@@ -12,7 +12,6 @@ extern "C" uint8_t __ImageBase;
 // offsets of the three link fields are ABI-stable across Windows x64.
 extern "C" LIST_ENTRY PsLoadedModuleList;
 
-
 namespace blook::hide::self {
 namespace {
 // The first members of the loader's module entry. Only the fields this module
@@ -29,7 +28,8 @@ struct module_entry {
     UNICODE_STRING base_dll_name;
 };
 
-UNICODE_STRING service_path{};  // \Registry\MACHINE\SYSTEM\CurrentControlSet\...
+UNICODE_STRING
+service_path{};  // \Registry\MACHINE\SYSTEM\CurrentControlSet\...
 bool service_path_owned{};
 
 module_entry* hidden_entry{};
@@ -92,8 +92,8 @@ NTSTATUS delete_value(HANDLE key, PCWSTR name) {
 NTSTATUS open_service_key(HANDLE& key, ACCESS_MASK access) {
     OBJECT_ATTRIBUTES attributes{};
     InitializeObjectAttributes(&attributes, &service_path,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, nullptr,
-                               nullptr);
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               nullptr, nullptr);
     return ZwOpenKey(&key, access, &attributes);
 }
 
@@ -132,9 +132,9 @@ NTSTATUS delete_service_key() {
             UCHAR buffer[4096]{};
             ULONG length{};
             for (ULONG index = 0;;) {
-                const auto query = ZwEnumerateValueKey(
-                    subkey, index, KeyValueBasicInformation, buffer,
-                    sizeof(buffer), &length);
+                const auto query =
+                    ZwEnumerateValueKey(subkey, index, KeyValueBasicInformation,
+                                        buffer, sizeof(buffer), &length);
                 if (!NT_SUCCESS(query))
                     break;
                 auto* info =
@@ -171,8 +171,8 @@ bool linked(LIST_ENTRY* link) {
 module_entry* find_image() {
     for (auto link = PsLoadedModuleList.Flink; link != &PsLoadedModuleList;
          link = link->Flink) {
-        auto* candidate = CONTAINING_RECORD(link, module_entry,
-                                            in_load_order_links);
+        auto* candidate =
+            CONTAINING_RECORD(link, module_entry, in_load_order_links);
         if (candidate->dll_base == &__ImageBase)
             return candidate;
     }
@@ -188,8 +188,8 @@ void unlink_module() {
     image_size = entry->size_of_image;
 
     LIST_ENTRY* links[] = {&entry->in_load_order_links,
-                          &entry->in_memory_order_links,
-                          &entry->in_initialization_order_links};
+                           &entry->in_memory_order_links,
+                           &entry->in_initialization_order_links};
     for (auto* link : links) {
         if (linked(link))
             RemoveEntryList(link);
@@ -238,8 +238,8 @@ void restore_module_list() {
     // Restore all three chains. The driver was the last module loaded, so the
     // tail is where its own load put it, and every chain stays consistent.
     LIST_ENTRY* links[] = {&hidden_entry->in_load_order_links,
-                          &hidden_entry->in_memory_order_links,
-                          &hidden_entry->in_initialization_order_links};
+                           &hidden_entry->in_memory_order_links,
+                           &hidden_entry->in_initialization_order_links};
     for (auto* link : links)
         InsertTailList(&PsLoadedModuleList, link);
     hidden_module_list = false;
@@ -282,7 +282,8 @@ NTSTATUS hide(uint32_t flags, outcome& result) {
         wire::TraceScanResponse trace{};
         scan(trace);
         result.device_found =
-            (trace.found & (wire::trace_device | wire::trace_symlink)) ? 1u : 0u;
+            (trace.found & (wire::trace_device | wire::trace_symlink)) ? 1u
+                                                                       : 0u;
         result.device_unlinked = result.device_found ? 0u : 1u;
     }
     if (flags & wire::selfhide_registry) {

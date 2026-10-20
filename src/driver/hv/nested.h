@@ -32,8 +32,8 @@ enum class host_kind : uint32_t {
 struct report {
     bool nested{};
     host_kind host{host_kind::none};
-    char vendor[13]{};  // CPUID.0x40000000 signature, NUL terminated
-    uint32_t leaf_max{};  // CPUID.0x40000000 EAX
+    char vendor[13]{};          // CPUID.0x40000000 signature, NUL terminated
+    uint32_t leaf_max{};        // CPUID.0x40000000 EAX
     uint32_t vendor_leaf[4]{};  // EAX/EBX/ECX/EDX as reported by the host
     bool vmx_msr_readable{};
     bool vp_assist{};

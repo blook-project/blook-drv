@@ -167,13 +167,15 @@ struct EnableRequest {
 // `flags` selects what happens on a hook hit:
 //   install_flag_read_hooked    - guest reads of the page see the hooked bytes
 //                                 instead of the original ones (default: the
-//                                 original bytes, so self-reads stay consistent)
+//                                 original bytes, so self-reads stay
+//                                 consistent)
 //   install_flag_once          - disarm after the first hit
 //   install_flag_swbreak       - install as an int3 software breakpoint: the
 //                                 shadow page holds 0xCC instead of `bytes`,
 //                                 the #BP VM-exit calls the kernel handler,
-//                                 and the original instruction is single-stepped
-//                                 (MTF) with the original byte restored
+//                                 and the original instruction is
+//                                 single-stepped (MTF) with the original byte
+//                                 restored
 inline constexpr uint32_t install_flag_read_hooked = 1;
 inline constexpr uint32_t install_flag_once = 2;
 inline constexpr uint32_t install_flag_swbreak = 4;
@@ -374,7 +376,8 @@ struct QueryResponse {
 
 // hv_flags bits reported by QueryResponse and HvInfoResponse.
 inline constexpr uint32_t hv_flag_running = 1u << 0;
-inline constexpr uint32_t hv_flag_nested = 1u << 1;  // running under a hypervisor
+inline constexpr uint32_t hv_flag_nested = 1u
+                                           << 1;  // running under a hypervisor
 inline constexpr uint32_t hv_flag_vmware = 1u << 2;  // nested host is VMware
 inline constexpr uint32_t hv_flag_hyperv = 1u << 3;  // nested host is Hyper-V
 inline constexpr uint32_t hv_flag_no_vp_assist = 1u << 4;
@@ -671,9 +674,8 @@ template <class T>
 inline constexpr bool is_wire_message =
     detail::same_type<T, PingRequest> || detail::same_type<T, ProbeRequest> ||
     detail::same_type<T, EnableRequest> ||
-    detail::same_type<T, InstallRequest> ||
-    detail::same_type<T, HookRequest> || detail::same_type<T, HideRequest> ||
-    detail::same_type<T, ScrubRequest> ||
+    detail::same_type<T, InstallRequest> || detail::same_type<T, HookRequest> ||
+    detail::same_type<T, HideRequest> || detail::same_type<T, ScrubRequest> ||
     detail::same_type<T, WatchRequest> || detail::same_type<T, DumpRequest> ||
     detail::same_type<T, QueryPageRequest> ||
     detail::same_type<T, ConfigurationRequest> ||

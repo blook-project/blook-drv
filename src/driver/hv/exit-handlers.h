@@ -42,6 +42,9 @@ void handle_nmi_window(vcpu* cpu);
 
 void handle_exception_or_nmi(vcpu* cpu);
 
+// MOV DRn: debug-register access interception (see hwbreak.hpp).
+void handle_mov_dr(vcpu* cpu);
+
 void handle_vmx_instruction(vcpu* cpu);
 
 void handle_ept_violation(vcpu* cpu);

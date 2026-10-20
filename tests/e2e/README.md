@@ -192,7 +192,6 @@ docs/evidence/<timestamp>-e2e/
   run.log                     # full host-side log
   run/cases.psd1              # exact matrix used for this run
   run/state-initial.json      # state after boot / reset
-  run/state-poll.raw.txt      # last readiness poll (diagnostic)
   cases/<case-id>/
     command.txt               # exact argv, timeout, post_checks
     stdout.txt                # bvmenv process stdout (guest stdout)
@@ -273,21 +272,27 @@ All CLI knowledge is in `Invoke-Bvmenv` in `scripts/E2E.ps1`; changing one
 function is enough if the real interface differs.
 
 1. `bvmenv create <vm>` creates a linked clone from the base snapshot; if the
-   VM already exists the runner falls back to `bvmenv reset <vm>`.
+   VM already exists the runner falls back to `bvmenv reset <vm>`.  A reset
+   that leaves the VM off is followed by `bvmenv start <vm>`.
 2. `bvmenv state <vm> --json` prints one JSON object with `vm`, `power`,
    `tools_heartbeat`, `classification`, `stop_code`, `screenshot`,
-   `vmware_log`, `errors`.  `screenshot` and `vmware_log` are **host** paths;
-   otherwise no image/log evidence can be copied.
-3. `classification` is exactly one of `desktop|login|bsod|hang|off`, and
-   `power` is `on|off|suspended`.
+   `vmware_log`, `errors` (flat contract) **or** the nested
+   `bvmenv.state.v1` equivalent.  `screenshot` and `vmware_log` are **host**
+   paths; otherwise no image/log evidence can be copied.
+3. `classification` is one of `desktop|login|bsod|hang|off`; bvmenv 0.1.0
+   may also emit `black|boot|unknown` (off/boot/screenshot failure).  `power`
+   is `on|off|suspended`; `power=off` is treated as a crash even when the
+   screen classifier says `unknown`.
 4. `bvmenv exec <vm> --timeout <s> [--elevated] [--workdir <dir>] -- <argv>`
-   exits with the **guest command's** exit code.  A timeout is assumed to be
-   `124`; change `$script:TimeoutSentinel` if the real sentinel differs.
-   The host also enforces `timeout + 60 s` and kills the process, so a
-   misbehaving `bvmenv` cannot hang the harness.
-5. `bvmenv exec` may print an artifact JSON object on stdout; the harness keeps
-   it as `bvmenv-exec.json` and copies `stdout`/`stderr` host files if present,
-   but never depends on that shape.
+   exits with the **guest command's** exit code in contract mode.  With
+   bvmenv 0.1.0 the process exits 1 for any non-zero guest exit; the runner
+   therefore requests `exec <vm> --json` and uses `ExecResult.exit_code`.
+   A timeout is normalised to `124`; change `$script:TimeoutSentinel` if the
+   real sentinel differs.  The host also enforces `timeout + 60 s` and kills
+   the process, so a misbehaving `bvmenv` cannot hang the harness.
+5. `bvmenv exec` may print a JSON object on stdout; the harness keeps it as
+   `bvmenv-exec.json` and copies the host `stdout_path`/`stderr_path` files
+   when present, but never depends on that shape.
 6. `bvmenv push <vm> <hostfile> <guestpath>` and `pull` are file/directory
    copies; the runner pushes individual files so a failed push names the exact
    artifact.
@@ -300,6 +305,31 @@ function is enough if the real interface differs.
 10. The stubbed `blook-antidetect.exe` / `blook-guest-hooks.exe` return 77;
     cases use `allow_skip` until the real probes exist.  `hv-info` and
     `trace-scan` are also probed for unknown-command/77 output and skipped.
+11. The hook runner contract is `blook-guest-hooks.exe ept <mode> --target-pid
+    <pid> --target-address <hex> --target-log <path> --json`, plus
+    `kchannel-fuzz --mode`, `memory-pressure`, and the swbreak/hwbreak mode
+    names used in `cases.psd1`.  Change `run-ept-hook.ps1`/`guest-hooks.ps1`
+    in one place if env's test binary chooses different argv.
+
+### bvmenv 0.1.0 compatibility (verified against the local build)
+
+The runner was checked against `bvmenv.exe` 0.1.0 while it was being built and
+handles its differences from the original contract:
+
+- `state <vm> --json` uses the nested `bvmenv.state.v1` schema
+  (`screen.classification`, `screen.stop_code`, `screen.screenshot`,
+  `tools.running`).  `ConvertTo-FlatVmState` adds the flat aliases the rest of
+  the harness expects and also derives `vmware_log` from the sibling
+  `vmware.log` of `vmx`.
+- `exec` returns **1 for any non-zero guest exit**.  The runner requests
+  `exec <vm> --json` and reads `ExecResult.exit_code` / `timed_out` /
+  `stdout_path` / `stderr_path`; for a contract-style CLI it falls back to the
+  `exit_code    : N` line and then to the process exit code.
+- `reset` leaves the VM powered off in 0.1.0; after every reset the runner
+  issues `start` when `state` says `power=off`, then waits for desktop.
+- 0.1.0 calls the destroy operation `delete`; this harness never destroys VMs.
+- The global `--json` switch is command-local in 0.1.0; the runner puts it
+  after `exec <vm>` and after `state <vm>`.
 
 ## Case-id → acceptance criterion
 
@@ -381,8 +411,9 @@ is last so an intentional timeout cannot delay the rest of the matrix.
 
 - **`bvmenv was not found`** — only fatal outside `-DryRun`/`-ValidateOnly`.
   Build `blook-vmware-environment` or pass `-Bvmenv`.
-- **`VM did not become desktop-ready`** — inspect `run/state-poll.raw.txt`;
-  the VM may be at a login screen, still booting, or `tools_heartbeat=false`.
+- **`VM did not become desktop-ready`** — inspect the readiness messages in
+  `run.log`; the VM may be at a login screen, still booting, or
+  `tools_heartbeat=false`.
   `-ReadyTimeoutSeconds` can be raised.
 - **Everything is `skip` with exit 77** — the guest test binaries are still
   stubs; this is the expected state for the current repository.

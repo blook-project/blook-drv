@@ -259,15 +259,14 @@ TEST_F(ClientTest, OpenWithoutTransportReportsInvalidHandle) {
     // seam is exactly what a caller gets when the channel could not start.
     auto bare = session::adopt(std::make_shared<detail::connection>());
     const auto invalid = bare.query();
-    ASSERT_TRUE((!invalid))
-        << "query without a transport must fail, not hang";
+    ASSERT_TRUE((!invalid)) << "query without a transport must fail, not hang";
 }
 
 TEST_F(ClientTest, OpenEnableFailureClosesConnection) {
     fake::fail_call = true;
     auto failed = open_session();
-    ASSERT_TRUE((!failed && failed.error().value() ==
-                                static_cast<int>(ERROR_NOT_READY)))
+    ASSERT_TRUE((!failed &&
+                 failed.error().value() == static_cast<int>(ERROR_NOT_READY)))
         << "enable failure propagated as a transport error";
 }
 
@@ -385,8 +384,9 @@ TEST_F(ClientTest, QueryPageKernelIsCountsOnlyAndValidatesArguments) {
         denied(opened->query_page(address, {}, 99), ERROR_INVALID_PARAMETER));
     EXPECT_EQ(fake::calls, before);
     raw.entry_count = 1;
-    EXPECT_TRUE(denied(opened->query_page(address, {}, wire::page_domain_kernel),
-                       ERROR_INVALID_DATA));
+    EXPECT_TRUE(
+        denied(opened->query_page(address, {}, wire::page_domain_kernel),
+               ERROR_INVALID_DATA));
 }
 
 TEST_F(ClientTest, QueryPageRejectsMalformedResponseAndPropagatesErrors) {
@@ -606,7 +606,8 @@ TEST_F(ClientTest, HookRetainsSharedConnectionUntilLastOwner) {
         ASSERT_TRUE((owner.id() == 0 && !owner && owner.remove().has_value()))
             << "moved hook cleanup is inert";
         ASSERT_TRUE((!observer.expired()))
-            << "the move kept the connection, the moved-from hook did not drop it";
+            << "the move kept the connection, the moved-from hook did not drop "
+               "it";
     }
     ASSERT_TRUE((observer.expired()))
         << "last shared owner releases the connection";

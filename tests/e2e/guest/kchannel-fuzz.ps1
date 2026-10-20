@@ -11,6 +11,10 @@ param(
 )
 . "$PSScriptRoot\lib.ps1"
 
+if (-not (Test-Path -LiteralPath $script:Loader)) {
+    Fail-Guest "missing $($script:Loader); cannot exercise the transport"
+}
+
 switch ($Mode) {
     'no-attach' {
         Stop-DriverQuietly

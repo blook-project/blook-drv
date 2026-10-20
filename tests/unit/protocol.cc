@@ -14,12 +14,12 @@ constexpr bool wire_value_types =
     ((std::is_standard_layout_v<Ts> && std::is_trivially_copyable_v<Ts>) &&
      ...);
 
-static_assert(
-    wire_value_types<wire::Header, wire::PingRequest, wire::PingResponse,
-                     wire::VersionInfo, wire::EnableRequest, wire::InstallRequest,
-                     wire::InstallResponse, wire::HookRequest, wire::HideRequest,
-                     wire::ScrubRequest, wire::QueryResponse, wire::WatchRequest,
-                     wire::WatchResponse, wire::DumpRequest, wire::DumpResponse>);
+static_assert(wire_value_types<
+              wire::Header, wire::PingRequest, wire::PingResponse,
+              wire::VersionInfo, wire::EnableRequest, wire::InstallRequest,
+              wire::InstallResponse, wire::HookRequest, wire::HideRequest,
+              wire::ScrubRequest, wire::QueryResponse, wire::WatchRequest,
+              wire::WatchResponse, wire::DumpRequest, wire::DumpResponse>);
 
 template <class T>
 concept HasFactory = requires {
@@ -40,10 +40,10 @@ constexpr bool rejected_types =
     ((!HasFactory<Ts> && !HasHeaderValidator<Ts>) && ...);
 static_assert(
     rejected_types<int, wire::Header, wire::PingResponse, wire::VersionInfo,
-                   wire::InstallResponse, wire::QueryResponse, wire::WatchResponse,
-                   wire::DumpResponse, HeaderLookalike, DerivedRequest,
-                   const wire::PingRequest, volatile wire::PingRequest,
-                   wire::PingRequest&>);
+                   wire::InstallResponse, wire::QueryResponse,
+                   wire::WatchResponse, wire::DumpResponse, HeaderLookalike,
+                   DerivedRequest, const wire::PingRequest,
+                   volatile wire::PingRequest, wire::PingRequest&>);
 
 constexpr bool initialized_fields(const wire::PingRequest& value) {
     return value.magic == 0;
@@ -160,19 +160,32 @@ static_assert(wire::watch_arm == 1 && wire::watch_disarm == 2);
 // route two payload types into one handler, and an opcode below the application
 // range would collide with the transport's own opcodes.
 constexpr std::array opcodes{
-    wire::opcode(wire::op::ping),           wire::opcode(wire::op::get_version),
-    wire::opcode(wire::op::enable),         wire::opcode(wire::op::install),
-    wire::opcode(wire::op::remove),         wire::opcode(wire::op::refresh),
-    wire::opcode(wire::op::query),          wire::opcode(wire::op::hide),
-    wire::opcode(wire::op::scrub),          wire::opcode(wire::op::stats),
-    wire::opcode(wire::op::probe),          wire::opcode(wire::op::watch),
-    wire::opcode(wire::op::dump),           wire::opcode(wire::op::query_page),
-    wire::opcode(wire::op::configuration),  wire::opcode(wire::op::features),
-    wire::opcode(wire::op::hide_self),      wire::opcode(wire::op::swbreak_arm),
-    wire::opcode(wire::op::swbreak_disarm), wire::opcode(wire::op::swbreak_query),
-    wire::opcode(wire::op::hwbreak_arm),    wire::opcode(wire::op::hwbreak_disarm),
-    wire::opcode(wire::op::hwbreak_query),  wire::opcode(wire::op::detect_probe),
-    wire::opcode(wire::op::hv_info),        wire::opcode(wire::op::trace_scan),
+    wire::opcode(wire::op::ping),
+    wire::opcode(wire::op::get_version),
+    wire::opcode(wire::op::enable),
+    wire::opcode(wire::op::install),
+    wire::opcode(wire::op::remove),
+    wire::opcode(wire::op::refresh),
+    wire::opcode(wire::op::query),
+    wire::opcode(wire::op::hide),
+    wire::opcode(wire::op::scrub),
+    wire::opcode(wire::op::stats),
+    wire::opcode(wire::op::probe),
+    wire::opcode(wire::op::watch),
+    wire::opcode(wire::op::dump),
+    wire::opcode(wire::op::query_page),
+    wire::opcode(wire::op::configuration),
+    wire::opcode(wire::op::features),
+    wire::opcode(wire::op::hide_self),
+    wire::opcode(wire::op::swbreak_arm),
+    wire::opcode(wire::op::swbreak_disarm),
+    wire::opcode(wire::op::swbreak_query),
+    wire::opcode(wire::op::hwbreak_arm),
+    wire::opcode(wire::op::hwbreak_disarm),
+    wire::opcode(wire::op::hwbreak_query),
+    wire::opcode(wire::op::detect_probe),
+    wire::opcode(wire::op::hv_info),
+    wire::opcode(wire::op::trace_scan),
 };
 constexpr bool opcode_contract() {
     for (std::size_t i = 0; i < opcodes.size(); ++i) {
@@ -199,7 +212,8 @@ void test_request() {
     // Inspect named fields only: padding bytes are not part of this contract.
     ASSERT_TRUE((initialized_fields(value)))
         << "factory initializes all payload fields";
-    ASSERT_TRUE((!wire::valid_header(T{}))) << "default request lacks wire size";
+    ASSERT_TRUE((!wire::valid_header(T{})))
+        << "default request lacks wire size";
 
     for (const uint32_t version : {0u, 3u, 4u, wire::abi_version - 1,
                                    wire::abi_version + 1, 0xffffffffu}) {
@@ -252,8 +266,7 @@ TEST(ProtocolTest, OpcodeRangeAndUniqueness) {
         ASSERT_TRUE((code >= 0x8000u && code < 0x9000u))
             << "application opcode stays in the kchannel client range";
         for (std::size_t j = i + 1; j < opcodes.size(); ++j)
-            ASSERT_TRUE((code != opcodes[j]))
-                << "opcodes are pairwise unique";
+            ASSERT_TRUE((code != opcodes[j])) << "opcodes are pairwise unique";
     }
 }
 

@@ -34,8 +34,7 @@ void initialize() {
                     wire::detect_check_cpuid_vendor |
                     wire::detect_check_cpuid_features |
                     wire::detect_check_cpuid_leaf_max |
-                    wire::detect_check_msr_vmx |
-                    wire::detect_check_exception;
+                    wire::detect_check_msr_vmx | wire::detect_check_exception;
 
     if (timing_hidden()) {
         cached.active |= wire::detect_check_tsc | wire::detect_check_rdtscp |
@@ -109,8 +108,9 @@ NTSTATUS probe(const wire::DetectProbeRequest& request,
     reply.checks_failed = failed;
 
     const auto& host = nested::probe();
-    reply.nested_host_vendor = (static_cast<uint64_t>(host.vendor_leaf[1]) << 32) |
-                               host.vendor_leaf[2];
+    reply.nested_host_vendor =
+        (static_cast<uint64_t>(host.vendor_leaf[1]) << 32) |
+        host.vendor_leaf[2];
     return STATUS_SUCCESS;
 }
 }  // namespace hv::detect

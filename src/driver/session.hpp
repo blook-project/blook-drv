@@ -16,8 +16,8 @@ namespace blook {
 // and the mandatory VM maintenance hooks. PASSIVE_LEVEL, once.
 NTSTATUS initialize_sessions();
 
-// Unpatches every CPU, drains, stops virtualization, drops the notifications and
-// relinks the driver into PsLoadedModuleList (so an unload never leaves a
+// Unpatches every CPU, drains, stops virtualization, drops the notifications
+// and relinks the driver into PsLoadedModuleList (so an unload never leaves a
 // dangling module-list entry behind).
 void shutdown_sessions();
 

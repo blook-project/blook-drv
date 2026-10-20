@@ -51,9 +51,9 @@ TEST(SessionSmoke, PatchOwnCodeAndRemove) {
     auto opened = session::open();
     ASSERT_TRUE(opened.has_value());
     // The hook may only cover whole instructions: mov eax, 42; ret is 6 bytes.
-    const std::array<std::byte, 6> patch{
-        std::byte{0xb8}, std::byte{42}, std::byte{0}, std::byte{0}, std::byte{0},
-        std::byte{0xc3}};
+    const std::array<std::byte, 6> patch{std::byte{0xb8}, std::byte{42},
+                                         std::byte{0},    std::byte{0},
+                                         std::byte{0},    std::byte{0xc3}};
     auto installed =
         opened->patch(reinterpret_cast<void*>(&call_returns_7), patch);
     ASSERT_TRUE(installed.has_value()) << "install hook";

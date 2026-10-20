@@ -10,6 +10,19 @@
 
 #include "hv.h"
 
+#include "driver/hv/detect.h"
+#include "driver/hv/hwbreak.hpp"
+#include "driver/hv/nested.h"
+#include "driver/hv/swbreak.hpp"
+
+namespace hv {
+// Defined below, next to the breakpoint exception handler; forward declared so
+// handle_mov_dr (which appears earlier in the file) can use them.
+uint64_t blook_read_guest_gpr(vcpu* cpu, uint64_t index);
+uint64_t blook_read_debug_register(uint32_t index);
+void blook_write_debug_register(uint32_t index, uint64_t value);
+}  // namespace hv
+
 namespace hv {
 
 void emulate_cpuid(vcpu* const cpu) {
@@ -18,14 +31,36 @@ void emulate_cpuid(vcpu* const cpu) {
     int regs[4];
     __cpuidex(regs, ctx->eax, ctx->ecx);
 
-    // A processor in non-root operation sets CPUID.1:ECX[31] by itself, which
-    // is the single most common way to notice a hypervisor. Report what the
-    // real machine reports and clear that bit again.
-    if (ctx->eax == 1)
-        regs[2] &= ~static_cast<int>(0x80000000u);
+    switch (ctx->eax) {
+        case 0x1:
+            // CPUID.1:ECX[31] is set by the processor itself in non-root
+            // operation, which is the single most common way to notice a
+            // hypervisor. Clear it, and clear the VMX/SMX feature bits as well:
+            // advertising VT-x while the VMX MSRs are filtered (see
+            // emulate_rdmsr) would be a contradiction a detector looks for.
+            regs[2] &= ~static_cast<int>(0x80000000u);  // hypervisor
+            regs[2] &= ~static_cast<int>(0x00000020u);  // VMX
+            regs[2] &= ~static_cast<int>(0x00000040u);  // SMX
+            break;
+        case 0x80000001:
+            // SVM / nested paging vendor bits: an Intel host never sets them,
+            // and a nested host that leaks AMD bits is a detection vector on
+            // its own.
+            regs[2] &= ~static_cast<int>(0x00000004u);  // SVM
+            break;
+        case 0x8000000A:
+            // SVM feature leaves are vendor-specific to AMD.
+            if (nested::probe().host != nested::host_kind::none)
+                regs[0] = regs[1] = regs[2] = regs[3] = 0;
+            break;
+        default:
+            break;
+    }
 
     // Hypervisor-defined leaves are only defined when a hypervisor advertises
-    // them through that bit, so they read as zero here.
+    // them through that bit, so they read as zero here. This hides the L0
+    // hypervisor's vendor signature as well (the nested VMware/Hyper-V host
+    // leaves 0x40000000.. are visible to the guest otherwise).
     if (ctx->eax >= 0x40000000 && ctx->eax <= 0x4FFFFFFF)
         regs[0] = regs[1] = regs[2] = regs[3] = 0;
 
@@ -37,6 +72,26 @@ void emulate_cpuid(vcpu* const cpu) {
 }
 
 void emulate_rdmsr(vcpu* const cpu) {
+    // Hiding CPUID.1:ECX[5] (VMX) is only consistent if the VMX capability
+    // MSRs and IA32_FEATURE_CONTROL agree that VT-x is not available:
+    //   * IA32_FEATURE_CONTROL reads as locked with VMX outside SMX disabled;
+    //   * every IA32_VMX_* MSR raises #GP, exactly as on a CPU without VT-x.
+    // A detector that compares "CPUID says no VMX" against "0x480 is readable"
+    // is otherwise a one-line find.
+    if (cpu->ctx->ecx >= 0x480 && cpu->ctx->ecx <= 0x48F) {
+        detect::note_masked_msr(cpu->ctx->ecx);
+        inject_hw_exception(general_protection, 0);
+        return;
+    }
+    if (cpu->ctx->ecx == IA32_FEATURE_CONTROL) {
+        // lock = 1, enable VMX outside SMX = 0, enable VMX inside SMX = 0.
+        detect::note_masked_msr(cpu->ctx->ecx);
+        cpu->ctx->rax = 1;
+        cpu->ctx->rdx = 0;
+        skip_instruction();
+        return;
+    }
+
     host_exception_info e;
 
     // the guest could be reading from MSRs that are outside of the MSR bitmap
@@ -713,6 +768,29 @@ void handle_mov_cr(vcpu* const cpu) {
     }
 }
 
+void handle_mov_dr(vcpu* const cpu) {
+    vmx_exit_qualification_mov_dr qualification{};
+    qualification.flags = vmx_vmread(VMCS_EXIT_QUALIFICATION);
+    const auto index = static_cast<uint32_t>(qualification.debug_register);
+    const auto gpr = qualification.general_purpose_register;
+
+    if (qualification.direction_of_access) {
+        // MOV XXX, DRn: what the guest is told depends on what the driver has
+        // armed. Our breakpoints never appear in the answer.
+        uint64_t value{};
+        if (!hwbreak::dr_read(cpu, index, value))
+            value = blook_read_debug_register(index);
+        write_guest_gpr(cpu->ctx, gpr, value);
+    } else {
+        // MOV DRn, XXX: a write that would disarm a driver breakpoint is
+        // swallowed (hwbreak::dr_write returns true and records the attempt).
+        const auto value = blook_read_guest_gpr(cpu, gpr);
+        if (!hwbreak::dr_write(cpu, index, value))
+            blook_write_debug_register(index, value);
+    }
+    skip_instruction();
+}
+
 void handle_nmi_window(vcpu* const cpu) {
     if (cpu->queued_nmis)
         --cpu->queued_nmis;
@@ -757,6 +835,105 @@ bool contributory(uint32_t const vector) {
 }
 }  // namespace
 
+// Reads a guest GPR by its MOV DR register encoding. RSP lives in the VMCS.
+uint64_t blook_read_guest_gpr(vcpu* const cpu, uint64_t index) {
+    if (index == 4)
+        return vmx_vmread(VMCS_GUEST_RSP);
+    return cpu->ctx->gpr[index];
+}
+
+uint64_t blook_read_debug_register(uint32_t index) {
+    switch (index) {
+        case 0:
+            return __readdr(0);
+        case 1:
+            return __readdr(1);
+        case 2:
+            return __readdr(2);
+        case 3:
+            return __readdr(3);
+        case 6:
+            return __readdr(6);
+        case 7:
+            return __readdr(7);
+        default:
+            return 0;
+    }
+}
+
+void blook_write_debug_register(uint32_t index, uint64_t value) {
+    switch (index) {
+        case 0:
+            __writedr(0, value);
+            break;
+        case 1:
+            __writedr(1, value);
+            break;
+        case 2:
+            __writedr(2, value);
+            break;
+        case 3:
+            __writedr(3, value);
+            break;
+        case 6:
+            __writedr(6, value);
+            break;
+        case 7:
+            __writedr(7, value);
+            break;
+        default:
+            break;
+    }
+}
+
+// Consumes #BP (#3) and #DB (#1) when they belong to a breakpoint hook. Every
+// path returns true because both vectors are always intercepted (exception
+// bitmap bits 1 and 3) and must never be left unhandled.
+bool handle_breakpoint_exception(vcpu* const cpu, uint32_t vector) {
+    if (vector == 3) {
+        // #BP is a trap: the RIP the processor reports is one byte past the
+        // int3, so the breakpoint address is RIP - 1.
+        const auto rip = vmx_vmread(VMCS_GUEST_RIP);
+        uint64_t address{};
+        uint64_t id{};
+        if (!rip || !swbreak::breakpoint_hit(rip - 1, address, id)) {
+            inject_hw_exception(3);
+            return true;
+        }
+        // Execute the original instruction exactly once from the untouched
+        // page, then resume after it with the shadow page back in effect.
+        if (!begin_ept_window(cpu->ept, id)) {
+            inject_hw_exception(3);
+            return true;
+        }
+        cpu->swbreak_stepping = true;
+        cpu->swbreak_step_id = id;
+        cpu->swbreak_saved_rflags = vmx_vmread(VMCS_GUEST_RFLAGS);
+        vmx_vmwrite(VMCS_GUEST_RFLAGS, cpu->swbreak_saved_rflags | 0x100ull);
+        vmx_vmwrite(VMCS_GUEST_RIP, address);
+        return true;
+    }
+
+    // #DB.
+    if (cpu->swbreak_stepping) {
+        cpu->swbreak_stepping = false;
+        end_ept_window(cpu->ept, cpu->swbreak_step_id);
+        cpu->swbreak_step_id = 0;
+        const auto flags = vmx_vmread(VMCS_GUEST_RFLAGS);
+        vmx_vmwrite(VMCS_GUEST_RFLAGS, flags & ~0x100ull);
+        // The single-step status is ours; the guest must not see it.
+        __writedr(6, __readdr(6) & ~0x4000ull);
+        return true;
+    }
+    uint64_t id{};
+    if (hwbreak::debug_hit(__readdr(6), id)) {
+        hwbreak::consume_status(cpu, id);
+        return true;
+    }
+    inject_hw_exception(1);
+    return true;
+}
+
 void handle_exception_or_nmi(vcpu* const cpu) {
     vmexit_interrupt_information info{};
     info.flags =
@@ -771,6 +948,14 @@ void handle_exception_or_nmi(vcpu* const cpu) {
         auto ctrl = read_ctrl_proc_based();
         ctrl.nmi_window_exiting = 1;
         write_ctrl_proc_based(ctrl);
+        return;
+    }
+
+    // #BP and #DB are always intercepted because the software and hardware
+    // breakpoint hooks consume them (exception bitmap bits 1 and 3).
+    if (info.interruption_type == software_exception &&
+        (info.vector == 3 || info.vector == 1)) {
+        handle_breakpoint_exception(cpu, info.vector);
         return;
     }
 

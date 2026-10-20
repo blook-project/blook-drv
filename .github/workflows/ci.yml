@@ -35,11 +35,21 @@ jobs:
           Invoke-WebRequest "https://api.nuget.org/v3-flatcontainer/microsoft.windows.wdk.x64/$ver/microsoft.windows.wdk.x64.$ver.nupkg" -OutFile $env:RUNNER_TEMP\wdk\wdk.nupkg
           tar.exe -xf $env:RUNNER_TEMP\wdk\wdk.nupkg -C $env:RUNNER_TEMP\wdk
           "WDK_ROOT=$env:RUNNER_TEMP\wdk\c" >> $env:GITHUB_ENV
+      - name: Fetch blook-kchannel (pinned)
+        shell: pwsh
+        run: |
+          # The driver links the real transport sources: there is no stub
+          # fallback in this job, so a missing fetch fails the build instead of
+          # testing against a stand-in.
+          $root = Join-Path $env:GITHUB_WORKSPACE '..\blook-kchannel'
+          git clone --quiet https://github.com/blook-project/blook-kchannel $root
+          git -C $root checkout --quiet 40a5337a2d69c79fb049361f616aacc58ae75d4d
+          "KCHANNEL_DIR=$root" >> $env:GITHUB_ENV
       - name: Configure
         shell: pwsh
         run: |
           $env:BLOOK_VERSION = (Get-Content version.txt -Raw).Trim()
-          xmake f -p windows -a x64 -m releasedbg --wdk="$env:WDK_ROOT" -y
+          xmake f -p windows -a x64 -m releasedbg --wdk="$env:WDK_ROOT" --kchannel_dir="$env:KCHANNEL_DIR" -y
           if ($LASTEXITCODE -ne 0) { throw "xmake configure failed" }
       - name: Build
         shell: pwsh
@@ -66,6 +76,7 @@ jobs:
           $stage = "out/blook-drv-$ver"
           New-Item -ItemType Directory -Force $stage | Out-Null
           $sys = Get-ChildItem -Recurse build -Filter blook-drv.sys | Select-Object -First 1
+          if (-not $sys) { throw "blook-drv.sys was not built" }
           if ($sys) { Copy-Item $sys.FullName $stage }
           Copy-Item include, sdk, docs, scripts, signer -Destination $stage -Recurse
           Copy-Item README.md, LICENSE, CHANGELOG.md, version.txt, xmake.lua, blook.ini -Destination $stage
@@ -91,7 +102,7 @@ jobs:
       - name: Install clang-format
         shell: pwsh
         run: |
-          python -m pip install --quiet "clang-format==18.1.8"
+          python -m pip install --quiet "clang-format==20.1.0"
           clang-format --version
       - name: Check formatting
         shell: pwsh

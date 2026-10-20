@@ -218,8 +218,8 @@ class hook final {
                 std::error_code{ERROR_INVALID_HANDLE, std::system_category()});
         auto request = wire::request<wire::HookRequest>();
         request.id = id_;
-        auto status = connection_->call(wire::opcode(wire::op::remove), &request,
-                                        sizeof(request), nullptr, 0);
+        auto status = connection_->call(wire::opcode(wire::op::remove),
+                                        &request, sizeof(request), nullptr, 0);
         if (status)
             id_ = 0;
         return status;
@@ -300,8 +300,8 @@ class watch final {
         request.id = id_;
         wire::DumpResponse response{};
         auto status =
-            connection_->call(wire::opcode(wire::op::dump), &request, sizeof(request),
-                              &response, sizeof(response));
+            connection_->call(wire::opcode(wire::op::dump), &request,
+                              sizeof(request), &response, sizeof(response));
         if (!status)
             return std::unexpected(status.error());
         return watch_hit{.rip = response.hit_rip,
@@ -326,8 +326,8 @@ class watch final {
         request.length = static_cast<uint32_t>(out.size());
         wire::DumpResponse response{};
         auto status =
-            connection_->call(wire::opcode(wire::op::dump), &request, sizeof(request),
-                              &response, sizeof(response));
+            connection_->call(wire::opcode(wire::op::dump), &request,
+                              sizeof(request), &response, sizeof(response));
         if (!status)
             return std::unexpected(status.error());
         if (response.state != blook::watch_hit)
@@ -402,14 +402,13 @@ class session final {
         return connection_->call(op, input, input_size, output, output_size);
     }
 
-
     [[nodiscard]] static result<session> finish_open(
         open_mode mode, std::shared_ptr<detail::connection> connection) {
         if (mode == open_mode::read_write) {
             auto request = wire::request<wire::EnableRequest>();
-            auto status = connection->call(wire::opcode(wire::op::enable),
-                                           &request, sizeof(request), nullptr,
-                                           0);
+            auto status =
+                connection->call(wire::opcode(wire::op::enable), &request,
+                                 sizeof(request), nullptr, 0);
             if (!status)
                 return std::unexpected(status.error());
         }
@@ -475,8 +474,8 @@ class session final {
             return std::unexpected(error);
         const auto blob = transport::bootstrap(*link);
         if (blob.empty())
-            return std::unexpected(std::error_code{
-                ERROR_INVALID_DATA, std::system_category()});
+            return std::unexpected(
+                std::error_code{ERROR_INVALID_DATA, std::system_category()});
         if (auto status = loader.load(blob))
             return std::unexpected(status);
         if (auto status = transport::finish(*link, 5000))
@@ -722,8 +721,8 @@ class session final {
         request.length = static_cast<uint32_t>(view.size());
         std::memcpy(request.bytes, view.data(), view.size());
         wire::InstallResponse response{};
-        auto status = call(wire::opcode(wire::op::install), &request, sizeof(request),
-                           &response, sizeof(response));
+        auto status = call(wire::opcode(wire::op::install), &request,
+                           sizeof(request), &response, sizeof(response));
         if (!status)
             return std::unexpected(status.error());
         return hook{connection_, response.id};
@@ -796,8 +795,8 @@ class session final {
         request.dump_base = reinterpret_cast<uint64_t>(dump_base);
         request.dump_size = dump_size;
         wire::WatchResponse response{};
-        auto status = call(wire::opcode(wire::op::watch), &request, sizeof(request),
-                           &response, sizeof(response));
+        auto status = call(wire::opcode(wire::op::watch), &request,
+                           sizeof(request), &response, sizeof(response));
         if (!status)
             return std::unexpected(status.error());
         return watch{connection_, response.id};
@@ -820,8 +819,8 @@ class session final {
         request.dump_base = dump_offset;
         request.dump_size = dump_size;
         wire::WatchResponse response{};
-        auto status = call(wire::opcode(wire::op::watch), &request, sizeof(request),
-                           &response, sizeof(response));
+        auto status = call(wire::opcode(wire::op::watch), &request,
+                           sizeof(request), &response, sizeof(response));
         if (!status)
             return std::unexpected(status.error());
         return watch{connection_, response.id};
@@ -850,8 +849,8 @@ class session final {
         const noexcept {
         auto request = wire::request<wire::FeaturesRequest>();
         wire::FeaturesResponse response{};
-        auto status = call(wire::opcode(wire::op::features), &request, sizeof(request),
-                           &response, sizeof(response));
+        auto status = call(wire::opcode(wire::op::features), &request,
+                           sizeof(request), &response, sizeof(response));
         if (!status)
             return std::unexpected(status.error());
         if (response.header.version != wire::abi_version ||
@@ -870,8 +869,8 @@ class session final {
         request.id = id;
         request.enabled = enabled ? 1u : 0u;
         wire::FeaturesResponse response{};
-        auto status = call(wire::opcode(wire::op::features), &request, sizeof(request),
-                           &response, sizeof(response));
+        auto status = call(wire::opcode(wire::op::features), &request,
+                           sizeof(request), &response, sizeof(response));
         if (!status)
             return std::unexpected(status.error());
         if (response.header.version != wire::abi_version ||
@@ -889,16 +888,16 @@ class session final {
     [[nodiscard]] result<void> hide(bool enable) const noexcept {
         auto request = wire::request<wire::HideRequest>();
         request.enable_hide = enable ? 1u : 0u;
-        return call(wire::opcode(wire::op::hide), &request, sizeof(request), nullptr,
-                    0);
+        return call(wire::opcode(wire::op::hide), &request, sizeof(request),
+                    nullptr, 0);
     }
 
     [[nodiscard]] result<void> hide_windows(bool enable) const noexcept {
         auto request = wire::request<wire::HideRequest>();
         request.enable_hide =
             enable ? wire::hide_windows_on : wire::hide_windows_off;
-        return call(wire::opcode(wire::op::hide), &request, sizeof(request), nullptr,
-                    0);
+        return call(wire::opcode(wire::op::hide), &request, sizeof(request),
+                    nullptr, 0);
     }
 
     [[nodiscard]] result<void> pin(pid process,
@@ -907,16 +906,16 @@ class session final {
         request.enable_hide = 2;
         request.pid = process.value;
         request.role = static_cast<uint32_t>(role);
-        return call(wire::opcode(wire::op::hide), &request, sizeof(request), nullptr,
-                    0);
+        return call(wire::opcode(wire::op::hide), &request, sizeof(request),
+                    nullptr, 0);
     }
 
     [[nodiscard]] result<void> unpin(pid process) const noexcept {
         auto request = wire::request<wire::HideRequest>();
         request.enable_hide = 3;
         request.pid = process.value;
-        return call(wire::opcode(wire::op::hide), &request, sizeof(request), nullptr,
-                    0);
+        return call(wire::opcode(wire::op::hide), &request, sizeof(request),
+                    nullptr, 0);
     }
 
     // Clear the debug artefacts a process can read out of its own structures.
@@ -925,8 +924,8 @@ class session final {
         auto request = wire::request<wire::ScrubRequest>();
         request.pid = process.value;
         request.flags = static_cast<uint32_t>(flags);
-        return call(wire::opcode(wire::op::scrub), &request, sizeof(request), nullptr,
-                    0);
+        return call(wire::opcode(wire::op::scrub), &request, sizeof(request),
+                    nullptr, 0);
     }
 };
 }  // namespace blook::client

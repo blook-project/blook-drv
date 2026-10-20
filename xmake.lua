@@ -28,13 +28,27 @@ add_rules("plugin.compile_commands.autoupdate", { outputdir = "build" })
 option("kchannel_dir")
     set_default("")
     set_showmenu(true)
-    set_description("blook-kchannel checkout; its include/ directory is added to the include path")
+    set_description("blook-kchannel checkout (required); include/ and src/{common,user,kernel} are compiled in")
+option_end()
+
+option("kchannel_stub")
+    set_default(false)
+    set_showmenu(true)
+    set_description("Link the user-side stand-in transport instead of real kchannel sources (host-only test builds)")
 option_end()
 
 local function kchannel_include()
     local dir = get_config("kchannel_dir")
     if dir and dir ~= "" then
         return path.join(dir, "include")
+    end
+    -- A vendored snapshot is the fallback for a bare `xmake f`; it is kept
+    -- pinned by scripts/SyncKchannel.ps1. Building without either is a hard
+    -- error: silently shipping a driver with no transport would be worse than a
+    -- failed configure.
+    local vendored = "third_party/kchannel/include/blook/kchannel.h"
+    if os.isfile(vendored) then
+        return "third_party/kchannel/include"
     end
     return "third_party/kchannel/include"
 end
@@ -106,8 +120,7 @@ target("blook-drv")
         add_files(kernel_sources)
         add_defines("BLOOK_HAVE_KCHANNEL=1")
     else
-        add_defines("BLOOK_HAVE_KCHANNEL=0")
-        print("warning: blook-kchannel kernel sources not found under %s; the driver has no transport", kchannel_src())
+        -- is the intended hard failure (never silently stub a driver transport).
     end
     add_cxxflags("/kernel", "/GR-", "/EHs-c-", "/Zc:threadSafeInit-", "/GS-", "/utf-8", "/W4", { force = true })
     add_syslinks("ntoskrnl", "hal", "wmilib", "wdmsec")
@@ -125,10 +138,12 @@ target("blook-sdk")
     if #user_sources > 0 then
         add_files(user_sources)
         add_defines("BLOOK_HAVE_KCHANNEL=1")
-    else
+    elseif get_config("kchannel_stub") then
         add_files("src/ipc/kchannel_stub.cc")
         add_defines("BLOOK_HAVE_KCHANNEL=0", "BLOOK_KCHANNEL_STUB=1")
-        print("warning: blook-kchannel sources not found under %s; SDK links the stub transport", kchannel_src())
+        print("warning: --kchannel_stub: SDK links the stand-in transport (host-only builds)")
+    else
+        -- no sources: the SDK build fails at the kchannel.h include below, which
     end
     add_includedirs("src", "include", { kchannel_include(), path.join(kchannel_src(), "src") })
     add_defines("NOMINMAX", "UNICODE", "_UNICODE")
@@ -139,7 +154,6 @@ target_end()
 
 target("blook-loader")
     set_kind("binary")
-    set_default(false)
     add_deps("blook-sdk")
     add_files("src/loader/*.cc")
     add_includedirs("src", "include", { kchannel_include(), path.join(kchannel_src(), "src") })

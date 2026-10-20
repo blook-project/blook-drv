@@ -2,19 +2,21 @@
 //
 // Two load paths, one initialisation:
 //
-//   manual map (production)  the loader maps the image, creates the blook-kchannel
+//   manual map (production)  the loader maps the image, creates the
+//   blook-kchannel
 //                            region and passes a kernel copy of kc_bootstrap in
 //                            the DriverObject slot. Nothing else about the load
 //                            is observable: no device, no registry, no service.
 //   service load (dev/e2e)   `sc create/start`. The bootstrap blob is read from
-//                            the service key's Parameters\KcBootstrap value, which
-//                            blook-loader wrote before starting the service. With
-//                            Parameters\Solo=1 the driver starts the hypervisor
-//                            with no peer at all (used by the e2e "driver runs"
-//                            cases and by bring-up on a bare machine).
+//                            the service key's Parameters\KcBootstrap value,
+//                            which blook-loader wrote before starting the
+//                            service. With Parameters\Solo=1 the driver starts
+//                            the hypervisor with no peer at all (used by the
+//                            e2e "driver runs" cases and by bring-up on a bare
+//                            machine).
 //
-// The driver never calls IoCreateDevice/IoCreateSymbolicLink and never exports a
-// symbol: the only kernel<->user path is blook-kchannel.
+// The driver never calls IoCreateDevice/IoCreateSymbolicLink and never exports
+// a symbol: the only kernel<->user path is blook-kchannel.
 #include <ntifs.h>
 
 #include "blook/drv/wire.hpp"
@@ -83,15 +85,14 @@ NTSTATUS read_service_bootstrap(PUNICODE_STRING registry_path, void*& blob,
 
     OBJECT_ATTRIBUTES attributes{};
     InitializeObjectAttributes(&attributes, &path,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, nullptr,
-                               nullptr);
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               nullptr, nullptr);
     HANDLE key{};
     auto status = ZwOpenKey(&key, KEY_READ, &attributes);
     if (!NT_SUCCESS(status))
         return status;
 
-    constexpr ULONG query_size =
-        sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 0x100;
+    constexpr ULONG query_size = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 0x100;
     auto* buffer = static_cast<UCHAR*>(
         ExAllocatePool2(POOL_FLAG_PAGED, query_size, blook::pool_tag));
     if (!buffer) {
@@ -145,7 +146,8 @@ NTSTATUS run(PUNICODE_STRING registry_path, const void* bootstrap) {
         blook::configuration_state::shutdown();
         return status;
     }
-    if (blook::ipc::adapter_start(bootstrap) != 0 && !blook::ipc::adapter_solo()) {
+    if (blook::ipc::adapter_start(bootstrap) != 0 &&
+        !blook::ipc::adapter_solo()) {
         // A client expected the channel to answer and it did not: fail the load
         // instead of pretending to be ready.
         blook::shutdown_sessions();

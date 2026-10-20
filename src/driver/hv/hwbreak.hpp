@@ -9,11 +9,11 @@ struct vcpu;
 
 // External-process hardware-breakpoint hooks and debug-register hiding.
 //
-// A hardware breakpoint is a per-thread property: DR0-DR3 hold the addresses and
-// DR7 the control bits. The driver cannot silently write another thread's DRs
-// from kernel mode (no such kernel API exists), so arming is done the same way a
-// debugger does it - the *client* calls SetThreadContext on the target thread.
-// The kernel then owns everything a scanner would look at:
+// A hardware breakpoint is a per-thread property: DR0-DR3 hold the addresses
+// and DR7 the control bits. The driver cannot silently write another thread's
+// DRs from kernel mode (no such kernel API exists), so arming is done the same
+// way a debugger does it - the *client* calls SetThreadContext on the target
+// thread. The kernel then owns everything a scanner would look at:
 //
 //   - `arm` records the breakpoint as belonging to this driver and to the
 //     session that asked for it, so a #DB can be attributed without trusting
@@ -22,7 +22,8 @@ struct vcpu;
 //     answered from the driver's shadow of what the guest should see (our
 //     breakpoints are simply not there), and writes that would disable one of
 //     our breakpoints are swallowed;
-//   - exception bitmap bit 1 turns #DB into a VM-exit, so the hit is counted and
+//   - exception bitmap bit 1 turns #DB into a VM-exit, so the hit is counted
+//   and
 //     the exception never reaches the target's own debugger/fault handlers;
 //   - the thread-context path (`NtGetContextThread`/`NtSetContextThread`) is
 //     sanitised by hide/nt.cc on top of this module, because that is the path

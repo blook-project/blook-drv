@@ -127,9 +127,9 @@ NTSTATUS arm(const arm_request& request, info& out) {
     // The hardware rejects unaligned addresses for data breakpoints and any
     // access to a register width it cannot watch.
     const uint64_t width = request.length == wire::hwbreak_len_8   ? 8
-                          : request.length == wire::hwbreak_len_4 ? 4
-                          : request.length == wire::hwbreak_len_2 ? 2
-                                                                  : 1;
+                           : request.length == wire::hwbreak_len_4 ? 4
+                           : request.length == wire::hwbreak_len_2 ? 2
+                                                                   : 1;
     if (request.access != wire::hwbreak_execute &&
         (request.address % width) != 0)
         return STATUS_DATATYPE_MISALIGNMENT;

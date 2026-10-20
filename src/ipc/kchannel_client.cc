@@ -76,8 +76,8 @@ std::unique_ptr<attachment> begin(const attach_options& options,
                                   std::error_code& error) {
     error = {};
     kc_attach_opts opts{};
-    opts.region_size = options.region_size ? options.region_size
-                                           : default_region_size;
+    opts.region_size =
+        options.region_size ? options.region_size : default_region_size;
     opts.mode = options.mode;
     opts.cipher = KC_CIPHER_CHACHA20;
     opts.peer_pid = options.peer_pid;
@@ -167,16 +167,17 @@ std::error_code set_service_dword(const std::wstring& service_name,
                                   0, KEY_SET_VALUE, nullptr, &key, nullptr);
     if (result != ERROR_SUCCESS)
         return make_error(result);
-    result = RegSetValueExW(key, name.c_str(), 0, REG_DWORD,
-                            reinterpret_cast<const BYTE*>(&value),
-                            sizeof(value));
+    result =
+        RegSetValueExW(key, name.c_str(), 0, REG_DWORD,
+                       reinterpret_cast<const BYTE*>(&value), sizeof(value));
     RegCloseKey(key);
     return result == ERROR_SUCCESS ? std::error_code{} : make_error(result);
 }
 
 std::error_code install_service(const std::wstring& service_name,
                                 const std::wstring& image_path) {
-    SC_HANDLE manager = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CREATE_SERVICE);
+    SC_HANDLE manager =
+        OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CREATE_SERVICE);
     if (!manager)
         return make_error(GetLastError());
     SC_HANDLE service = CreateServiceW(
@@ -196,7 +197,8 @@ std::error_code start_service(const std::wstring& service_name) {
     SC_HANDLE manager = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CONNECT);
     if (!manager)
         return make_error(GetLastError());
-    SC_HANDLE service = OpenServiceW(manager, service_name.c_str(), SERVICE_START);
+    SC_HANDLE service =
+        OpenServiceW(manager, service_name.c_str(), SERVICE_START);
     if (!service) {
         const auto error = GetLastError();
         CloseServiceHandle(manager);
@@ -217,7 +219,8 @@ std::error_code stop_service(const std::wstring& service_name) {
     SC_HANDLE manager = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CONNECT);
     if (!manager)
         return make_error(GetLastError());
-    SC_HANDLE service = OpenServiceW(manager, service_name.c_str(), SERVICE_STOP);
+    SC_HANDLE service =
+        OpenServiceW(manager, service_name.c_str(), SERVICE_STOP);
     if (!service) {
         const auto error = GetLastError();
         CloseServiceHandle(manager);

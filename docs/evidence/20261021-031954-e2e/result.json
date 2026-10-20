@@ -1,0 +1,1546 @@
+{
+  "run": {
+    "started_utc": "2026-10-20T19:19:54.6448242Z",
+    "finished_utc": "2026-10-20T19:19:55.1355969Z",
+    "vm": "vm-drv",
+    "config": "releasedbg",
+    "bvmenv": "D:\\blook-kernel-project\\blook-vmware-environment\\build\\windows\\x64\\releasedbg\\bvmenv.exe",
+    "host": "MB-CLOUD / Microsoft Windows NT 10.0.26100.0",
+    "git_commit": "b07d45a",
+    "dry_run": true,
+    "aborted": false,
+    "abort_reason": "",
+    "artifact_root": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e",
+    "timeout_scale": 1.0,
+    "timeout_sentinel": 124,
+    "filter": "",
+    "from": "",
+    "keep_going": false,
+    "no_reset": false,
+    "error": ""
+  },
+  "cases": [
+    {
+      "id": "boot-baseline",
+      "name": "Guest boots, testsigning on, loader executable runs",
+      "category": "smoke",
+      "timeout_s": 180,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\boot-baseline",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "driver-install",
+      "name": "Install the signed driver service",
+      "category": "smoke",
+      "timeout_s": 180,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\driver-install",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "driver-start-solo",
+      "name": "Start the driver in solo mode (no profile) and query it",
+      "category": "smoke",
+      "timeout_s": 240,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\driver-start-solo",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "driver-stop",
+      "name": "Stop the driver and verify the service is stopped",
+      "category": "smoke",
+      "timeout_s": 180,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\driver-stop",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "driver-restart-10x",
+      "name": "Start/stop the driver ten times",
+      "category": "smoke",
+      "timeout_s": 900,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\driver-restart-10x",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "cpuid-nested-host",
+      "name": "CPUID 0x40000000 reports the VMware hypervisor vendor",
+      "category": "nested-virt",
+      "timeout_s": 120,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\cpuid-nested-host",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "nested-vmx-available",
+      "name": "Nested VMX is available or its degradation is documented",
+      "category": "nested-virt",
+      "timeout_s": 180,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\nested-vmx-available",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "hv-start-in-nested",
+      "name": "Start blook-drv while already running inside VMware",
+      "category": "hv-lifecycle",
+      "timeout_s": 300,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\hv-start-in-nested",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "hv-stop-in-nested",
+      "name": "Stop blook-drv cleanly in the nested guest",
+      "category": "hv-lifecycle",
+      "timeout_s": 180,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\hv-stop-in-nested",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "hv-start-stop-50x",
+      "name": "Fifty nested start/stop cycles",
+      "category": "hv-lifecycle",
+      "timeout_s": 1200,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\hv-start-stop-50x",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "antidetect-baseline",
+      "name": "Collect the no-driver anti-detection baseline",
+      "category": "antidetect",
+      "timeout_s": 240,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\antidetect-baseline",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "antidetect-with-hv",
+      "name": "Anti-detection suite adds no new FAILs with blook-drv running",
+      "category": "antidetect",
+      "timeout_s": 300,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\antidetect-with-hv",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "cpuid-hypervisor-bit-hidden",
+      "name": "CPUID hypervisor-present bit is hidden",
+      "category": "antidetect",
+      "timeout_s": 120,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\cpuid-hypervisor-bit-hidden",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "cpuid-vendor-leaves-empty",
+      "name": "Hypervisor vendor leaves 0x40000000+ are empty",
+      "category": "antidetect",
+      "timeout_s": 120,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\cpuid-vendor-leaves-empty",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "vmx-msr-filtered",
+      "name": "IA32_VMX_BASIC MSR is filtered for the target",
+      "category": "antidetect",
+      "timeout_s": 120,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\vmx-msr-filtered",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "tsc-timing-clean",
+      "name": "TSC/CPUID timing is not measurably hypervisor-skewed",
+      "category": "antidetect",
+      "timeout_s": 300,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\tsc-timing-clean",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "rdtscp-clean",
+      "name": "RDTSCP is consistent and not trapped",
+      "category": "antidetect",
+      "timeout_s": 180,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\rdtscp-clean",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "aperf-mperf-clean",
+      "name": "APERF/MPERF and invariant-TSC leaves are clean",
+      "category": "antidetect",
+      "timeout_s": 180,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\aperf-mperf-clean",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "exception-behaviour-clean",
+      "name": "Exception and fault behaviour matches bare metal",
+      "category": "antidetect",
+      "timeout_s": 180,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\exception-behaviour-clean",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "ept-hook-self-page-read",
+      "name": "Hooked page reads return the original bytes",
+      "category": "ept-hooks",
+      "timeout_s": 240,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\ept-hook-self-page-read",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "ept-hook-foreign-process",
+      "name": "Hook a foreign process, observe hits and detour output",
+      "category": "ept-hooks",
+      "timeout_s": 240,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\ept-hook-foreign-process",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "ept-hook-multi-same-page",
+      "name": "At least eight hooks share one page",
+      "category": "ept-hooks",
+      "timeout_s": 300,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\ept-hook-multi-same-page",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "ept-unhook-restores",
+      "name": "Unhook restores the original bytes and behaviour",
+      "category": "ept-hooks",
+      "timeout_s": 240,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\ept-unhook-restores",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "ept-hook-while-thread-executes",
+      "name": "Install/remove while the target thread spins in the function",
+      "category": "ept-hooks",
+      "timeout_s": 240,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\ept-hook-while-thread-executes",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "ept-hook-invalid-address",
+      "name": "Invalid hook address is rejected without a BSOD",
+      "category": "ept-hooks",
+      "timeout_s": 180,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\ept-hook-invalid-address",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "ept-hook-unload-under-load",
+      "name": "Unload the driver while a threaded hook target is active",
+      "category": "ept-hooks",
+      "timeout_s": 300,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\ept-hook-unload-under-load",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "swbreak-arm-hit-restore",
+      "name": "Software breakpoint arms, hits and restores",
+      "category": "swbreak",
+      "timeout_s": 240,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\swbreak-arm-hit-restore",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "swbreak-single-step-correctness",
+      "name": "MTF executes the original instruction exactly once",
+      "category": "swbreak",
+      "timeout_s": 240,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\swbreak-single-step-correctness",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "swbreak-rearm-after-hit",
+      "name": "Software breakpoint can be re-armed after a hit",
+      "category": "swbreak",
+      "timeout_s": 240,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\swbreak-rearm-after-hit",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "swbreak-multi-hooks",
+      "name": "Multiple software breakpoints coexist",
+      "category": "swbreak",
+      "timeout_s": 300,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\swbreak-multi-hooks",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "swbreak-disarm-race",
+      "name": "Disarm racing an executing target is safe",
+      "category": "swbreak",
+      "timeout_s": 300,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\swbreak-disarm-race",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "swbreak-hook-unhook-1000x",
+      "name": "One thousand software-breakpoint hook/unhook cycles",
+      "category": "swbreak",
+      "timeout_s": 1200,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\swbreak-hook-unhook-1000x",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "hwbreak-arm-hit",
+      "name": "Hardware breakpoint arms and fires",
+      "category": "hwbreak",
+      "timeout_s": 240,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\hwbreak-arm-hit",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "hwbreak-dr7-query-sanitised",
+      "name": "GetThreadContext hides the target DR registers",
+      "category": "hwbreak",
+      "timeout_s": 240,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\hwbreak-dr7-query-sanitised",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "hwbreak-scan-clean",
+      "name": "A scanner-style DR read loop sees no breakpoint",
+      "category": "hwbreak",
+      "timeout_s": 300,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\hwbreak-scan-clean",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "hwbreak-setcontext-does-not-clobber",
+      "name": "Target NtSetContextThread does not disable our breakpoint",
+      "category": "hwbreak",
+      "timeout_s": 240,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\hwbreak-setcontext-does-not-clobber",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "hwbreak-multi-index",
+      "name": "DR0 through DR3 can be armed independently",
+      "category": "hwbreak",
+      "timeout_s": 240,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\hwbreak-multi-index",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "hwbreak-disarm",
+      "name": "Hardware breakpoint disarms cleanly",
+      "category": "hwbreak",
+      "timeout_s": 180,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\hwbreak-disarm",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "hwbreak-unload-with-bp-armed",
+      "name": "Unload with a hardware breakpoint still armed",
+      "category": "hwbreak",
+      "timeout_s": 300,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\hwbreak-unload-with-bp-armed",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "self-hide-module-list",
+      "name": "SystemModuleInformation does not list blook-drv",
+      "category": "self-hide",
+      "timeout_s": 240,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\self-hide-module-list",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "self-hide-device-symlink",
+      "name": "The BlookDrv device and symlink are not discoverable",
+      "category": "self-hide",
+      "timeout_s": 180,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\self-hide-device-symlink",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "self-hide-registry",
+      "name": "The SCM service key is removed",
+      "category": "self-hide",
+      "timeout_s": 180,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\self-hide-registry",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "self-hide-pool-tag",
+      "name": "A pool-tag scan finds no project-specific tag",
+      "category": "self-hide",
+      "timeout_s": 240,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\self-hide-pool-tag",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "trace-scan-clean",
+      "name": "The driver trace_scan reports zero findings",
+      "category": "self-hide",
+      "timeout_s": 180,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\trace-scan-clean",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "self-hide-then-unload",
+      "name": "Clean unload after self-hide, then sc query fails",
+      "category": "self-hide",
+      "timeout_s": 300,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\self-hide-then-unload",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "kchannel-bad-payload",
+      "name": "Truncated/oversized/garbage kchannel payloads are rejected",
+      "category": "invalid-input",
+      "timeout_s": 180,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\kchannel-bad-payload",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "kchannel-unknown-opcode",
+      "name": "Unknown kchannel opcodes are rejected",
+      "category": "invalid-input",
+      "timeout_s": 180,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\kchannel-unknown-opcode",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "kchannel-no-attach",
+      "name": "Calls without a transport session fail cleanly",
+      "category": "invalid-input",
+      "timeout_s": 180,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\kchannel-no-attach",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "kchannel-double-attach",
+      "name": "A second attach returns KC_ERR_ALREADY",
+      "category": "invalid-input",
+      "timeout_s": 180,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\kchannel-double-attach",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "kchannel-detach-then-call",
+      "name": "Calls after detach are rejected",
+      "category": "invalid-input",
+      "timeout_s": 180,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\kchannel-detach-then-call",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "invalid-parameters-table",
+      "name": "A table of malformed loader requests is rejected",
+      "category": "invalid-input",
+      "timeout_s": 300,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\invalid-parameters-table",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "hook-stress-1000",
+      "name": "One thousand install/remove cycles on rotating addresses",
+      "category": "stress",
+      "timeout_s": 1200,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\hook-stress-1000",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "concurrent-processes",
+      "name": "Four target processes are hooked simultaneously",
+      "category": "stress",
+      "timeout_s": 400,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\concurrent-processes",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "memory-pressure",
+      "name": "Hook/unhook under 80% commit pressure",
+      "category": "stress",
+      "timeout_s": 900,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\memory-pressure",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "unload-under-load",
+      "name": "Stop the driver while target threads are executing",
+      "category": "crash-safety",
+      "timeout_s": 300,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\unload-under-load",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": false
+    },
+    {
+      "id": "watchdog-detects-hang",
+      "name": "Synthetic hang is classified timeout and the VM stays alive",
+      "category": "crash-safety",
+      "timeout_s": 5,
+      "started_utc": null,
+      "duration_s": 0.0,
+      "status": "skip",
+      "exit_code": null,
+      "artifacts": {
+        "dir": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-031954-e2e\\cases\\watchdog-detects-hang",
+        "stdout": null,
+        "stderr": null,
+        "state_json": null,
+        "screenshot": null,
+        "vmware_log_tail": null
+      },
+      "assertions": [
+        {
+          "name": "dry-run",
+          "ok": true,
+          "detail": "case was not executed"
+        }
+      ],
+      "notes": "dry run: not executed",
+      "expected": true
+    }
+  ],
+  "summary": {
+    "total": 56,
+    "pass": 0,
+    "fail": 0,
+    "skip": 56,
+    "crash": 0,
+    "timeout": 0,
+    "expected_timeout": 0
+  },
+  "dry_run": true
+}

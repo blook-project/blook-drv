@@ -4,6 +4,7 @@
 #include "vmx.h"
 #include "vcpu.h"
 #include "segment.h"
+#include "nested.h"
 
 namespace hv {
 
@@ -19,7 +20,11 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     pin_based_ctrl.flags = 0;
     pin_based_ctrl.virtual_nmi = 1;
     pin_based_ctrl.nmi_exiting = 1;
-    pin_based_ctrl.activate_vmx_preemption_timer = 1;
+    // The preemption timer is not guaranteed to be exposed by a nested host; a
+    // control the capability MSR says is disallowed makes VM entry fail with
+    // "invalid control field", which presents as a hang. Ask first.
+    pin_based_ctrl.activate_vmx_preemption_timer =
+        nested::preemption_timer_supported() ? 1 : 0;
     write_ctrl_pin_based_safe(pin_based_ctrl);
 
     // 3.24.6.2
@@ -30,6 +35,9 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     // The guest clock is maintained through the TSC offset so a world switch
     // does not show up as elapsed guest time.
     proc_based_ctrl.use_tsc_offsetting = 1;
+    // Debug-register accesses are intercepted so the driver can hide its own
+    // hardware breakpoints and sanitise what the guest reads (hwbreak).
+    proc_based_ctrl.mov_dr_exiting = 1;
     proc_based_ctrl.activate_secondary_controls = 1;
     write_ctrl_proc_based_safe(proc_based_ctrl);
 
@@ -37,10 +45,12 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     ia32_vmx_procbased_ctls2_register proc_based_ctrl2;
     proc_based_ctrl2.flags = 0;
     proc_based_ctrl2.enable_ept = 1;
-    proc_based_ctrl2.enable_rdtscp = 1;
-    proc_based_ctrl2.enable_vpid = 1;
-    proc_based_ctrl2.enable_invpcid = 1;
-    proc_based_ctrl2.enable_xsaves = 1;
+    // Optional second-level controls: each one is only requested when the
+    // capability MSRs allow it on this CPU / nested host.
+    proc_based_ctrl2.enable_rdtscp = nested::rdtscp_supported() ? 1 : 0;
+    proc_based_ctrl2.enable_vpid = nested::vpid_supported() ? 1 : 0;
+    proc_based_ctrl2.enable_invpcid = nested::invpcid_supported() ? 1 : 0;
+    proc_based_ctrl2.enable_xsaves = nested::xsaves_supported() ? 1 : 0;
     proc_based_ctrl2.enable_user_wait_pause = 1;
     proc_based_ctrl2.conceal_vmx_from_pt = 1;
     write_ctrl_proc_based2_safe(proc_based_ctrl2);
@@ -73,7 +83,9 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
         (vmx_vmread(VMCS_CTRL_PRIMARY_VMEXIT_CONTROLS) >> 12) & 1;
 
     // 3.24.6.3
-    vmx_vmwrite(VMCS_CTRL_EXCEPTION_BITMAP, 0);
+    // Bits 1 (#DB) and 3 (#BP) are always intercepted: the software and
+    // hardware breakpoint hooks consume those exceptions (exit-handlers.cpp).
+    vmx_vmwrite(VMCS_CTRL_EXCEPTION_BITMAP, (1u << 1) | (1u << 3));
 
     // set up the mask and match in such a way so
     // that a vm-exit is never triggered for a pagefault
@@ -141,7 +153,8 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     // real machine delivers them without exiting.
     vmx_vmwrite(
         VMCS_CTRL_EXCEPTION_BITMAP,
-        hv::fault_trace_enabled() ? hv::fault_trace_exception_bitmap : 0);
+        ((1u << 1) | (1u << 3)) |
+            (hv::fault_trace_enabled() ? hv::fault_trace_exception_bitmap : 0));
 
     vmx_vmwrite(VMCS_CTRL_VMEXIT_MSR_STORE_COUNT, hv::timing_hidden() ? 4 : 0);
     vmx_vmwrite(VMCS_CTRL_VMEXIT_MSR_STORE_ADDRESS,

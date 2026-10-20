@@ -35,7 +35,9 @@ class attachment final {
     ~attachment();
 
     [[nodiscard]] void* handle() const noexcept { return impl_; }
-    [[nodiscard]] explicit operator bool() const noexcept { return impl_ != nullptr; }
+    [[nodiscard]] explicit operator bool() const noexcept {
+        return impl_ != nullptr;
+    }
 
    private:
     friend std::unique_ptr<attachment> begin(const attach_options&,
@@ -65,8 +67,8 @@ int call(attachment& value, uint16_t op, const void* in, uint32_t in_len,
 void detach(std::unique_ptr<attachment> value);
 
 // Registry/SCM helpers for the service-load development path (sc create/start).
-// They are what the loader CLI and the e2e runner use; a manual-map client never
-// calls them.
+// They are what the loader CLI and the e2e runner use; a manual-map client
+// never calls them.
 std::error_code write_service_bootstrap(const std::wstring& service_name,
                                         const attachment& value);
 std::error_code install_service(const std::wstring& service_name,

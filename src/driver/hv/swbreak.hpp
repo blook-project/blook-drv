@@ -12,8 +12,8 @@ struct vcpu;
 // The hook itself is the existing EPT shadow-page mechanism: the target process
 // executes a page whose shadow copy has 0xCC at the breakpoint address while
 // every guest *read* of that page still returns the original bytes (so the
-// target cannot discover the hook by comparing its own memory). What this module
-// adds is the breakpoint semantic on top:
+// target cannot discover the hook by comparing its own memory). What this
+// module adds is the breakpoint semantic on top:
 //
 //   1. the shadow page holds 0xCC at the breakpoint; the CPU raises #BP (#BP is
 //      a trap, so the RIP the processor reports is already one byte past it);

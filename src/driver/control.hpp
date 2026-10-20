@@ -19,8 +19,8 @@ namespace blook::control {
 // Identity of the peer that is allowed to issue commands. The transport fills
 // it once at attach time; it never changes for the lifetime of a session.
 struct context {
-    uint32_t pid{};       // peer process id (hooks default to this process)
-    uint64_t token{};     // hook ownership token, unique per session
+    uint32_t pid{};        // peer process id (hooks default to this process)
+    uint64_t token{};      // hook ownership token, unique per session
     bool administrator{};  // peer token is a member of Administrators
     bool enabled{};        // session may modify hypervisor state
 };
@@ -32,7 +32,8 @@ NTSTATUS dispatch(context& caller, uint16_t op, const void* in, uint32_t in_len,
                   void* out, uint32_t* out_cap, uint32_t* out_len);
 
 // Applies the hide-self request (also used by the solo/dev path).
-NTSTATUS dispatch_hide_self(context& caller, const wire::HideSelfRequest& request,
+NTSTATUS dispatch_hide_self(context& caller,
+                            const wire::HideSelfRequest& request,
                             wire::HideSelfResponse& reply);
 
 // Nested-virtualisation / degradation report, also used by the driver startup

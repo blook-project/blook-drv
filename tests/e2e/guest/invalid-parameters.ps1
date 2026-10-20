@@ -3,6 +3,10 @@
 # invalid-input category; the payload-level cases live in kchannel-fuzz.ps1.
 . "$PSScriptRoot\lib.ps1"
 
+if (-not (Test-Path -LiteralPath $script:Loader)) {
+    Fail-Guest "missing $($script:Loader); cannot exercise the loader parser"
+}
+
 $cases = @(
     @{ Name = 'unknown-command'; Args = @('frobnicate') },
     @{ Name = 'help-extra'; Args = @('help', 'extra') },

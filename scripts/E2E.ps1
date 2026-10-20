@@ -108,6 +108,7 @@ $script:RunDir = $null
 $script:LogPath = $null
 $script:BvmenvPath = $null
 $script:BvmenvFound = $false
+$script:BvmenvSupportsJson = $false
 $script:Cases = @()
 $script:Results = [System.Collections.Generic.List[object]]::new()
 $script:Aborted = $false
@@ -307,7 +308,8 @@ function Invoke-Native {
 }
 
 # ---------------------------------------------------------------------------
-# bvmenv adapter: the ONLY place that knows the CLI shape
+# bvmenv adapter: BvmenvCli is the ONLY place that knows the CLI shape.
+# If env changes an option or a sentinel, edit this section only.
 # ---------------------------------------------------------------------------
 
 function Invoke-Bvmenv {
@@ -369,6 +371,41 @@ function Resolve-Bvmenv {
     }
     Write-Log 'bvmenv not found; dry/validate mode continues with placeholders.' -Level WARN
     return $null
+}
+
+function Initialize-BvmenvCapabilities {
+    # bvmenv 0.1.0 accepts a command-local --json option; `exec <vm> --json`
+    # then prints an ExecResult object instead of the guest's raw stream.
+    # Probe --help once and use the richer output when available.  A
+    # contract-style CLI falls back to "process exit code is the guest exit
+    # code" and the human `exit_code : N` line.
+    $script:BvmenvSupportsJson = $false
+    if (-not $script:BvmenvFound -or $script:IsDryRun -or $script:IsValidateOnly) { return }
+    try {
+        $help = Invoke-Native -FilePath $script:BvmenvPath -Arguments @('--help') -TimeoutSeconds 15
+        $text = ($help.StdOut + "`n" + $help.StdErr)
+        if ($text -match '(?i)--json' -and $text -match '(?i)exec') {
+            $script:BvmenvSupportsJson = $true
+            Write-Log 'bvmenv supports --json; exec/state JSON will be parsed.'
+        }
+    } catch {
+        Write-Log ('bvmenv capability probe failed (using contract mode): ' + $_.Exception.Message) -Level WARN
+    }
+}
+
+function Start-VmIfNeeded {
+    # reset on bvmenv 0.1.0 leaves the VM powered off unless --wait is passed.
+    # A contract-style reset may already leave it running, so only start when
+    # the state query says off.
+    $query = Save-VmState -OutputDir $script:RunDir -Prefix 'state-before-start' -NoSave
+    if (-not $query.Ok) { return }
+    $power = [string](Get-ObjectProperty -Object $query.Data -Name 'power')
+    if ($power -ne 'off') { return }
+    Write-Log 'VM is off after reset; starting it.'
+    $start = Invoke-Bvmenv -Arguments @('start', $Vm) -TimeoutSeconds 300
+    if ($start.ExitCode -ne 0) {
+        throw "bvmenv start failed after reset ($($start.ExitCode)): $($start.StdErr)"
+    }
 }
 
 # ---------------------------------------------------------------------------
@@ -560,7 +597,7 @@ function Test-CaseMatrix {
                     switch ([string]$key) {
                         'state_classification' {
                             $v = [string]$postChecks[$key]
-                            if (@('desktop', 'login', 'off', 'bsod', 'hang') -notcontains $v) {
+                            if (@('desktop', 'login', 'off', 'bsod', 'hang', 'black', 'boot', 'unknown') -notcontains $v) {
                                 $errors.Add("$label post_checks.state_classification has invalid value '$v'.")
                             }
                         }
@@ -720,6 +757,59 @@ function ConvertFrom-EmbeddedJson {
     try { return ($json | ConvertFrom-Json -ErrorAction Stop) } catch { return $null }
 }
 
+function ConvertTo-FlatVmState {
+    # bvmenv 0.1.0 prints the nested bvmenv.state.v1 schema:
+    #   { power, tools:{state,running}, screen:{classification,stop_code,
+    #     screenshot}, vmx, log:{issues}, ... }
+    # The user-facing contract is flatter.  Keep both: state.json preserves the
+    # original fields and adds the aliases the harness asserts on.
+    param($Data)
+    if ($null -eq $Data) { return $null }
+    $flat = [ordered]@{}
+    if ($Data -is [System.Collections.IDictionary]) {
+        foreach ($key in $Data.Keys) { $flat[[string]$key] = $Data[$key] }
+    } else {
+        foreach ($property in $Data.PSObject.Properties) { $flat[$property.Name] = $property.Value }
+    }
+
+    $screen = Get-ObjectProperty -Object $Data -Name 'screen'
+    $tools = Get-ObjectProperty -Object $Data -Name 'tools'
+
+    $classification = Get-ObjectProperty -Object $Data -Name 'classification'
+    if (-not $classification) { $classification = Get-ObjectProperty -Object $screen -Name 'classification' }
+    $flat['classification'] = $classification
+
+    $stopCode = Get-ObjectProperty -Object $Data -Name 'stop_code'
+    if (-not $stopCode) { $stopCode = Get-ObjectProperty -Object $screen -Name 'stop_code' }
+    $flat['stop_code'] = $stopCode
+
+    $screenshot = Get-ObjectProperty -Object $Data -Name 'screenshot'
+    if (-not $screenshot) { $screenshot = Get-ObjectProperty -Object $screen -Name 'screenshot' }
+    $flat['screenshot'] = $screenshot
+
+    $heartbeat = Get-ObjectProperty -Object $Data -Name 'tools_heartbeat'
+    if ($null -eq $heartbeat) { $heartbeat = Get-ObjectProperty -Object $tools -Name 'running' }
+    if ($null -eq $heartbeat) {
+        $heartbeat = ((Get-ObjectProperty -Object $tools -Name 'state') -eq 'running')
+    }
+    $flat['tools_heartbeat'] = [bool]$heartbeat
+
+    $vmwareLog = Get-ObjectProperty -Object $Data -Name 'vmware_log'
+    if (-not $vmwareLog) {
+        $vmx = [string](Get-ObjectProperty -Object $Data -Name 'vmx')
+        if ($vmx) {
+            try { $vmwareLog = Join-Path (Split-Path -Parent $vmx) 'vmware.log' } catch { }
+        }
+    }
+    $flat['vmware_log'] = $vmwareLog
+
+    if (-not $flat.Contains('errors')) {
+        $log = Get-ObjectProperty -Object $Data -Name 'log'
+        $flat['errors'] = Get-ObjectProperty -Object $log -Name 'issues'
+    }
+    return [pscustomobject]$flat
+}
+
 function Save-VmState {
     param(
         [Parameter(Mandatory = $true)][string]$OutputDir,
@@ -728,7 +818,7 @@ function Save-VmState {
     )
     $timeout = [int][Math]::Max(15, [Math]::Ceiling(60 * $TimeoutScale))
     $r = Invoke-Bvmenv -Arguments @('state', $Vm, '--json') -TimeoutSeconds $timeout
-    $data = ConvertFrom-EmbeddedJson -Text ($r.StdOut + "`n" + $r.StdErr)
+    $data = ConvertTo-FlatVmState -Data (ConvertFrom-EmbeddedJson -Text ($r.StdOut + "`n" + $r.StdErr))
     $stateFile = $null
     $screenshotFile = $null
     $vmwareLogFile = $null
@@ -784,7 +874,9 @@ function Save-VmState {
     }
 
     return [pscustomobject]@{
-        Ok              = ($null -ne $data -and -not $r.TimedOut -and $r.ExitCode -eq 0)
+        # bvmenv 0.1.0 returns 4 when it suspects a hang but still emits a
+        # complete state JSON; 2 is an error object with no state fields.
+        Ok              = ($null -ne $data -and -not $r.TimedOut -and $r.ExitCode -in @(0, 4))
         Data            = $data
         Raw             = ($r.StdOut + "`n" + $r.StdErr)
         ExitCode        = $r.ExitCode
@@ -894,6 +986,7 @@ function Reset-Vm {
     if ($r.ExitCode -ne 0) {
         throw "bvmenv reset failed ($($r.ExitCode)): $($r.StdErr)"
     }
+    Start-VmIfNeeded
     Wait-VmReady
     Initialize-Guest
 }
@@ -931,6 +1024,61 @@ function Test-ContainsAny {
 # per-case execution
 # ---------------------------------------------------------------------------
 
+function Invoke-CaseExec {
+    # bvmenv 0.1.0 returns 1 for any non-zero guest exit and prints raw guest
+    # output.  With `exec <vm> --json` it prints an ExecResult with the real
+    # exit_code/timed_out and host paths for stdout/stderr; prefer that.  The
+    # switch is command-local in 0.1.0 (a leading global --json prints help),
+    # and contract-style CLIs that only return the guest exit code still work.
+    param(
+        [Parameter(Mandatory = $true)][string[]]$Arguments,
+        [int]$TimeoutSeconds = 120
+    )
+    if ($script:BvmenvSupportsJson -and $Arguments.Count -ge 2) {
+        $callArgs = @($Arguments[0], $Arguments[1], '--json') + @($Arguments | Select-Object -Skip 2)
+    } else {
+        $callArgs = $Arguments
+    }
+    $r = Invoke-Bvmenv -Arguments $callArgs -TimeoutSeconds $TimeoutSeconds -Echo
+
+    $json = ConvertFrom-EmbeddedJson -Text $r.StdOut
+    if ($json -and $null -ne (Get-ObjectProperty -Object $json -Name 'exit_code')) {
+        $timedOut = [bool](Get-ObjectProperty -Object $json -Name 'timed_out')
+        $code = if ($timedOut) { $script:TimeoutSentinel } else { [int](Get-ObjectProperty -Object $json -Name 'exit_code') }
+        $guestOut = ''
+        $guestErr = ''
+        $outPath = [string](Get-ObjectProperty -Object $json -Name 'stdout_path')
+        $errPath = [string](Get-ObjectProperty -Object $json -Name 'stderr_path')
+        if ($outPath -and (Test-Path -LiteralPath $outPath -PathType Leaf)) {
+            try { $guestOut = [IO.File]::ReadAllText($outPath) } catch { }
+        } else {
+            $guestOut = [string](Get-ObjectProperty -Object $json -Name 'stdout_tail')
+        }
+        if ($errPath -and (Test-Path -LiteralPath $errPath -PathType Leaf)) {
+            try { $guestErr = [IO.File]::ReadAllText($errPath) } catch { }
+        } else {
+            $guestErr = [string](Get-ObjectProperty -Object $json -Name 'stderr_tail')
+        }
+        $r.StdOut = $guestOut
+        $r.StdErr = $guestErr
+        $r.ExitCode = $code
+        $r.TimedOut = $timedOut
+        $r | Add-Member -NotePropertyName ExecJson -NotePropertyValue $json -Force
+        return $r
+    }
+
+    # No ExecResult JSON: bvmenv's human printer includes the guest exit code.
+    $match = [regex]::Match($r.StdOut, '(?m)^exit_code\s*:\s*(\d+)(\s*\(timed out\))?')
+    if ($match.Success) {
+        $r.ExitCode = [int]$match.Groups[1].Value
+        if ($match.Groups[2].Value) {
+            $r.TimedOut = $true
+            $r.ExitCode = $script:TimeoutSentinel
+        }
+    }
+    return $r
+}
+
 function Invoke-Case {
     param([Parameter(Mandatory = $true)]$Case)
 
@@ -961,17 +1109,27 @@ function Invoke-Case {
     Write-Log ("--- case {0} [{1}/{2}] timeout={3}s admin={4}" -f `
             $Case.Id, $Case.Category, $Case.Name, $timeout, $Case.RequiresAdmin) -Level STEP
     Write-Log ('  $ bvmenv ' + (Format-CommandLine -FilePath 'exec' -Arguments @($execArgs | Select-Object -Skip 1)))
-    $exec = Invoke-Bvmenv -Arguments $execArgs -TimeoutSeconds ($timeout + 60) -Echo
+    $exec = Invoke-CaseExec -Arguments $execArgs -TimeoutSeconds ($timeout + 60)
 
     Write-Utf8Text -Path (Join-Path $caseDir 'stdout.txt') -Text $exec.StdOut
     Write-Utf8Text -Path (Join-Path $caseDir 'stderr.txt') -Text $exec.StdErr
 
     # bvmenv exec may print a JSON descriptor with additional artifacts.  Keep
     # whatever host-side files it points at without depending on that shape.
-    $execJson = ConvertFrom-EmbeddedJson -Text $exec.StdOut
+    $execJson = if ($exec.PSObject.Properties['ExecJson']) {
+        $exec.ExecJson
+    } else {
+        ConvertFrom-EmbeddedJson -Text $exec.StdOut
+    }
     if ($execJson) {
         Write-Utf8Text -Path (Join-Path $caseDir 'bvmenv-exec.json') -Text ($execJson | ConvertTo-Json -Depth 10)
-        foreach ($pair in @(@{ Prop = 'stdout'; Name = 'guest-stdout.txt' }, @{ Prop = 'stderr'; Name = 'guest-stderr.txt' })) {
+        $pairs = @(
+            @{ Prop = 'stdout_path'; Name = 'guest-stdout.txt' },
+            @{ Prop = 'stderr_path'; Name = 'guest-stderr.txt' },
+            @{ Prop = 'stdout'; Name = 'guest-stdout.txt' },
+            @{ Prop = 'stderr'; Name = 'guest-stderr.txt' }
+        )
+        foreach ($pair in $pairs) {
             $path = [string](Get-ObjectProperty -Object $execJson -Name $pair.Prop)
             if ($path -and (Test-Path -LiteralPath $path -PathType Leaf)) {
                 try { Copy-Item -LiteralPath $path -Destination (Join-Path $caseDir $pair.Name) -Force } catch { }
@@ -993,7 +1151,7 @@ function Invoke-Case {
     $stateClass = [string](Get-ObjectProperty -Object $state.Data -Name 'classification')
     $stopCode = [string](Get-ObjectProperty -Object $state.Data -Name 'stop_code')
     $power = [string](Get-ObjectProperty -Object $state.Data -Name 'power')
-    $isCrashState = (-not $state.Ok) -or ($stateClass -in @('bsod', 'hang', 'off'))
+    $isCrashState = (-not $state.Ok) -or ($stateClass -in @('bsod', 'hang', 'off')) -or ($power -eq 'off')
     $isTimeout = ($exec.TimedOut -or $exec.ExitCode -eq $script:TimeoutSentinel)
     $isSkip = ($exec.ExitCode -eq 77 -and $Case.AllowSkip)
 
@@ -1447,6 +1605,7 @@ try {
     $script:BvmenvPath = Resolve-Bvmenv -Explicit $Bvmenv
     $script:BvmenvFound = [bool]$script:BvmenvPath
     if ($script:BvmenvFound) { Write-Log "bvmenv: $($script:BvmenvPath)" }
+    Initialize-BvmenvCapabilities
 
     if ($NoBuild) {
         Write-Log '-NoBuild: using the existing build outputs.'
@@ -1496,6 +1655,7 @@ try {
                     throw "could not create or reset VM '$Vm' (create=$($create.ExitCode), reset=$($reset.ExitCode)): $($reset.StdErr)"
                 }
             }
+            Start-VmIfNeeded
             Wait-VmReady
             Initialize-Guest
         }
@@ -1533,7 +1693,7 @@ try {
     $unexpectedTimeouts = $summary.timeout - $summary.expected_timeout
     if ($script:RunError) { $exitCode = 3 }
     elseif ($summary.crash -gt 0 -or $summary.fail -gt 0 -or $unexpectedTimeouts -gt 0) { $exitCode = 1 }
-    elseif ($summary.pass -eq $summary.total) { $exitCode = 0 }
+    elseif (($summary.pass + $summary.expected_timeout) -eq $summary.total) { $exitCode = 0 }
     elseif ($summary.skip -gt 0) { $exitCode = 2 }
     else { $exitCode = 1 }
 

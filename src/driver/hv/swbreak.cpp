@@ -88,9 +88,8 @@ NTSTATUS arm(const arm_request& request, info& out) {
     slot->flags = request.flags;
     slot->hits = 0;
     const auto id = (static_cast<uint64_t>(request.pid) << 32) | next_id++;
-    InterlockedExchange64(
-        reinterpret_cast<volatile LONG64*>(&slot->id),
-        static_cast<LONG64>(id));
+    InterlockedExchange64(reinterpret_cast<volatile LONG64*>(&slot->id),
+                          static_cast<LONG64>(id));
 
     out.id = id;
     out.hits = 0;
@@ -177,8 +176,7 @@ bool breakpoint_hit(uint64_t int3_address, uint64_t& address, uint64_t& id) {
         if (item.id && item.address == int3_address) {
             id = item.id;
             address = item.address;
-            InterlockedIncrement(
-                reinterpret_cast<volatile LONG*>(&item.hits));
+            InterlockedIncrement(reinterpret_cast<volatile LONG*>(&item.hits));
             return true;
         }
     }

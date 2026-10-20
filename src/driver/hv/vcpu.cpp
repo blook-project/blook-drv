@@ -141,6 +141,12 @@ static void enable_mtrr_exiting(vcpu* const cpu) {
     ia32_mtrr_capabilities_register mtrr_cap;
     mtrr_cap.flags = __readmsr(IA32_MTRR_CAPABILITIES);
 
+    // Hiding CPUID.1:ECX[5] (VMX) is only consistent if the VMX capability MSRs
+    // and IA32_FEATURE_CONTROL give the same answer a non-VT-x CPU would.
+    enable_exit_for_msr_read(cpu->msr_bitmap, IA32_FEATURE_CONTROL, true);
+    for (uint32_t msr = IA32_VMX_BASIC; msr <= 0x48F; ++msr)
+        enable_exit_for_msr_read(cpu->msr_bitmap, msr, true);
+
     enable_exit_for_msr_write(cpu->msr_bitmap, IA32_MTRR_DEF_TYPE, true);
 
     // enable exiting for fixed-range MTRRs
@@ -205,6 +211,9 @@ static void dispatch_vm_exit(vcpu* const cpu, vmx_vmexit_reason const reason) {
             break;
         case VMX_EXIT_REASON_MOV_CR:
             handle_mov_cr(cpu);
+            break;
+        case VMX_EXIT_REASON_MOV_DR:
+            handle_mov_dr(cpu);
             break;
         case VMX_EXIT_REASON_EXECUTE_RDMSR:
             emulate_rdmsr(cpu);

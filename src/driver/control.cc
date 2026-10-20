@@ -90,16 +90,16 @@ NTSTATUS query(uint32_t version, wire::QueryResponse& reply) {
     reply.abi = wire::abi_version;
     reply.backend_status = STATUS_SUCCESS;
     reply.window_hooks = hide::window_hook_count();
-    reply.hv_flags = hv::nested::flags() | (hv::ghv.running
-                                                ? wire::hv_flag_running
-                                                : 0u);
+    reply.hv_flags =
+        hv::nested::flags() | (hv::ghv.running ? wire::hv_flag_running : 0u);
     reply.swbreak_count = hv::swbreak::count();
     reply.hwbreak_count = hv::hwbreak::count();
     reply.self_hidden = hide::self::module_list_hidden() ? 1u : 0u;
     return STATUS_SUCCESS;
 }
 
-NTSTATUS query_page(const context& caller, const wire::QueryPageRequest& request,
+NTSTATUS query_page(const context& caller,
+                    const wire::QueryPageRequest& request,
                     wire::QueryPageResponse& reply) {
     if (request.reserved || request.reserved2)
         return STATUS_INVALID_PARAMETER;
@@ -125,15 +125,13 @@ void fill_hv_info(wire::HvInfoResponse& reply) {
     reply.vmx_basic = nested.vmx_basic;
     reply.nested_cr4_fixed0 = nested.cr4_fixed0;
     reply.nested_cr4_fixed1 = nested.cr4_fixed1;
-    reply.capabilities = (nested.vmx_msr_readable ? 1ull : 0ull) |
-                         (nested.vp_assist ? 2ull : 0ull) |
-                         (nested.preemption_timer ? 4ull : 0ull) |
-                         (nested.ept_ad ? 8ull : 0ull) |
-                         (nested.vpid ? 16ull : 0ull) |
-                         (nested.invpcid ? 32ull : 0ull) |
-                         (nested.xsaves ? 64ull : 0ull) |
-                         (nested.rdtscp ? 128ull : 0ull) |
-                         (nested.mtf ? 256ull : 0ull);
+    reply.capabilities =
+        (nested.vmx_msr_readable ? 1ull : 0ull) |
+        (nested.vp_assist ? 2ull : 0ull) |
+        (nested.preemption_timer ? 4ull : 0ull) |
+        (nested.ept_ad ? 8ull : 0ull) | (nested.vpid ? 16ull : 0ull) |
+        (nested.invpcid ? 32ull : 0ull) | (nested.xsaves ? 64ull : 0ull) |
+        (nested.rdtscp ? 128ull : 0ull) | (nested.mtf ? 256ull : 0ull);
     reply.degradation_reasons = nested.flags;
 }
 
@@ -293,12 +291,13 @@ NTSTATUS dispatch(context& caller, uint16_t op, const void* in, uint32_t in_len,
                 MmGetPhysicalAddress(reinterpret_cast<void*>(request.address))
                     .QuadPart;
             reply->pid = caller.pid;
-            reply->kernel_physical = MmGetPhysicalAddress(&hv::g_stats).QuadPart;
+            reply->kernel_physical =
+                MmGetPhysicalAddress(&hv::g_stats).QuadPart;
             {
                 blook::page_lock lock;
-                const auto status = lock.acquire(
-                    reinterpret_cast<void*>(request.address), UserMode,
-                    IoReadAccess);
+                const auto status =
+                    lock.acquire(reinterpret_cast<void*>(request.address),
+                                 UserMode, IoReadAccess);
                 reply->locked_status =
                     static_cast<uint64_t>(static_cast<uint32_t>(status));
                 reply->locked_pfn = NT_SUCCESS(status) ? lock.pfn() : 0;
@@ -325,8 +324,9 @@ NTSTATUS dispatch(context& caller, uint16_t op, const void* in, uint32_t in_len,
                         request.role != wire::hide_role_target)
                         return STATUS_INVALID_PARAMETER;
                     hide::pin(request.pid ? request.pid : caller.pid,
-                              request.role == wire::hide_role_tool ? role::tool
-                                                                  : role::target);
+                              request.role == wire::hide_role_tool
+                                  ? role::tool
+                                  : role::target);
                     return STATUS_SUCCESS;
                 case 3:
                     hide::unpin(request.pid ? request.pid : caller.pid);
@@ -383,9 +383,9 @@ NTSTATUS dispatch(context& caller, uint16_t op, const void* in, uint32_t in_len,
             if (!reply)
                 return STATUS_BUFFER_TOO_SMALL;
             watch::fetch_result fetched{};
-            const auto status = watch::fetch(request.id, caller.token,
-                                             request.offset, reply->data,
-                                             request.length, fetched);
+            const auto status =
+                watch::fetch(request.id, caller.token, request.offset,
+                             reply->data, request.length, fetched);
             if (!NT_SUCCESS(status))
                 return status;
             reply->state = fetched.state;
@@ -399,7 +399,8 @@ NTSTATUS dispatch(context& caller, uint16_t op, const void* in, uint32_t in_len,
             wire::QueryPageRequest request{};
             if (!parse(in, in_len, request))
                 return STATUS_REVISION_MISMATCH;
-            auto* reply = prepare<wire::QueryPageResponse>(out, out_cap, out_len);
+            auto* reply =
+                prepare<wire::QueryPageResponse>(out, out_cap, out_len);
             if (!reply)
                 return STATUS_BUFFER_TOO_SMALL;
             return query_page(caller, request, *reply);
@@ -431,7 +432,8 @@ NTSTATUS dispatch(context& caller, uint16_t op, const void* in, uint32_t in_len,
                 return STATUS_ACCESS_DENIED;
             if (request.action && request.id >= 64)
                 return STATUS_INVALID_PARAMETER;
-            auto* reply = prepare<wire::FeaturesResponse>(out, out_cap, out_len);
+            auto* reply =
+                prepare<wire::FeaturesResponse>(out, out_cap, out_len);
             if (!reply)
                 return STATUS_BUFFER_TOO_SMALL;
             const auto state =
@@ -449,7 +451,8 @@ NTSTATUS dispatch(context& caller, uint16_t op, const void* in, uint32_t in_len,
             wire::HideSelfRequest request{};
             if (!parse(in, in_len, request))
                 return STATUS_REVISION_MISMATCH;
-            auto* reply = prepare<wire::HideSelfResponse>(out, out_cap, out_len);
+            auto* reply =
+                prepare<wire::HideSelfResponse>(out, out_cap, out_len);
             if (!reply)
                 return STATUS_BUFFER_TOO_SMALL;
             return dispatch_hide_self(caller, request, *reply);
@@ -525,8 +528,8 @@ NTSTATUS dispatch(context& caller, uint16_t op, const void* in, uint32_t in_len,
             hv::hwbreak::info info{};
             const auto status = hv::hwbreak::arm(
                 {request.pid ? request.pid : caller.pid, request.tid,
-                 request.dr_index, request.access, request.length, request.flags,
-                 request.address, caller.token},
+                 request.dr_index, request.access, request.length,
+                 request.flags, request.address, caller.token},
                 info);
             reply->id = info.id;
             reply->dr_index = info.dr_index;
@@ -552,9 +555,9 @@ NTSTATUS dispatch(context& caller, uint16_t op, const void* in, uint32_t in_len,
             key.tid = request.tid;
             key.dr_index = request.dr_index;
             key.token = caller.token;
-            const auto status =
-                request.id ? hv::hwbreak::disarm_id(request.id, caller.token, info)
-                           : hv::hwbreak::disarm(key, info);
+            const auto status = request.id ? hv::hwbreak::disarm_id(
+                                                 request.id, caller.token, info)
+                                           : hv::hwbreak::disarm(key, info);
             reply->id = info.id;
             reply->dr_index = info.dr_index;
             reply->hit_count = info.hits;
@@ -607,7 +610,8 @@ NTSTATUS dispatch(context& caller, uint16_t op, const void* in, uint32_t in_len,
             wire::TraceScanRequest request{};
             if (!parse(in, in_len, request))
                 return STATUS_INVALID_PARAMETER;
-            auto* reply = prepare<wire::TraceScanResponse>(out, out_cap, out_len);
+            auto* reply =
+                prepare<wire::TraceScanResponse>(out, out_cap, out_len);
             if (!reply)
                 return STATUS_BUFFER_TOO_SMALL;
             return hide::self::scan(*reply);

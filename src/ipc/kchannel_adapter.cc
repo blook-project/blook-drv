@@ -23,8 +23,8 @@ bool live{};
 bool peer_gone_pending{};
 
 // Backpressure in the response ring is handled by kchannel; our buffer only has
-// to be big enough for the largest reply (StatsResponse/QueryPageResponse), plus
-// the dump chunk.
+// to be big enough for the largest reply (StatsResponse/QueryPageResponse),
+// plus the dump chunk.
 constexpr uint32_t reply_capacity = 0x10000;
 
 kc_status to_status(NTSTATUS status) {
@@ -168,8 +168,8 @@ int adapter_start(const void* bootstrap) {
 
     const auto pid = kc_kernel_peer_pid(kernel);
     uint64_t token{};
-    const auto attach = blook::attach_peer(
-        pid, blook::process_is_administrator(pid), token);
+    const auto attach =
+        blook::attach_peer(pid, blook::process_is_administrator(pid), token);
     if (!NT_SUCCESS(attach)) {
         kc_kernel_destroy(kernel);
         last_error = to_status(attach);

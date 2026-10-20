@@ -6,10 +6,10 @@
 // Kernel side of the blook-kchannel integration.
 //
 // This is the only kernel file allowed to include a kchannel header: it creates
-// the kernel instance from the bootstrap, registers one handler per wire::op and
-// forwards every request to blook::dispatch_peer, which is the transport-neutral
-// command layer. Nothing else in the driver (and nothing in the SDK) may define
-// a second IPC path.
+// the kernel instance from the bootstrap, registers one handler per wire::op
+// and forwards every request to blook::dispatch_peer, which is the
+// transport-neutral command layer. Nothing else in the driver (and nothing in
+// the SDK) may define a second IPC path.
 namespace blook::ipc {
 
 // Set by the entry point when the driver was started without a client

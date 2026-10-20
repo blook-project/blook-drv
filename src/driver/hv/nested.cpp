@@ -2,13 +2,13 @@
 //
 // The interesting part is not "am I virtualised" but "which VMX controls did
 // the L0 hypervisor actually leave enabled". A nested VMware guest reports
-// VMX in CPUID and answers the capability MSRs, but the returned allowed-0/allowed-1
-// sets are the intersection with the L0 policy: for example the VMX preemption
-// timer is commonly reported as unsupported, EPT A/D is not always available,
-// and IPAT/VPID may be masked. Writing a control the MSR says is disallowed
-// makes VM entry fail with VM-entry failure 7 ("invalid control field"), which
-// on a nested host usually means an unhandled #UD/#GP in root mode and a hang,
-// so the hypervisor must ask first.
+// VMX in CPUID and answers the capability MSRs, but the returned
+// allowed-0/allowed-1 sets are the intersection with the L0 policy: for example
+// the VMX preemption timer is commonly reported as unsupported, EPT A/D is not
+// always available, and IPAT/VPID may be masked. Writing a control the MSR says
+// is disallowed makes VM entry fail with VM-entry failure 7 ("invalid control
+// field"), which on a nested host usually means an unhandled #UD/#GP in root
+// mode and a hang, so the hypervisor must ask first.
 #include "nested.h"
 
 #include <intrin.h>
