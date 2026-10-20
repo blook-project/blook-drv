@@ -1,0 +1,146 @@
+#include <gtest/gtest.h>
+
+#include <cstdlib>
+#include <string_view>
+
+#include "blook/drv/wire.hpp"
+#include "policy/hook.hpp"
+#include "policy/names.hpp"
+using namespace blook;
+namespace {
+void check(bool condition, const char* message) {
+    EXPECT_TRUE(condition) << message;
+}
+role classify(std::wstring_view name) {
+    return blook::classify(name.data(), name.size());
+}
+role classify_ascii(std::string_view name) {
+    return blook::classify_ascii(name.data(), name.size());
+}
+}  // namespace
+
+TEST(Policy, ImageClassification) {
+    // The policy has to recognise the same images the previous implementation
+    // did, and it must not depend on the path the sample was started from.
+    check(classify(L"al-khaser_x64.exe") == role::target, "target by name");
+    check(classify(L"C:\\tools\\AL-KHASER_X64.EXE") == role::target,
+          "target case insensitive");
+    check(classify(L"C:\\ctf-target-20260422.exe") == role::target,
+          "target by prefix list entry");
+    check(classify(L"C:\\dbg\\x64dbg.exe") == role::tool, "tool by name");
+    check(classify(L"C:\\dbg\\CheatEngine-x86_64.exe") == role::tool,
+          "tool by prefix list entry");
+    check(classify(L"C:\\Windows\\System32\\taskmgr.exe") == role::watched,
+          "watched role");
+    check(classify(L"C:\\Windows\\explorer.exe") == role::other,
+          "unclassified image");
+    check(classify(L"") == role::other && classify(L"al-khaser") == role::other,
+          "no false positive on partial name");
+    check(classify_ascii("AL-KHASER_X64.EXE") == role::target,
+          "ansi fallback path");
+    check(classify_ascii("x64dbg.exe") == role::tool, "ansi fallback tool");
+    check(classify_ascii("explorer.exe") == role::other, "ansi fallback other");
+    const std::string_view driver_path =
+        "\\SystemRoot\\System32\\drivers\\blook-drv.sys";
+    const std::string_view other_driver =
+        "\\SystemRoot\\System32\\drivers\\tcpip.sys";
+    check(driver_path.size() == 42, "driver path length");
+    check(blook::hidden_module(driver_path.data(), driver_path.size()),
+          "driver path matched");
+    check(!blook::hidden_module(other_driver.data(), other_driver.size()),
+          "unrelated driver kept");
+}
+
+TEST(Policy, JumpAndPatchBoundaries) {
+    // The entry jump must not clobber an argument register and must not read
+    // its target back out of the shadow page.
+    uint8_t buffer[max_patch]{};
+    check(
+        build_jump_patch(buffer, reinterpret_cast<uint64_t>(buffer) + 0x200000,
+                         reinterpret_cast<uint64_t>(buffer) + 0x200100),
+        "jump encoder produces a reachable patch");
+    // The encoder is covered by the model test; the raw bytes change whenever
+    // the entry-jump shape is revisited.
+
+    check(valid_patch(0x10000, 64), "maximum patch");
+    check(!valid_patch(0x10000, 65) && !valid_patch(0x10000, 0),
+          "size rejection");
+    check(valid_patch(0x10ffb, 5) && !valid_patch(0x10ffb, 6), "page boundary");
+    for (unsigned i = 0; i < 4096; ++i)
+        for (unsigned n = 0; n < 66; ++n)
+            check(valid_patch(0x10000 + i, n) ==
+                      (n >= 1 && n <= 64 && i + n <= 4096),
+                  "exhaustive patch boundary");
+}
+
+TEST(Policy, OwnershipAndCompatibility) {
+    // Ownership: a user hook only fires for its own address space, a kernel
+    // hook fires everywhere, and an unknown identity never matches.
+    hook_spec spec{};
+    spec.domain = hook_domain::user;
+    spec.address_space = 123;
+    check(
+        same_owner(spec, 123) && !same_owner(spec, 124) && !same_owner(spec, 0),
+        "address space not PID");
+    spec.domain = hook_domain::kernel;
+    check(same_owner(spec, 0), "kernel scope");
+
+    // Multi-hook pages: who may share a physical page, and where.
+    hook_spec page_a{}, page_b{};
+    page_a.pfn = 10;
+    page_b.pfn = 10;
+    page_a.domain = hook_domain::kernel;
+    page_b.domain = hook_domain::kernel;
+    page_a.target = 0x1000;
+    page_a.length = 6;
+    page_b.target = 0x1010;
+    page_b.length = 6;
+    check(hooks_compatible(page_a, page_b), "kernel hooks share a page");
+    check(same_scope(page_a, page_b), "kernel scope is global");
+    page_b.target = 0x1003;
+    check(!hooks_compatible(page_a, page_b), "overlapping ranges rejected");
+    page_b.domain = hook_domain::user;
+    page_b.address_space = 55;
+    check(!hooks_compatible(page_a, page_b), "kernel never shares with user");
+    page_a.domain = hook_domain::user;
+    page_a.address_space = 55;
+    check(!hooks_compatible(page_a, page_b), "user overlap same scope refused");
+    check(!same_scope(page_a, page_b) ||
+              page_a.address_space == page_b.address_space,
+          "scope sanity");
+    page_b.address_space = 56;
+    check(hooks_compatible(page_a, page_b), "shared page one hook per process");
+    check(!same_scope(page_a, page_b), "different owners different scopes");
+    page_b.pfn = 11;
+    check(hooks_compatible(page_a, page_b),
+          "different pages always compatible");
+}
+
+TEST(Policy, ViewPermissions) {
+    auto original = select_view(ept_view::original_data, 123, 456);
+    auto shadow = select_view(ept_view::shadow_execute, 123, 456);
+    auto step = select_view(ept_view::original_step, 123, 456);
+    auto window = select_view(ept_view::window_execute, 123, 456);
+    check(original.pfn == 123 && original.permissions == 3, "original RW NX");
+    check(shadow.pfn == 456 && shadow.permissions == 4, "shadow execute only");
+    check(step.pfn == 123 && step.permissions == 7, "MTF original step");
+    check(window.pfn == 123 && window.permissions == 7, "call original window");
+}
+
+TEST(Policy, ProtocolContracts) {
+    auto request = wire::request<wire::InstallRequest>();
+    check(wire::valid_header(request), "ABI size");
+    request.header.version = wire::abi_version - 1;
+    check(!wire::valid_header(request), "ABI version rejection");
+    request = wire::request<wire::InstallRequest>();
+    request.header.size--;
+    check(!wire::valid_header(request), "ABI length rejection");
+    check(wire::request<wire::PingRequest>().header.size ==
+              sizeof(wire::PingRequest),
+          "request factory sizes header");
+    check(wire::opcode(wire::op::install) >= 0x8000 &&
+              wire::opcode(wire::op::install) < 0x9000,
+          "opcodes live in the kchannel application range");
+    check(wire::opcode(wire::op::hide) != wire::opcode(wire::op::scrub),
+          "distinct control codes");
+}

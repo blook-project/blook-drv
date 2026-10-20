@@ -1,0 +1,106 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  XMAKE_ROOT: "y"
+
+jobs:
+  build:
+    name: build + unit tests (windows-latest)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: "3.0.8"
+
+      - name: Install WDK from NuGet content
+        shell: pwsh
+        run: |
+          # windows-latest has no WDK preinstalled (only the Windows SDK).
+          # The NuGet WDK content package is a plain zip of the official layout.
+          $ver = '10.0.26100.6584'
+          New-Item -ItemType Directory -Force $env:RUNNER_TEMP\wdk | Out-Null
+          Invoke-WebRequest "https://api.nuget.org/v3-flatcontainer/microsoft.windows.wdk.x64/$ver/microsoft.windows.wdk.x64.$ver.nupkg" -OutFile $env:RUNNER_TEMP\wdk\wdk.nupkg
+          tar.exe -xf $env:RUNNER_TEMP\wdk\wdk.nupkg -C $env:RUNNER_TEMP\wdk
+          "WDK_ROOT=$env:RUNNER_TEMP\wdk\c" >> $env:GITHUB_ENV
+      - name: Configure
+        shell: pwsh
+        run: |
+          $env:BLOOK_VERSION = (Get-Content version.txt -Raw).Trim()
+          xmake f -p windows -a x64 -m releasedbg --wdk="$env:WDK_ROOT" -y
+          if ($LASTEXITCODE -ne 0) { throw "xmake configure failed" }
+      - name: Build
+        shell: pwsh
+        run: |
+          xmake -y
+          if ($LASTEXITCODE -ne 0) { throw "xmake build failed" }
+
+      - name: Host unit tests
+        shell: pwsh
+        run: |
+          $failed = @()
+          foreach ($target in @("blook-tests", "blook-client-tests", "blook-loader-tests", "blook-protocol-tests")) {
+            Write-Host "=== $target ==="
+            xmake run $target
+            if ($LASTEXITCODE -ne 0) { $failed += $target }
+          }
+          if ($failed.Count -ne 0) { throw "unit tests failed: $($failed -join ', ')" }
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force out | Out-Null
+          $ver = (Get-Content version.txt -Raw).Trim()
+          $stage = "out/blook-drv-$ver"
+          New-Item -ItemType Directory -Force $stage | Out-Null
+          $sys = Get-ChildItem -Recurse build -Filter blook-drv.sys | Select-Object -First 1
+          if ($sys) { Copy-Item $sys.FullName $stage }
+          Copy-Item include, sdk, docs, scripts, signer -Destination $stage -Recurse
+          Copy-Item README.md, LICENSE, CHANGELOG.md, version.txt, xmake.lua, blook.ini -Destination $stage
+          Compress-Archive -Path $stage -DestinationPath "out/blook-drv-$ver.zip" -Force
+          (Get-FileHash "out/blook-drv-$ver.zip" -Algorithm SHA256).Hash |
+            ForEach-Object { "$($_.ToLower())  blook-drv-$ver.zip" } |
+            Set-Content "out/blook-drv-$ver.zip.sha256"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blook-drv-ci
+          path: out/*
+          if-no-files-found: error
+
+  format:
+    name: clang-format
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install clang-format
+        shell: pwsh
+        run: |
+          python -m pip install --quiet "clang-format==18.1.8"
+          clang-format --version
+      - name: Check formatting
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem -Recurse -Include *.cc,*.cpp,*.h,*.hpp |
+            Where-Object { $_.FullName -notmatch '\\third_party\\|\\build\\|\\signer\\|\\.xmake\\' }
+          $bad = @()
+          foreach ($f in $files) {
+            $diff = & clang-format --style=file --dry-run --Werror $f.FullName 2>&1
+            if ($LASTEXITCODE -ne 0) { $bad += $f.FullName; Write-Host $diff }
+          }
+          if ($bad.Count -ne 0) { throw "clang-format violations in: $($bad -join ', ')" }

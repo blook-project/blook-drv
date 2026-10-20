@@ -1,0 +1,87 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: build, test, package, publish
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: "3.0.8"
+
+      - name: Install WDK from NuGet content
+        shell: pwsh
+        run: |
+          # windows-latest has no WDK preinstalled (only the Windows SDK).
+          # The NuGet WDK content package is a plain zip of the official layout.
+          $ver = '10.0.26100.6584'
+          New-Item -ItemType Directory -Force $env:RUNNER_TEMP\wdk | Out-Null
+          Invoke-WebRequest "https://api.nuget.org/v3-flatcontainer/microsoft.windows.wdk.x64/$ver/microsoft.windows.wdk.x64.$ver.nupkg" -OutFile $env:RUNNER_TEMP\wdk\wdk.nupkg
+          tar.exe -xf $env:RUNNER_TEMP\wdk\wdk.nupkg -C $env:RUNNER_TEMP\wdk
+          "WDK_ROOT=$env:RUNNER_TEMP\wdk\c" >> $env:GITHUB_ENV
+      - name: Version from tag
+        id: version
+        shell: pwsh
+        run: |
+          $ver = if ($env:GITHUB_REF -match '^refs/tags/v(.+)$') { $matches[1] } else { (Get-Content version.txt -Raw).Trim() }
+          "version=$ver" >> $env:GITHUB_OUTPUT
+          Set-Content version.txt $ver
+
+      - name: Configure and build
+        shell: pwsh
+        run: |
+          $env:BLOOK_VERSION = (Get-Content version.txt -Raw).Trim()`n          xmake f -p windows -a x64 -m release --wdk="$env:WDK_ROOT" -y
+          xmake -y
+
+      - name: Unit tests
+        shell: pwsh
+        run: |
+          foreach ($target in @("blook-tests", "blook-client-tests", "blook-loader-tests", "blook-protocol-tests")) {
+            xmake run $target
+            if ($LASTEXITCODE -ne 0) { throw "$target failed" }
+          }
+
+      - name: Package
+        id: package
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.version.outputs.version }}"
+          $stage = "out/blook-drv-$ver"
+          New-Item -ItemType Directory -Force $stage | Out-Null
+          $sys = Get-ChildItem -Recurse build -Filter blook-drv.sys | Select-Object -First 1
+          if (-not $sys) { throw "blook-drv.sys was not built" }
+          Copy-Item $sys.FullName $stage
+          Copy-Item include, sdk, docs, scripts, signer, xmake-package -Destination $stage -Recurse
+          Copy-Item README.md, LICENSE, CHANGELOG.md, version.txt, xmake.lua, blook.ini -Destination $stage
+          Compress-Archive -Path $stage -DestinationPath "out/blook-drv-$ver.zip" -Force
+          $hash = (Get-FileHash "out/blook-drv-$ver.zip" -Algorithm SHA256).Hash.ToLower()
+          "$hash  blook-drv-$ver.zip" | Set-Content "out/blook-drv-$ver.zip.sha256"
+          "sha256=$hash" >> $env:GITHUB_OUTPUT
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            out/blook-drv-*.zip
+            out/blook-drv-*.zip.sha256
+          generate_release_notes: true
+          draft: false
+
+      - name: Update package registry (optional)
+        if: ${{ env.REPO_TOKEN != '' }}
+        env:
+          REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
+        shell: pwsh
+        run: |
+          ./scripts/publish-registry.ps1 -Version "${{ steps.version.outputs.version }}" -Sha256 "${{ steps.package.outputs.sha256 }}"

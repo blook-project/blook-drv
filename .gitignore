@@ -1,0 +1,29 @@
+# Build outputs
+/build/
+/build-*/
+/.xmake/
+/.cache/
+/packages/
+/minidumps/
+
+# Compiler artefacts
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.exe
+*.dll
+*.sys
+
+# Test / e2e artefacts (evidence is committed under docs/evidence; raw logs are
+# summarised and hashed instead)
+/docs/evidence/**/raw/
+*.log
+*.etl
+*.dmp
+
+# Editor
+.vs/
+.vscode/
+compile_commands.json
