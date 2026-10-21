@@ -60,7 +60,10 @@ void emulate_cpuid(vcpu* const cpu) {
     ctx->rbx = filtered.ebx;
     ctx->rcx = filtered.ecx;
     ctx->rdx = filtered.edx;
-    skip_instruction();
+    // CPUID is two bytes; do not trust VMCS_VMEXIT_INSTRUCTION_LENGTH here (it
+    // has been observed to report bogus lengths, and a wrong skip turns the
+    // next fetch into garbage - an endless exit loop the guest cannot escape).
+    skip_instruction(2);
 }
 
 void emulate_rdmsr(vcpu* const cpu) {
@@ -96,7 +99,7 @@ void emulate_rdmsr(vcpu* const cpu) {
 
     cpu->ctx->rax = msr_value & 0xFFFF'FFFF;
     cpu->ctx->rdx = msr_value >> 32;
-    skip_instruction();
+    skip_instruction(2);
 }
 
 void emulate_wrmsr(vcpu* const cpu) {
@@ -134,7 +137,7 @@ void emulate_wrmsr(vcpu* const cpu) {
 
         vmx_invept(invept_all_context, {});
     }
-    skip_instruction();
+    skip_instruction(2);
     return;
 }
 
@@ -1044,7 +1047,7 @@ void emulate_rdtsc(vcpu* const cpu) {
     cpu->ctx->rax = tsc & 0xFFFFFFFF;
     cpu->ctx->rdx = (tsc >> 32) & 0xFFFFFFFF;
 
-    skip_instruction();
+    skip_instruction(2);
 }
 
 void emulate_rdtscp(vcpu* const cpu) {
@@ -1056,7 +1059,7 @@ void emulate_rdtscp(vcpu* const cpu) {
     cpu->ctx->rdx = (tsc >> 32) & 0xFFFFFFFF;
     cpu->ctx->rcx = aux;
 
-    skip_instruction();
+    skip_instruction(3);
 }
 
 void handle_monitor_trap_flag(vcpu* const cpu) {

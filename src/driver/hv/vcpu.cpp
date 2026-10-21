@@ -781,8 +781,9 @@ bool virtualize_cpu(vcpu* const cpu) {
     // not a valid TSS, and a fatal path that bugchecks inside its own recovery
     // loses the original reason. The dump still works without a restored TR.
     {
-        auto* descriptor = reinterpret_cast<segment_descriptor_32*>(
-            gdtr.base_address) + (guest_tr >> 3);
+        auto* descriptor =
+            reinterpret_cast<segment_descriptor_32*>(gdtr.base_address) +
+            (guest_tr >> 3);
         if ((guest_tr >> 3) != 0 && (guest_tr >> 3) < (gdtr.limit / 8) &&
             descriptor->type == SEGMENT_DESCRIPTOR_TYPE_TSS_AVAILABLE)
             write_tr(guest_tr);

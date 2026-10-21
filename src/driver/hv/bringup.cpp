@@ -81,7 +81,8 @@ void publish_stage() {
     write_dword(L"LaunchErrorLow", static_cast<uint32_t>(launch_error));
     write_dword(L"LaunchErrorHigh", static_cast<uint32_t>(launch_error >> 32));
     write_dword(L"VmwriteFieldLow", static_cast<uint32_t>(vmwrite_error));
-    write_dword(L"VmwriteFieldHigh", static_cast<uint32_t>(vmwrite_error >> 32));
+    write_dword(L"VmwriteFieldHigh",
+                static_cast<uint32_t>(vmwrite_error >> 32));
     write_dword(L"StageSerial", stage_serial);
     write_dword(L"StageCpu", stage_cpu);
 }
