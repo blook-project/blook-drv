@@ -72,12 +72,12 @@ jobs:
           $sys = Get-ChildItem -Recurse build -Filter blook-drv.sys | Select-Object -First 1
           if (-not $sys) { throw "blook-drv.sys was not built" }
           Copy-Item $sys.FullName $stage
+          Copy-Item include, sdk, docs, scripts, signer, xmake-package -Destination $stage -Recurse
           # Public headers include <policy/*.hpp>; ship those headers at
           # include/policy so the SDK include root is self-contained.
           $policyStage = Join-Path $stage "include\policy"
           New-Item -ItemType Directory -Force $policyStage | Out-Null
           Copy-Item src\policy\*.hpp $policyStage -Force
-          Copy-Item include, sdk, docs, scripts, signer, xmake-package -Destination $stage -Recurse
           Copy-Item README.md, LICENSE, CHANGELOG.md, version.txt, xmake.lua, blook.ini -Destination $stage
           Compress-Archive -Path $stage -DestinationPath "out/blook-drv-$ver-windows-x64.zip" -Force
           $hash = (Get-FileHash "out/blook-drv-$ver-windows-x64.zip" -Algorithm SHA256).Hash.ToLower()

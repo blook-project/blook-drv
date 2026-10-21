@@ -91,12 +91,12 @@ jobs:
             $built = Get-ChildItem -Recurse build -Filter $exe -File | Select-Object -First 1
             if ($built) { Copy-Item $built.FullName $stage }
           }
+          Copy-Item include, sdk, docs, scripts, signer -Destination $stage -Recurse
           # Public headers include <policy/*.hpp>; ship those headers at
           # include/policy so the SDK include root is self-contained.
           $policyStage = Join-Path $stage "include\policy"
           New-Item -ItemType Directory -Force $policyStage | Out-Null
           Copy-Item src\policy\*.hpp $policyStage -Force
-          Copy-Item include, sdk, docs, scripts, signer -Destination $stage -Recurse
           Copy-Item README.md, LICENSE, CHANGELOG.md, version.txt, xmake.lua, blook.ini -Destination $stage
           Compress-Archive -Path $stage -DestinationPath "out/blook-drv-$ver.zip" -Force
           (Get-FileHash "out/blook-drv-$ver.zip" -Algorithm SHA256).Hash |
