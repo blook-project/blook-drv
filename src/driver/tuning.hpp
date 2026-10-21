@@ -36,6 +36,12 @@ bool trace_markers();
 // through VMCALL with interrupts disabled, so it is the first suspect when a
 // nested host freezes right after the hypervisor starts.
 bool skip_timing_calibration();
+// Minimal bring-up preset (Parameters\BringupMinimal): only the VMX controls
+// required to enter and leave guest mode. No MSR bitmaps, no CR exits, no
+// exception interception, no timing calibration, no maintenance hooks. Used to
+// bisect a nested host that freezes during hv::start(); hooks and hiding are
+// offline until the preset is turned off.
+bool bringup_minimal();
 
 // Records a phase marker (best effort, PASSIVE_LEVEL only, ignores failures).
 void mark(uint32_t phase, uint32_t extra = 0);

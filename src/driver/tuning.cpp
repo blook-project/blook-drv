@@ -11,6 +11,7 @@ uint32_t intercept_debug_value{default_intercept_debug};
 uint32_t intercept_rdtscp_value{default_intercept_rdtscp};
 bool trace_value{};
 bool skip_timing_value{};
+bool minimal_value{};
 
 bool read_dword(const wchar_t* name, uint32_t& value) {
     if (!parameters.Buffer)
@@ -85,6 +86,9 @@ void initialize(PCUNICODE_STRING service_path) {
     uint32_t skip_timing{};
     if (read_dword(L"SkipTimingCalibration", skip_timing))
         skip_timing_value = skip_timing != 0;
+    uint32_t minimal{};
+    if (read_dword(L"BringupMinimal", minimal))
+        minimal_value = minimal != 0;
 }
 
 bool intercept_debug() {
@@ -100,7 +104,11 @@ bool trace_markers() {
 }
 
 bool skip_timing_calibration() {
-    return skip_timing_value;
+    return skip_timing_value || minimal_value;
+}
+
+bool bringup_minimal() {
+    return minimal_value;
 }
 
 void mark(uint32_t phase, uint32_t extra) {

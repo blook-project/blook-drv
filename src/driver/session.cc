@@ -11,6 +11,7 @@
 #include "driver/features.hpp"
 #include "driver/hide/hide.hpp"
 #include "driver/hide/self.hpp"
+#include "driver/tuning.hpp"
 #include "driver/hooks.hpp"
 #include "driver/hv/detect.h"
 #include "driver/hv/hv.h"
@@ -174,7 +175,7 @@ NTSTATUS initialize_sessions() {
     // state (CPUID spoofing, MSR filtering) is in effect from that point on.
     hv::detect::initialize();
     status = hv::start();
-    if (NT_SUCCESS(status)) {
+    if (NT_SUCCESS(status) && !blook::tuning::bringup_minimal()) {
         // Mandatory VM maintenance is not an optional feature. Refuse startup
         // rather than silently promising COW/dormant support without its hooks.
         status = hide::activate_maintenance();

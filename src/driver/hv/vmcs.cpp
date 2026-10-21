@@ -18,6 +18,10 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     // 3.26.2
 
     // 3.24.6.1
+    // Minimal bring-up preset (Parameters\BringupMinimal): only the controls
+    // required to enter and leave guest mode, so a nested host that freezes can
+    // be bisected. Hooks/hiding stay offline until the preset is cleared.
+    const bool minimal = blook::tuning::bringup_minimal();
     ia32_vmx_pinbased_ctls_register pin_based_ctrl;
     pin_based_ctrl.flags = 0;
     pin_based_ctrl.virtual_nmi = 1;
@@ -39,20 +43,21 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     capabilities.host = static_cast<blook::policy::host_kind>(host.host);
     const auto plan = blook::policy::make_plan(capabilities);
     pin_based_ctrl.activate_vmx_preemption_timer =
-        plan.use_preemption_timer ? 1 : 0;
+        (!minimal && plan.use_preemption_timer) ? 1 : 0;
     write_ctrl_pin_based_safe(pin_based_ctrl);
 
     // 3.24.6.2
     ia32_vmx_procbased_ctls_register proc_based_ctrl;
     proc_based_ctrl.flags = 0;
-    proc_based_ctrl.cr3_load_exiting = 1;
-    proc_based_ctrl.use_msr_bitmaps = 1;
+    proc_based_ctrl.cr3_load_exiting = minimal ? 0 : 1;
+    proc_based_ctrl.use_msr_bitmaps = minimal ? 0 : 1;
     // The guest clock is maintained through the TSC offset so a world switch
     // does not show up as elapsed guest time.
-    proc_based_ctrl.use_tsc_offsetting = 1;
+    proc_based_ctrl.use_tsc_offsetting = minimal ? 0 : 1;
     // Debug-register accesses are intercepted so the driver can hide its own
     // hardware breakpoints and sanitise what the guest reads (hwbreak).
-    proc_based_ctrl.mov_dr_exiting = blook::tuning::intercept_debug() ? 1 : 0;
+    proc_based_ctrl.mov_dr_exiting =
+        (!minimal && blook::tuning::intercept_debug()) ? 1 : 0;
     proc_based_ctrl.activate_secondary_controls = 1;
     write_ctrl_proc_based_safe(proc_based_ctrl);
 
@@ -63,33 +68,35 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     // Optional second-level controls: each one is only requested when the
     // capability MSRs allow it on this CPU / nested host.
     proc_based_ctrl2.enable_rdtscp =
-        (blook::tuning::intercept_rdtscp() && nested::rdtscp_supported()) ? 1
-                                                                          : 0;
-    proc_based_ctrl2.enable_vpid = plan.use_vpid ? 1 : 0;
-    proc_based_ctrl2.enable_invpcid = plan.use_invpcid ? 1 : 0;
-    proc_based_ctrl2.enable_xsaves = plan.use_xsaves ? 1 : 0;
+        (!minimal && blook::tuning::intercept_rdtscp() &&
+         nested::rdtscp_supported())
+            ? 1
+            : 0;
+    proc_based_ctrl2.enable_vpid = (!minimal && plan.use_vpid) ? 1 : 0;
+    proc_based_ctrl2.enable_invpcid = (!minimal && plan.use_invpcid) ? 1 : 0;
+    proc_based_ctrl2.enable_xsaves = (!minimal && plan.use_xsaves) ? 1 : 0;
     proc_based_ctrl2.enable_user_wait_pause = 1;
-    proc_based_ctrl2.conceal_vmx_from_pt = 1;
+    proc_based_ctrl2.conceal_vmx_from_pt = minimal ? 0 : 1;
     write_ctrl_proc_based2_safe(proc_based_ctrl2);
 
     // 3.24.7
     ia32_vmx_exit_ctls_register exit_ctrl;
     exit_ctrl.flags = 0;
-    exit_ctrl.save_debug_controls = 1;
+    exit_ctrl.save_debug_controls = minimal ? 0 : 1;
     exit_ctrl.host_address_space_size = 1;
     exit_ctrl.save_ia32_pat = 1;
     exit_ctrl.load_ia32_pat = 1;
-    exit_ctrl.load_ia32_perf_global_ctrl = 1;
-    exit_ctrl.conceal_vmx_from_pt = 1;
+    exit_ctrl.load_ia32_perf_global_ctrl = minimal ? 0 : 1;
+    exit_ctrl.conceal_vmx_from_pt = minimal ? 0 : 1;
     write_ctrl_exit_safe(exit_ctrl);
 
     // 3.24.8
     ia32_vmx_entry_ctls_register entry_ctrl;
     entry_ctrl.flags = 0;
-    entry_ctrl.load_debug_controls = 1;
+    entry_ctrl.load_debug_controls = minimal ? 0 : 1;
     entry_ctrl.ia32e_mode_guest = 1;
     entry_ctrl.load_ia32_pat = 1;
-    entry_ctrl.conceal_vmx_from_pt = 1;
+    entry_ctrl.conceal_vmx_from_pt = minimal ? 0 : 1;
     write_ctrl_entry_safe(entry_ctrl);
 
     // Record which optional controls the processor actually accepted so the
@@ -104,7 +111,8 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     // are the one place where a wrong reflection would be visible to every
     // debugger in the guest, so the switch matters.
     const uint32_t breakpoint_bits =
-        blook::tuning::intercept_debug() ? ((1u << 1) | (1u << 3)) : 0;
+        (!minimal && blook::tuning::intercept_debug()) ? ((1u << 1) | (1u << 3))
+                                                       : 0;
     vmx_vmwrite(VMCS_CTRL_EXCEPTION_BITMAP, breakpoint_bits);
 
     // set up the mask and match in such a way so
@@ -176,10 +184,10 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
         breakpoint_bits |
             (hv::fault_trace_enabled() ? hv::fault_trace_exception_bitmap : 0));
 
-    vmx_vmwrite(VMCS_CTRL_VMEXIT_MSR_STORE_COUNT, hv::timing_hidden() ? 4 : 0);
+    vmx_vmwrite(VMCS_CTRL_VMEXIT_MSR_STORE_COUNT, (hv::timing_hidden() && !minimal) ? 4 : 0);
     vmx_vmwrite(VMCS_CTRL_VMEXIT_MSR_STORE_ADDRESS,
                 MmGetPhysicalAddress(&cpu->msr_exit_store).QuadPart);
-    vmx_vmwrite(VMCS_CTRL_VMENTRY_MSR_LOAD_COUNT, hv::timing_hidden() ? 2 : 0);
+    vmx_vmwrite(VMCS_CTRL_VMENTRY_MSR_LOAD_COUNT, (hv::timing_hidden() && !minimal) ? 2 : 0);
     vmx_vmwrite(VMCS_CTRL_VMENTRY_MSR_LOAD_ADDRESS,
                 MmGetPhysicalAddress(&cpu->msr_entry_load).QuadPart);
     vmx_vmwrite(VMCS_CTRL_VMEXIT_MSR_LOAD_COUNT, 0);
