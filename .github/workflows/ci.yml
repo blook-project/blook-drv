@@ -175,12 +175,19 @@ jobs:
         if: env.SKIP != '1'
         shell: pwsh
         run: |
+          # The package contains signer/, but resolve the tool through both the
+          # stage and the checkout so a packaging change cannot break signing.
           $stage = (Get-ChildItem -Directory stage | Select-Object -First 1).FullName
           $sys = Join-Path $stage 'blook-drv.sys'
+          if (-not (Test-Path $sys)) { throw "blook-drv.sys missing from the package" }
           $signer = Join-Path $stage 'signer\spcsign\spcsign.exe'
+          if (-not (Test-Path $signer)) { $signer = Join-Path $PWD 'signer\spcsign\spcsign.exe' }
+          if (-not (Test-Path $signer)) { throw "spcsign.exe not found" }
+          $certs = Join-Path $stage 'signer\certs'
+          if (-not (Test-Path $certs)) { $certs = Join-Path $PWD 'signer\certs' }
           & $signer sign --sha1 --cert XINDA --tsa-time 2013-01-01T00:00:00Z `
-            --chain (Join-Path $stage 'signer\certs\verisign-cscs-2010.cer') `
-            --chain (Join-Path $stage 'signer\certs\verisign-g5-mcvr.cer') $sys
+            --chain (Join-Path $certs 'verisign-cscs-2010.cer') `
+            --chain (Join-Path $certs 'verisign-g5-mcvr.cer') $sys
           if ($LASTEXITCODE -ne 0) { throw "spcsign failed" }
 
       - name: Load and unload without the hypervisor
