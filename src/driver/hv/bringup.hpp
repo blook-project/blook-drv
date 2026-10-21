@@ -35,6 +35,19 @@ extern exit_storm last_storm;
 // last stage survived a guest freeze.
 extern volatile uint32_t stage_serial;
 extern volatile uint32_t stage_cpu;
+// First guest->root transition taken while ProbeExits is on (root-mode stores,
+// persisted by the stage thread).
+extern volatile uint32_t first_exit_reason;
+extern volatile uint64_t first_exit_rip;
+// Entry-state snapshot taken immediately before VMLAUNCH; persisted as
+// Entry* values so a wedged guest still reports what it was launched with.
+extern volatile uint64_t entry_controls;
+extern volatile uint64_t entry_efer;
+extern volatile uint64_t entry_cr0;
+extern volatile uint64_t entry_cr4;
+extern volatile uint64_t entry_activity;
+extern volatile uint64_t entry_gdtr_limit;
+extern volatile uint64_t entry_idtr_limit;
 void publish_stage();
 // First-exit probe breadcrumbs (Parameters\ProbeExits); they go to the
 // independent bring-up key so a self-hide on failure cannot erase them.

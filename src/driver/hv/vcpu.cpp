@@ -20,6 +20,8 @@ namespace hv {
 
 // defined in vm-launch.asm
 bool vm_launch();
+bool blook_vm_launch_stub(uint64_t guest_rip, uint64_t command);
+void blook_guest_stub();
 
 // cache certain fixed values (CPUID results, MSRs, etc) that are used
 // frequently during VMX operation (to speed up vm-exit handling).
@@ -286,6 +288,14 @@ bool handle_vm_exit(guest_context* const ctx) {
     // versus "the fetch never left guest mode".
     if (reason.basic_exit_reason < exit_reason_slots)
         ++g_stats.exit_reasons[reason.basic_exit_reason];
+    if (blook::tuning::probe_exits() && !bringup::first_exit_reason) {
+        // Root-mode safe: plain stores only; the PASSIVE stage thread persists
+        // this immediately, so it survives a hard power-off of a wedged guest.
+        bringup::first_exit_rip = vmx_vmread(VMCS_GUEST_RIP);
+        bringup::first_exit_reason = reason.basic_exit_reason
+                                         ? reason.basic_exit_reason
+                                         : 1;
+    }
 
     cpu->stop_virtualization = false;
 
@@ -716,6 +726,35 @@ bool virtualize_cpu(vcpu* const cpu) {
     write_vmcs_host_fields(cpu);
     write_vmcs_guest_fields();
     bringup::stage("vmcs-ready", cpu->index);
+    if (blook::tuning::start_stage() == 3) {
+        // Stage 3: enter guest mode straight into a three-instruction stub
+        // (vmcall; hlt; jmp $) with the hypercall command in RAX. Nothing in
+        // this path depends on our C++ continuation, so the breadcrumbs separate
+        // "VM entry rejected" from "first VM exit broken".
+        bringup::entry_controls = vmx_vmread(VMCS_CTRL_VMENTRY_CONTROLS);
+        bringup::entry_efer = vmx_vmread(0x00002806);  // VMCS_GUEST_IA32_EFER
+        bringup::entry_cr0 = vmx_vmread(VMCS_GUEST_CR0);
+        bringup::entry_cr4 = vmx_vmread(VMCS_GUEST_CR4);
+        bringup::entry_activity = vmx_vmread(VMCS_GUEST_ACTIVITY_STATE);
+        bringup::entry_gdtr_limit = vmx_vmread(VMCS_GUEST_GDTR_LIMIT);
+        bringup::entry_idtr_limit = vmx_vmread(VMCS_GUEST_IDTR_LIMIT);
+        const uint64_t command =
+            (static_cast<uint64_t>(call_tag) << 8) |
+            static_cast<uint8_t>(operation::ping);
+        if (!blook_vm_launch_stub(
+                reinterpret_cast<uint64_t>(&blook_guest_stub), command)) {
+            bringup::record_launch_error(
+                vmx_vmread(VMCS_VM_INSTRUCTION_ERROR));
+            bringup::stage("stub-vmlaunch-failed", cpu->index);
+            vmx_vmxoff();
+            rollback();
+            return false;
+        }
+        // The stub only comes back if the processor left VMX (it never does on
+        // the ping path), so reaching this line means root mode took over.
+        bringup::stage("stub-returned", cpu->index);
+        return true;
+    }
     if (blook::tuning::start_stage() == 1) {
         // Stage 1: prove VMXON + VMPTRLD + VMXOFF work on this nested host
         // without ever entering guest mode. This cannot hang the guest, so it

@@ -10,6 +10,15 @@ volatile uint32_t stage_cpu{};
 volatile uint64_t launch_error{};
 volatile uint64_t vmwrite_error{};
 volatile uint32_t armed{};
+volatile uint32_t first_exit_reason{};
+volatile uint64_t entry_controls{};
+volatile uint64_t entry_efer{};
+volatile uint64_t entry_cr0{};
+volatile uint64_t entry_cr4{};
+volatile uint64_t entry_activity{};
+volatile uint64_t entry_gdtr_limit{};
+volatile uint64_t entry_idtr_limit{};
+volatile uint64_t first_exit_rip{};
 namespace {
 UNICODE_STRING parameters{};
 bool ready{};
@@ -90,6 +99,24 @@ void stage_worker(PVOID) {
             written = stage_serial;
             write_dword(L"WatchStage", written);
             write_dword(L"WatchCpu", last_stage_cpu);
+        }
+        if (entry_controls) {
+            write_dword(L"EntryCtls", static_cast<uint32_t>(entry_controls));
+            write_dword(L"EntryEfer", static_cast<uint32_t>(entry_efer));
+            write_dword(L"EntryCr0", static_cast<uint32_t>(entry_cr0));
+            write_dword(L"EntryCr4", static_cast<uint32_t>(entry_cr4));
+            write_dword(L"EntryActivity", static_cast<uint32_t>(entry_activity));
+            write_dword(L"EntryGdtrLimit",
+                        static_cast<uint32_t>(entry_gdtr_limit));
+            write_dword(L"EntryIdtrLimit",
+                        static_cast<uint32_t>(entry_idtr_limit));
+        }
+        if (first_exit_reason) {
+            write_dword(L"FirstExitReason", first_exit_reason);
+            write_dword(L"FirstExitRipLow",
+                        static_cast<uint32_t>(first_exit_rip));
+            write_dword(L"FirstExitRipHigh",
+                        static_cast<uint32_t>(first_exit_rip >> 32));
         }
         KeDelayExecutionThread(KernelMode, FALSE, &interval);
     }
