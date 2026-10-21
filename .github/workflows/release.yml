@@ -38,11 +38,18 @@ jobs:
           "version=$ver" >> $env:GITHUB_OUTPUT
           Set-Content version.txt $ver
 
-      - name: Configure and build
+      - name: Fetch blook-kchannel (pinned)
+        shell: pwsh
+        run: |
+          # The driver links the real transport sources; the pin matches ci.yml.
+          $root = Join-Path $env:GITHUB_WORKSPACE '..\blook-kchannel'
+          git clone --quiet https://github.com/blook-project/blook-kchannel $root
+          git -C $root checkout --quiet 40a5337a2d69c79fb049361f616aacc58ae75d4d
+          "KCHANNEL_DIR=$root" >> $env:GITHUB_ENV      - name: Configure and build
         shell: pwsh
         run: |
           $env:BLOOK_VERSION = (Get-Content version.txt -Raw).Trim()
-          xmake f -p windows -a x64 -m release --wdk="$env:WDK_ROOT" -y
+          xmake f -p windows -a x64 -m release --wdk="$env:WDK_ROOT" --kchannel_dir="$env:KCHANNEL_DIR" -y
           xmake -y
 
       - name: Unit tests
