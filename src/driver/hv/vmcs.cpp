@@ -374,6 +374,13 @@ void write_vmcs_guest_fields() {
     vmx_vmwrite(VMCS_GUEST_PENDING_DEBUG_EXCEPTIONS, 0);
 
     vmx_vmwrite(VMCS_GUEST_VMCS_LINK_POINTER, MAXULONG64);
+    // Pending debug exceptions and interruptibility must be consistent with the
+    // entry controls: with "load debug controls" = 0 (minimal preset) a nonzero
+    // pending-debug field is an invalid guest state and VM entry fails. The VMCS
+    // region is reused memory, so this has to be written explicitly, not assumed
+    // zero.
+    vmx_vmwrite(VMCS_GUEST_PENDING_DEBUG_EXCEPTIONS, 0);
+    vmx_vmwrite(0x00004824, 0);  // VMCS_GUEST_INTERRUPTIBILITY_STATE
 
     // The timer *value* field only exists when the "activate VMX preemption
     // timer" control is 1: writing it with the control clear fails the VMWRITE
