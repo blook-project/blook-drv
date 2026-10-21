@@ -740,7 +740,8 @@ bool virtualize_cpu(vcpu* const cpu) {
     bringup::entry_gdtr_limit = vmx_vmread(VMCS_GUEST_GDTR_LIMIT);
     bringup::entry_idtr_limit = vmx_vmread(VMCS_GUEST_IDTR_LIMIT);
     bringup::entry_interruptibility = vmx_vmread(VMCS_GUEST_INTERRUPTIBILITY_STATE);
-    bringup::entry_pending_debug = vmx_vmread(0x4822);  // PENDING_DBG_EXCEPTIONS
+    bringup::entry_pending_debug =
+        vmx_vmread(VMCS_GUEST_PENDING_DEBUG_EXCEPTIONS);
     bringup::entry_link_pointer = vmx_vmread(VMCS_GUEST_VMCS_LINK_POINTER);
     bringup::entry_eptp = vmx_vmread(VMCS_CTRL_EPT_POINTER);
     bringup::host_cr0 = vmx_vmread(VMCS_HOST_CR0);

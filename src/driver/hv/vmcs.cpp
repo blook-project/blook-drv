@@ -152,16 +152,17 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
                 MmGetPhysicalAddress(&cpu->msr_bitmap).QuadPart);
 
     // 3.24.6.11
-    ept_pointer eptp;
     if (use_ept) {
-        eptp.flags = 0;
-        eptp.memory_type = MEMORY_TYPE_WRITE_BACK;
-        eptp.page_walk_length = 3;
-        eptp.enable_access_and_dirty_flags = 0;
-        eptp.enable_supervisor_shadow_stack_pages = 0;
-        eptp.page_frame_number =
-            MmGetPhysicalAddress(&cpu->ept.pml4).QuadPart >> 12;
-        vmx_vmwrite(VMCS_CTRL_EPT_POINTER, eptp.flags);
+        // Encode the EPTP explicitly (Intel SDM 25.6.11): bits 2:0 = EPT page
+        // walk length (3 = 4 levels), bits 5:3 = memory type (6 = write-back),
+        // bit 6 = A/D support (off), bits 11:0 reserved, above that the PML4 PFN.
+        // The struct-based encoding used before produced 0x1E here - both fields
+        // at the wrong offsets - which makes VM entry reject the EPTP.
+        const auto pfn =
+            (MmGetPhysicalAddress(&cpu->ept.pml4).QuadPart >> 12) &
+            0x000FFFFFFFFFFull;
+        const uint64_t eptp = (pfn << 12) | 3ull | (6ull << 3);
+        vmx_vmwrite(VMCS_CTRL_EPT_POINTER, eptp);
     }
 
     // 3.24.6.12
@@ -380,7 +381,7 @@ void write_vmcs_guest_fields() {
     // region is reused memory, so this has to be written explicitly, not assumed
     // zero.
     vmx_vmwrite(VMCS_GUEST_PENDING_DEBUG_EXCEPTIONS, 0);
-    vmx_vmwrite(0x00004824, 0);  // VMCS_GUEST_INTERRUPTIBILITY_STATE
+    vmx_vmwrite(VMCS_GUEST_INTERRUPTIBILITY_STATE, 0);
 
     // The timer *value* field only exists when the "activate VMX preemption
     // timer" control is 1: writing it with the control clear fails the VMWRITE
