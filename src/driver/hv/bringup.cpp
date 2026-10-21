@@ -75,6 +75,9 @@ void write_dword(const wchar_t* name, uint32_t value) {
     UNICODE_STRING value_name;
     RtlInitUnicodeString(&value_name, name);
     ZwSetValueKey(key, &value_name, 0, REG_DWORD, &value, sizeof(value));
+    // A hard VM power-off (the only way to recover a wedged guest) loses
+    // registry writes that have not reached the hive, so flush explicitly.
+    ZwFlushKey(key);
     ZwClose(key);
 }
 
