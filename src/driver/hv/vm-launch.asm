@@ -56,4 +56,13 @@ successful_launch:
   hlt
   jmp $
 ?blook_guest_stub_hlt@hv@@YAXXZ endp
+
+; void blook_guest_stub_cpuid();
+; Stage 5: guest mode with a CPUID first. CPUID always causes a VM exit, so a
+; recorded exit proves guest code executed and the exit path returns to root.
+?blook_guest_stub_cpuid@hv@@YAXXZ proc
+  cpuid
+  hlt
+  jmp $
+?blook_guest_stub_cpuid@hv@@YAXXZ endp
 end

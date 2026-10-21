@@ -23,6 +23,7 @@ bool vm_launch();
 bool blook_vm_launch_stub(uint64_t guest_rip, uint64_t command);
 void blook_guest_stub();
 void blook_guest_stub_hlt();
+void blook_guest_stub_cpuid();
 
 // cache certain fixed values (CPUID results, MSRs, etc) that are used
 // frequently during VMX operation (to speed up vm-exit handling).
@@ -762,6 +763,21 @@ bool virtualize_cpu(vcpu* const cpu) {
         bringup::publish_stage();
         irql = KeRaiseIrqlToDpcLevel();
         _disable();
+    }
+    if (blook::tuning::start_stage() == 5) {
+        // Stage 5: the stub starts with a CPUID, which always VM-exits. If the
+        // handler records the exit, guest execution and the exit path are both
+        // alive; if nothing is recorded, VM entry itself is not taking effect.
+        if (!blook_vm_launch_stub(
+                reinterpret_cast<uint64_t>(&blook_guest_stub_cpuid), 0)) {
+            bringup::record_launch_error(vmx_vmread(VMCS_VM_INSTRUCTION_ERROR));
+            bringup::stage("cpuid-vmlaunch-failed", cpu->index);
+            vmx_vmxoff();
+            rollback();
+            return false;
+        }
+        bringup::stage("cpuid-stub-returned", cpu->index);
+        return true;
     }
     if (blook::tuning::start_stage() == 4) {
         // Stage 4: enter guest mode into a hlt-only stub (no VMCALL at all).
