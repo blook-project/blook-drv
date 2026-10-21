@@ -3,6 +3,10 @@
 #include "driver/pool.hpp"
 #include "vmx.h"
 
+namespace hv {
+void blook_serial_out(uint8_t byte);
+}
+
 namespace hv::bringup {
 exit_storm last_storm{};
 volatile uint32_t storm_count{};
@@ -40,6 +44,35 @@ PVOID stage_thread{};
 void write_dword(const wchar_t* name, uint32_t value);
 }  // namespace
 
+void serial_out(char c) {
+    blook_serial_out(static_cast<uint8_t>(c));
+}
+
+void serial_hex(uint32_t value) {
+    static constexpr char digits[] = "0123456789ABCDEF";
+    for (int shift = 28; shift >= 0; shift -= 4)
+        serial_out(digits[(value >> shift) & 0xF]);
+}
+
+void serial_mark(char tag, uint32_t first, uint32_t second) {
+    serial_out(tag);
+    serial_hex(first);
+    if (second) {
+        serial_out(':');
+        serial_hex(second);
+    }
+    serial_out('\r'); serial_out('\n');
+}
+
+void serial_exit(uint32_t reason, uint64_t rip) {
+    serial_out('X');
+    serial_hex(reason);
+    serial_out(':');
+    serial_hex(static_cast<uint32_t>(rip >> 32));
+    serial_hex(static_cast<uint32_t>(rip));
+    serial_out('\r'); serial_out('\n');
+}
+
 void stage(const char* name, uint32_t cpu) {
     stage_cpu = cpu;
     last_stage_cpu = cpu;
@@ -47,6 +80,8 @@ void stage(const char* name, uint32_t cpu) {
     // The guest is configured with a serial debug port; without a debugger
     // attached DbgPrint is cheap and lands in the serial log.
     DbgPrint("[blook] stage=%s cpu=%u\n", name, cpu);
+    // Serial breadcrumb: survives a guest freeze without any debugger.
+    serial_mark('S', stage_serial, cpu);
 }
 
 void record_storm(uint32_t cpu, uint32_t reason, uint64_t rip, uint32_t count) {
@@ -183,6 +218,13 @@ void write_snapshot() {
         {L"TrueEntryAllowed1", static_cast<uint32_t>(controls_snapshot[12])},
         {L"SecondaryCtls", static_cast<uint32_t>(controls_snapshot[13])},
         {L"VmxBasic", static_cast<uint32_t>(controls_snapshot[14])},
+        {L"CurrentCr3Low", static_cast<uint32_t>(__readcr3())},
+        {L"HostCr3Low",
+         static_cast<uint32_t>(vmx_vmread(VMCS_HOST_CR3))},
+        {L"HostStateOk",
+         static_cast<uint32_t>(
+             (MmIsAddressValid(reinterpret_cast<void*>(host_rip)) ? 1 : 0) |
+             (MmIsAddressValid(reinterpret_cast<void*>(host_rsp)) ? 2 : 0))},
     };
     for (const auto& entry : values) {
         UNICODE_STRING value_name;

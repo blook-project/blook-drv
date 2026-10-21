@@ -94,6 +94,12 @@ void record_vmwrite_failure(uint64_t field);
 
 // Breadcrumb with a stage name and the logical processor index.
 void stage(const char* name, uint32_t cpu);
+// Emit text on the emulated COM1 UART (file-backed serial.log). Safe in root
+// mode: plain port I/O, no locks, no allocation, no debugger protocol.
+void serial_out(char c);
+void serial_hex(uint32_t value);
+void serial_mark(char tag, uint32_t first = 0, uint32_t second = 0);
+void serial_exit(uint32_t reason, uint64_t rip);
 // Records an exit storm (called from root mode: no allocation, no locks).
 void record_storm(uint32_t cpu, uint32_t reason, uint64_t rip, uint32_t count);
 // Writes the last storm into the service key (PASSIVE_LEVEL, best effort) so a

@@ -36,4 +36,15 @@ blook_vmcall_site::
   ret
 ?vmx_vmcall@hv@@YA_KAEAUhypercall_input@1@@Z endp
 
+; void blook_serial_out(uint8_t byte);
+; Straight to the emulated COM1 UART: plain port I/O, not the KD protocol, so
+; the bytes land in the VM's file-backed serial.log and survive a guest freeze
+; with no debugger attached.
+?blook_serial_out@hv@@YAXE@Z proc
+  mov dx, 3F8h
+  mov al, cl
+  out dx, al
+  ret
+?blook_serial_out@hv@@YAXE@Z endp
+
 end

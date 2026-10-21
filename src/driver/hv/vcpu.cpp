@@ -277,6 +277,11 @@ static void dispatch_vm_exit(vcpu* const cpu, vmx_vmexit_reason const reason) {
 
 // called for every vm-exit
 bool handle_vm_exit(guest_context* const ctx) {
+    // Serial breadcrumb first: if the guest dies in the exit path, this is the
+    // only record that the handler ran at all (no debugger needed).
+    bringup::serial_exit(
+        static_cast<uint32_t>(vmx_vmread(VMCS_EXIT_REASON) & 0xFFFF),
+        vmx_vmread(VMCS_GUEST_RIP));
     // get the current vcpu
     auto const cpu = reinterpret_cast<vcpu*>(_readfsbase_u64());
     cpu->ctx = ctx;
@@ -719,6 +724,10 @@ bool virtualize_cpu(vcpu* const cpu) {
         return false;
     }
     bringup::stage("vmxon", cpu->index);
+    // VMCLEAR first: a stale launch state left in the VMCS region makes the
+    // following VMLAUNCH fail (or, on a nested host, wedge), and the region is
+    // reused memory, not guaranteed clean.
+    vmx_vmclear(MmGetPhysicalAddress(&cpu->vmcs).QuadPart);
     if (!load_vmcs_pointer(cpu->vmcs)) {
         bringup::stage("vmptrld-failed", cpu->index);
         vmx_vmxoff();
