@@ -118,16 +118,19 @@ void write_snapshot() {
     controls_snapshot[2] = vmx_vmread(0x0000401E);  // PROC_BASED2
     controls_snapshot[3] = vmx_vmread(0x0000400C);  // VMEXIT_CONTROLS
     controls_snapshot[4] = vmx_vmread(VMCS_CTRL_VMENTRY_CONTROLS);
-    controls_snapshot[5] = __readmsr(0x00004811);   // TRUE_PINBASED 0
-    controls_snapshot[6] = __readmsr(0x00004811) >> 32;
-    controls_snapshot[7] = __readmsr(0x00004813);   // TRUE_PROCBASED 0
-    controls_snapshot[8] = __readmsr(0x00004813) >> 32;
-    controls_snapshot[9] = __readmsr(0x00004815);   // TRUE_EXIT 0
-    controls_snapshot[10] = __readmsr(0x00004815) >> 32;
-    controls_snapshot[11] = __readmsr(0x00004817);  // TRUE_ENTRY 0
-    controls_snapshot[12] = __readmsr(0x00004817) >> 32;
-    controls_snapshot[13] = __readmsr(0x0000480B) >> 32;  // PROCBASED_CTLS2 hi
-    controls_snapshot[14] = static_cast<uint32_t>(__readmsr(0x0000048A));
+    // TRUE_* capability MSRs (Intel SDM 25.6.2): the validator uses these when
+    // IA32_VMX_BASIC[55] is set, which is the common case on modern CPUs and on
+    // VMware nested VMX.
+    controls_snapshot[5] = static_cast<uint32_t>(__readmsr(0x0000048D));
+    controls_snapshot[6] = static_cast<uint32_t>(__readmsr(0x0000048D) >> 32);
+    controls_snapshot[7] = static_cast<uint32_t>(__readmsr(0x0000048E));
+    controls_snapshot[8] = static_cast<uint32_t>(__readmsr(0x0000048E) >> 32);
+    controls_snapshot[9] = static_cast<uint32_t>(__readmsr(0x0000048F));
+    controls_snapshot[10] = static_cast<uint32_t>(__readmsr(0x0000048F) >> 32);
+    controls_snapshot[11] = static_cast<uint32_t>(__readmsr(0x00000490));
+    controls_snapshot[12] = static_cast<uint32_t>(__readmsr(0x00000490) >> 32);
+    controls_snapshot[13] = static_cast<uint32_t>(__readmsr(0x0000048B) >> 32);
+    controls_snapshot[14] = static_cast<uint32_t>(__readmsr(0x00000480));
     (void)controls_snapshot;
     OBJECT_ATTRIBUTES attributes{};
     InitializeObjectAttributes(&attributes, &parameters,
