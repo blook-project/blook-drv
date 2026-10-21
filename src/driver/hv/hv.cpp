@@ -236,6 +236,7 @@ NTSTATUS start() {
     ghv.system_cr3.flags = __readcr3();
     prepare_host_page_tables();
     KeUnstackDetachProcess(&state);
+    bringup::start_stage_thread();
     bringup::stage("preflight-ok", ghv.vcpu_count);
     for (ULONG i = 0; i < ghv.vcpu_count; ++i) {
         affinity_guard affinity{i};
@@ -248,6 +249,7 @@ NTSTATUS start() {
             return STATUS_UNSUCCESSFUL;
         }
     }
+    bringup::disarm_stage_thread();
     // Measure the cost of a world switch so it can be removed from the guest
     // clock. This runs after this processor is virtualised, so the VMCALLs
     // inside the measurement perform a real non-root to root round trip.
