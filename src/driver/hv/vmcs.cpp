@@ -98,7 +98,12 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     entry_ctrl.ia32e_mode_guest = 1;
     entry_ctrl.load_ia32_pat = 1;
     entry_ctrl.conceal_vmx_from_pt = minimal ? 0 : 1;
-    write_ctrl_entry_safe(entry_ctrl);
+    if (const auto raw = blook::tuning::raw_entry_ctls(); raw != 0) {
+        // Raw override: skip the capability merge entirely (see tuning.hpp).
+        vmx_vmwrite(VMCS_CTRL_VMENTRY_CONTROLS, raw);
+    } else {
+        write_ctrl_entry_safe(entry_ctrl);
+    }
 
     // Record which optional controls the processor actually accepted so the
     // fields they guard are never written unconditionally.
