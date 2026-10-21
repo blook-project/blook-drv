@@ -22,6 +22,7 @@ namespace hv {
 bool vm_launch();
 bool blook_vm_launch_stub(uint64_t guest_rip, uint64_t command);
 void blook_guest_stub();
+void blook_guest_stub_hlt();
 
 // cache certain fixed values (CPUID results, MSRs, etc) that are used
 // frequently during VMX operation (to speed up vm-exit handling).
@@ -288,6 +289,9 @@ bool handle_vm_exit(guest_context* const ctx) {
     // versus "the fetch never left guest mode".
     if (reason.basic_exit_reason < exit_reason_slots)
         ++g_stats.exit_reasons[reason.basic_exit_reason];
+    if (!bringup::first_launch_error)
+        bringup::first_launch_error =
+            static_cast<uint32_t>(vmx_vmread(VMCS_VM_INSTRUCTION_ERROR));
     if (blook::tuning::probe_exits() && !bringup::first_exit_reason) {
         // Root-mode safe: plain stores only; the PASSIVE stage thread persists
         // this immediately, so it survives a hard power-off of a wedged guest.
@@ -725,19 +729,57 @@ bool virtualize_cpu(vcpu* const cpu) {
     write_vmcs_ctrl_fields(cpu);
     write_vmcs_host_fields(cpu);
     write_vmcs_guest_fields();
+    // Entry-state snapshot, taken in root mode before any guest entry. The
+    // stage thread / PASSIVE publish below puts it on disk, so a guest that
+    // dies in VMLAUNCH still reports exactly what it was launched with.
+    bringup::entry_controls = vmx_vmread(VMCS_CTRL_VMENTRY_CONTROLS);
+    bringup::entry_efer = vmx_vmread(0x00002806);  // VMCS_GUEST_IA32_EFER
+    bringup::entry_cr0 = vmx_vmread(VMCS_GUEST_CR0);
+    bringup::entry_cr4 = vmx_vmread(VMCS_GUEST_CR4);
+    bringup::entry_activity = vmx_vmread(VMCS_GUEST_ACTIVITY_STATE);
+    bringup::entry_gdtr_limit = vmx_vmread(VMCS_GUEST_GDTR_LIMIT);
+    bringup::entry_idtr_limit = vmx_vmread(VMCS_GUEST_IDTR_LIMIT);
+    bringup::entry_interruptibility = vmx_vmread(VMCS_GUEST_INTERRUPTIBILITY_STATE);
+    bringup::entry_pending_debug = vmx_vmread(0x4822);  // PENDING_DBG_EXCEPTIONS
+    bringup::entry_link_pointer = vmx_vmread(VMCS_GUEST_VMCS_LINK_POINTER);
+    bringup::entry_eptp = vmx_vmread(VMCS_CTRL_EPT_POINTER);
+    bringup::host_cr0 = vmx_vmread(VMCS_HOST_CR0);
+    bringup::host_cr4 = vmx_vmread(VMCS_HOST_CR4);
+    bringup::host_rsp = vmx_vmread(VMCS_HOST_RSP);
+    bringup::host_rip = vmx_vmread(VMCS_HOST_RIP);
+    bringup::host_efer = vmx_vmread(0x00002C02);  // VMCS_HOST_IA32_EFER
+    bringup::entry_ctls_allowed0 = __readmsr(IA32_VMX_ENTRY_CTLS);
+    bringup::entry_ctls_allowed1 = __readmsr(IA32_VMX_ENTRY_CTLS) >> 32;
     bringup::stage("vmcs-ready", cpu->index);
+    if (blook::tuning::probe_exits() || blook::tuning::start_stage() >= 2) {
+        // Persist at PASSIVE level before entering the guest. Still in root
+        // operation on the normal CR3, so interrupts/DPCs are the ordinary
+        // kernel ones; the host-state fields only matter once a VM exit happens.
+        _enable();
+        KeLowerIrql(irql);
+        bringup::publish_stage();
+        irql = KeRaiseIrqlToDpcLevel();
+        _disable();
+    }
+    if (blook::tuning::start_stage() == 4) {
+        // Stage 4: enter guest mode into a hlt-only stub (no VMCALL at all).
+        if (!blook_vm_launch_stub(
+                reinterpret_cast<uint64_t>(&blook_guest_stub_hlt), 0)) {
+            bringup::record_launch_error(vmx_vmread(VMCS_VM_INSTRUCTION_ERROR));
+            bringup::stage("hlt-vmlaunch-failed", cpu->index);
+            vmx_vmxoff();
+            rollback();
+            return false;
+        }
+        bringup::stage("hlt-stub-returned", cpu->index);
+        return true;
+    }
     if (blook::tuning::start_stage() == 3) {
         // Stage 3: enter guest mode straight into a three-instruction stub
         // (vmcall; hlt; jmp $) with the hypercall command in RAX. Nothing in
         // this path depends on our C++ continuation, so the breadcrumbs separate
         // "VM entry rejected" from "first VM exit broken".
-        bringup::entry_controls = vmx_vmread(VMCS_CTRL_VMENTRY_CONTROLS);
-        bringup::entry_efer = vmx_vmread(0x00002806);  // VMCS_GUEST_IA32_EFER
-        bringup::entry_cr0 = vmx_vmread(VMCS_GUEST_CR0);
-        bringup::entry_cr4 = vmx_vmread(VMCS_GUEST_CR4);
-        bringup::entry_activity = vmx_vmread(VMCS_GUEST_ACTIVITY_STATE);
-        bringup::entry_gdtr_limit = vmx_vmread(VMCS_GUEST_GDTR_LIMIT);
-        bringup::entry_idtr_limit = vmx_vmread(VMCS_GUEST_IDTR_LIMIT);
+
         const uint64_t command =
             (static_cast<uint64_t>(call_tag) << 8) |
             static_cast<uint8_t>(operation::ping);

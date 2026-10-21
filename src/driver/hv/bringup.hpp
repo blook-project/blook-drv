@@ -48,6 +48,21 @@ extern volatile uint64_t entry_cr4;
 extern volatile uint64_t entry_activity;
 extern volatile uint64_t entry_gdtr_limit;
 extern volatile uint64_t entry_idtr_limit;
+extern volatile uint64_t entry_interruptibility;
+extern volatile uint64_t entry_pending_debug;
+extern volatile uint64_t entry_link_pointer;
+extern volatile uint64_t entry_eptp;
+extern volatile uint64_t host_cr0;
+extern volatile uint64_t host_cr4;
+extern volatile uint64_t host_rsp;
+extern volatile uint64_t host_rip;
+extern volatile uint64_t host_efer;
+// VM-instruction error read in root mode on the first VM exit (0 = VMLAUNCH
+// reported success).
+extern volatile uint32_t first_launch_error;
+// IA32_VMX_ENTRY_CTLS allowed-0 / allowed-1 halves, for the comparison table.
+extern volatile uint64_t entry_ctls_allowed0;
+extern volatile uint64_t entry_ctls_allowed1;
 void publish_stage();
 // First-exit probe breadcrumbs (Parameters\ProbeExits); they go to the
 // independent bring-up key so a self-hide on failure cannot erase them.

@@ -18,6 +18,18 @@ volatile uint64_t entry_cr4{};
 volatile uint64_t entry_activity{};
 volatile uint64_t entry_gdtr_limit{};
 volatile uint64_t entry_idtr_limit{};
+volatile uint64_t entry_interruptibility{};
+volatile uint64_t entry_pending_debug{};
+volatile uint64_t entry_link_pointer{};
+volatile uint64_t entry_eptp{};
+volatile uint64_t host_cr0{};
+volatile uint64_t host_cr4{};
+volatile uint64_t host_rsp{};
+volatile uint64_t host_rip{};
+volatile uint64_t host_efer{};
+volatile uint32_t first_launch_error{};
+volatile uint64_t entry_ctls_allowed0{};
+volatile uint64_t entry_ctls_allowed1{};
 volatile uint64_t first_exit_rip{};
 namespace {
 UNICODE_STRING parameters{};
@@ -110,6 +122,20 @@ void stage_worker(PVOID) {
                         static_cast<uint32_t>(entry_gdtr_limit));
             write_dword(L"EntryIdtrLimit",
                         static_cast<uint32_t>(entry_idtr_limit));
+            write_dword(L"EntryIntr", static_cast<uint32_t>(entry_interruptibility));
+            write_dword(L"EntryPendDbg", static_cast<uint32_t>(entry_pending_debug));
+            write_dword(L"EntryLinkPtr", static_cast<uint32_t>(entry_link_pointer));
+            write_dword(L"EntryEptp", static_cast<uint32_t>(entry_eptp));
+            write_dword(L"HostCr0Low", static_cast<uint32_t>(host_cr0));
+            write_dword(L"HostCr4Low", static_cast<uint32_t>(host_cr4));
+            write_dword(L"HostRspLow", static_cast<uint32_t>(host_rsp));
+            write_dword(L"HostRipLow", static_cast<uint32_t>(host_rip));
+            write_dword(L"HostEfer", static_cast<uint32_t>(host_efer));
+            write_dword(L"EntryCtlsAllowed0",
+                        static_cast<uint32_t>(entry_ctls_allowed0));
+            write_dword(L"EntryCtlsAllowed1",
+                        static_cast<uint32_t>(entry_ctls_allowed1));
+            write_dword(L"FirstLaunchErr", first_launch_error);
         }
         if (first_exit_reason) {
             write_dword(L"FirstExitReason", first_exit_reason);

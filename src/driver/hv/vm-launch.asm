@@ -48,4 +48,12 @@ successful_launch:
   hlt
   jmp $
 ?blook_guest_stub@hv@@YAXXZ endp
+
+; void blook_guest_stub_hlt();
+; Stage 4: guest mode with no VMCALL at all - a halt-only stub, to tell a broken
+; VMCALL/exit path apart from a broken entry.
+?blook_guest_stub_hlt@hv@@YAXXZ proc
+  hlt
+  jmp $
+?blook_guest_stub_hlt@hv@@YAXXZ endp
 end
