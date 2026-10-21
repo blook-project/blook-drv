@@ -93,7 +93,7 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     exit_ctrl.load_ia32_perf_global_ctrl = minimal ? 0 : 1;
     exit_ctrl.conceal_vmx_from_pt = minimal ? 0 : 1;
     if (const auto raw = blook::tuning::raw_exit_ctls(); raw != 0)
-        vmx_vmwrite(VMCS_CTRL_VMEXIT_CONTROLS, raw);
+        vmx_vmwrite(VMCS_CTRL_PRIMARY_VMEXIT_CONTROLS, raw);
     else
         write_ctrl_exit_safe(exit_ctrl);
 
