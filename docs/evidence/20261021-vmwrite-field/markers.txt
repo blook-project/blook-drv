@@ -1,0 +1,41 @@
+# Stage-1 proof and VMLAUNCH blocker markers (captured in vm-drv, 2026-10-21)
+
+These are the `Parameters\*` marker values read back from the guest registry with
+`bvmenv exec ... reg.exe query`, on a signed driver built from 16df829
+(preemption-timer fix) / de8c991 (instruction-length guard).
+
+## Stage 1 (VMXON + VMPTRLD + VMXOFF, 1 CPU, minimal controls, solo) — PASSES
+
+Settings: `Solo=1 StartStage=1 BringupMinimal=1 MaxCpus=1 InterceptDebug=0
+SkipTimingCalibration=1 TraceMarkers=1`
+
+```
+sc start BlookDrv -> STATE: 4 RUNNING / WIN32_EXIT_CODE 0 / SERVICE_EXIT_CODE 0
+TraceLast          REG_DWORD 0x3        (initialize_sessions completed)
+TraceExtra         REG_DWORD 0x0
+VmwriteFieldLow    REG_DWORD 0x0        (no VMCS write failed)
+VmwriteFieldHigh   REG_DWORD 0x0
+LaunchErrorLow     REG_DWORD 0x0
+StageSerial        REG_DWORD 0x5        (vmxon, vmptrld, vmcs-ready, vmxon-only-ok)
+StageCpu           REG_DWORD 0x0
+guest `echo ALIVE` -> ALIVE             (guest not wedged)
+```
+
+## Full start (StartStage=0, same minimal preset) — STILL WEDGES
+
+Before the preemption-timer fix this produced the 0x7E captured in
+`../20261021-kd-stage1/kd-analyze.txt`. After the fix the failed-write marker
+named the culprit:
+
+```
+TraceLast          REG_DWORD 0x102      (initialize_sessions failed)
+TraceExtra         REG_DWORD 0xc0000001 (STATUS_UNSUCCESSFUL)
+VmwriteFieldLow    REG_DWORD 0x482E     (VMCS_GUEST_VMX_PREEMPTION_TIMER_VALUE)
+VmwriteFieldHigh   REG_DWORD 0x0
+StageSerial        REG_DWORD 0x5
+StageCpu           REG_DWORD 0x0
+```
+
+With StartStage=0 after the fix the guest wedges inside VMLAUNCH: `sc start`
+never returns, `bvmenv exec`/`state` time out and the MKS screen is black, with
+no bugcheck (so the next step needs a kd capture that continues the target).
