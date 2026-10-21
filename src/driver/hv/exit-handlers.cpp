@@ -221,7 +221,7 @@ void emulate_xsetbv(vcpu* const cpu) {
         return;
     }
 
-    skip_instruction();
+    skip_instruction(3);
 }
 
 void emulate_vmxon(vcpu*) {
@@ -300,7 +300,7 @@ void emulate_vmcall(vcpu* const cpu) {
             inject_hw_exception(invalid_opcode);
             return;
     }
-    skip_instruction();
+    skip_instruction(3);
 }
 
 void handle_vmx_preemption(vcpu*) {
