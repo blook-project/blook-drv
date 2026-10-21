@@ -44,7 +44,10 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     const auto plan = blook::policy::make_plan(capabilities);
     pin_based_ctrl.activate_vmx_preemption_timer =
         (!minimal && plan.use_preemption_timer) ? 1 : 0;
-    write_ctrl_pin_based_safe(pin_based_ctrl);
+    if (const auto raw = blook::tuning::raw_pin_ctls(); raw != 0)
+        vmx_vmwrite(VMCS_CTRL_PIN_BASED_VM_EXECUTION_CONTROLS, raw);
+    else
+        write_ctrl_pin_based_safe(pin_based_ctrl);
 
     // 3.24.6.2
     ia32_vmx_procbased_ctls_register proc_based_ctrl;
@@ -89,7 +92,10 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     exit_ctrl.load_ia32_pat = 1;
     exit_ctrl.load_ia32_perf_global_ctrl = minimal ? 0 : 1;
     exit_ctrl.conceal_vmx_from_pt = minimal ? 0 : 1;
-    write_ctrl_exit_safe(exit_ctrl);
+    if (const auto raw = blook::tuning::raw_exit_ctls(); raw != 0)
+        vmx_vmwrite(VMCS_CTRL_VMEXIT_CONTROLS, raw);
+    else
+        write_ctrl_exit_safe(exit_ctrl);
 
     // 3.24.8
     ia32_vmx_entry_ctls_register entry_ctrl;

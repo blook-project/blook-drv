@@ -70,6 +70,10 @@ bool probe_exits();
 // MSRs. VMware nested VMX can expose entry-control capability values that do not
 // behave like bare metal, so the merge has to be bypassable to test.
 uint32_t raw_entry_ctls();
+// Same raw overrides for the other control groups (see raw_entry_ctls). Used to
+// pin the nested configuration to the capability MSRs allowed-0 values only.
+uint32_t raw_pin_ctls();
+uint32_t raw_exit_ctls();
 
 // Records a phase marker (best effort, PASSIVE_LEVEL only, ignores failures).
 void mark(uint32_t phase, uint32_t extra = 0);
