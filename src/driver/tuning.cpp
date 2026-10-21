@@ -17,6 +17,7 @@ bool no_hypervisor_value{};
 uint32_t max_cpus_value{};
 bool no_ept_value{};
 bool host_page_tables_value{ true };
+bool probe_exits_value{};
 
 bool read_dword(const wchar_t* name, uint32_t& value) {
     if (!parameters.Buffer)
@@ -94,6 +95,9 @@ void initialize(PCUNICODE_STRING service_path) {
     uint32_t max_cpus_dword{};
     if (read_dword(L"MaxCpus", max_cpus_dword))
         max_cpus_value = max_cpus_dword;
+    uint32_t probe{};
+    if (read_dword(L"ProbeExits", probe))
+        probe_exits_value = probe != 0;
     uint32_t host_pt{};
     if (read_dword(L"HostPageTables", host_pt))
         host_page_tables_value = host_pt != 0;
@@ -137,6 +141,10 @@ bool no_hypervisor() {
 
 uint32_t max_cpus() {
     return max_cpus_value;
+}
+
+bool probe_exits() {
+    return probe_exits_value;
 }
 
 bool host_page_tables() {

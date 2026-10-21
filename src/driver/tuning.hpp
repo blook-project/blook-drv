@@ -60,6 +60,11 @@ bool bringup_no_ept();
 // the guest CR3 instead of the private identity page tables. Bisects a nested
 // wedge that happens on the first VM exit (host CR3 switch).
 bool host_page_tables();
+// Debug switch (Parameters\ProbeExits): after virtualising, force a CPUID and a
+// VMCALL round trip in guest mode, recording a breadcrumb before each step. The
+// marks land in the service key (on disk), so they survive a guest freeze and a
+// host-side VM reset: the highest TraceLast tells us which step wedged.
+bool probe_exits();
 
 // Records a phase marker (best effort, PASSIVE_LEVEL only, ignores failures).
 void mark(uint32_t phase, uint32_t extra = 0);
