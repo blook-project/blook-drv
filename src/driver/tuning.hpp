@@ -31,6 +31,11 @@ bool intercept_debug();
 bool intercept_rdtscp();
 // Bring-up tracing into the service key (off unless asked for).
 bool trace_markers();
+// Startup-only bisect switch: skip the VMCALL-based timing calibration in
+// hv::start(). That calibration is the only bring-up step that round-trips
+// through VMCALL with interrupts disabled, so it is the first suspect when a
+// nested host freezes right after the hypervisor starts.
+bool skip_timing_calibration();
 
 // Records a phase marker (best effort, PASSIVE_LEVEL only, ignores failures).
 void mark(uint32_t phase, uint32_t extra = 0);

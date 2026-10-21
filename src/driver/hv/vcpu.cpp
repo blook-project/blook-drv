@@ -288,11 +288,14 @@ bool handle_vm_exit(guest_context* const ctx) {
 
     cpu->stop_virtualization = false;
 
-    // Exit-storm watchdog (see bringup.hpp): if this processor keeps taking the
-    // same exit at the same guest RIP, the handler is not advancing the guest.
-    // Abort virtualisation on this processor so hv::start returns an error and
-    // the failure can be read from the service key, instead of freezing the
-    // whole guest in an endless root/guest loop.
+    // Exit-storm watchdog (see bringup.hpp). Two signatures are checked:
+    //  * the same (exit reason, guest RIP) over and over: a handler that fails
+    //    to advance the guest instruction;
+    //  * a sustained exit rate no real VM exit can produce (a runaway loop that
+    //    changes RIP every iteration, e.g. a one-byte mis-decode).
+    // Either way virtualisation on this processor is aborted, so hv::start
+    // returns an error that can be read from the service key instead of the
+    // guest freezing in an endless root/guest loop.
     {
         const auto guest_rip = vmx_vmread(VMCS_GUEST_RIP);
         if (reason.basic_exit_reason == cpu->last_exit_reason &&
@@ -309,8 +312,20 @@ bool handle_vm_exit(guest_context* const ctx) {
             cpu->last_exit_rip = guest_rip;
             cpu->same_exit_count = 0;
         }
+        if (++cpu->exit_rate_count >= 1024) {
+            const auto now = __rdtsc();
+            const auto elapsed = now - cpu->exit_rate_tsc;
+            if (cpu->exit_rate_tsc != 0 && elapsed < 1024ull * 100ull) {
+                bringup::record_storm(cpu->index, reason.basic_exit_reason,
+                                      guest_rip, cpu->exit_rate_count);
+                bringup::stage("exit-rate-storm", cpu->index);
+                cpu->stop_virtualization = true;
+                return true;
+            }
+            cpu->exit_rate_tsc = now;
+            cpu->exit_rate_count = 0;
+        }
     }
-
     // Only exits that exist because an instruction was intercepted have a cost
     // that can be removed from the guest clock without accumulating error.
     switch (reason.basic_exit_reason) {

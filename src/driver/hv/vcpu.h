@@ -70,6 +70,8 @@ struct vcpu {
     uint32_t last_exit_reason{};
     uint64_t last_exit_rip{};
     uint32_t same_exit_count{};
+    uint32_t exit_rate_count{};
+    uint64_t exit_rate_tsc{};
 
     // Debug-register interception state (see hwbreak.hpp / swbreak.hpp).
     // DR0-DR3/DR6 are not switched by VMX (only DR7 is, with the save/load

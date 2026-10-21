@@ -247,9 +247,20 @@ NTSTATUS start() {
     // Measure the cost of a world switch so it can be removed from the guest
     // clock. This runs after this processor is virtualised, so the VMCALLs
     // inside the measurement perform a real non-root to root round trip.
-    const auto tsc_overhead = measure_vm_exit_tsc_overhead();
-    const auto mperf_overhead = measure_vm_exit_mperf_overhead();
-    const auto ref_overhead = measure_vm_exit_ref_tsc_overhead();
+    uint64_t tsc_overhead{};
+    uint64_t mperf_overhead{};
+    uint64_t ref_overhead{};
+    if (blook::tuning::skip_timing_calibration()) {
+        // Bisect switch (Parameters\SkipTimingCalibration): the VMCALL-based
+        // calibration is the only bring-up step that round-trips through
+        // VMCALL with interrupts disabled. With zero overheads the guest clock
+        // simply is not compensated; hooks and hiding still work.
+        bringup::stage("timing-skipped", 0);
+    } else {
+        tsc_overhead = measure_vm_exit_tsc_overhead();
+        mperf_overhead = measure_vm_exit_mperf_overhead();
+        ref_overhead = measure_vm_exit_ref_tsc_overhead();
+    }
     for (ULONG i = 0; i < ghv.vcpu_count; ++i) {
         ghv.vcpus[i]->vm_exit_tsc_overhead = tsc_overhead;
         ghv.vcpus[i]->vm_exit_mperf_overhead = mperf_overhead;

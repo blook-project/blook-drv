@@ -12,6 +12,7 @@ param(
     [int]$ReadyTimeoutSeconds = 600,
     [switch]$KeepVm,
     [int]$InterceptDebug = 0,
+    [int]$SkipTimingCalibration = 1,
     [string]$Artifacts
 )
 
@@ -203,6 +204,7 @@ try {
     Invoke-Guest -Command "cmd.exe /c reg.exe add $params /f /v InterceptDebug /t REG_DWORD /d $InterceptDebug" -TimeoutSeconds 60 | Out-Null
     Invoke-Guest -Command "cmd.exe /c reg.exe add $params /f /v InterceptRdtscp /t REG_DWORD /d 0" -TimeoutSeconds 60 | Out-Null
     Invoke-Guest -Command "cmd.exe /c reg.exe add $params /f /v TraceMarkers /t REG_DWORD /d 1" -TimeoutSeconds 60 | Out-Null
+    Invoke-Guest -Command "cmd.exe /c reg.exe add $params /f /v SkipTimingCalibration /t REG_DWORD /d $SkipTimingCalibration" -TimeoutSeconds 60 | Out-Null
     $start = Invoke-Guest -Command "cmd /c $guestRoot\blook-loader.exe start"
     L "  start exit=$($start.ExitCode): $($start.StdOut)"
     $afterState = Invoke-Bvmenv -Arguments @('state', $Vm, '--json') -TimeoutSeconds 60
