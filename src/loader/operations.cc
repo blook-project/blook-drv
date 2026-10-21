@@ -78,11 +78,13 @@ bool inside_virtual_machine() {
     // set by the e2e harness on a command line it executes through bvmenv
     // inside the guest. A host shell does not have them, so a driver can never
     // be loaded (or stopped) on the physical machine by accident. Deliberately
-    // no CPUID/model check: once the hypervisor is running it masks CPUID, and a
-    // heuristic that changes its answer under our own driver would block `stop`.
+    // no CPUID/model check: once the hypervisor is running it masks CPUID, and
+    // a heuristic that changes its answer under our own driver would block
+    // `stop`.
     return std::getenv("BLOOK_VM_GUEST") != nullptr &&
            std::getenv("BLOOK_ALLOW_KERNEL_LOAD") != nullptr;
-}}  // namespace
+}
+}  // namespace
 
 result service_command(const cli::command& command, output_sink& output) {
     using enum cli::kind;

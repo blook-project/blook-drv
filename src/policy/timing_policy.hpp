@@ -4,9 +4,10 @@
 // TSC / performance-counter compensation math.
 //
 // The hypervisor removes the cost of the world switch from the guest clock by
-// adjusting the TSC offset, and keeps APERF/MPERF/PERF_GLOBAL_CTRL continuous by
-// snapshotting them on exit and restoring them on entry. The arithmetic is pure
-// and unit-tested here; `hv/timing.cpp` only performs the VMCS/MSR side effects.
+// adjusting the TSC offset, and keeps APERF/MPERF/PERF_GLOBAL_CTRL continuous
+// by snapshotting them on exit and restoring them on entry. The arithmetic is
+// pure and unit-tested here; `hv/timing.cpp` only performs the VMCS/MSR side
+// effects.
 namespace blook::policy {
 
 // What the vm-exit path should do to the guest clock for this exit.
@@ -36,7 +37,8 @@ inline constexpr uint64_t resync_interval_ticks = 10000;
 
 // `timing_hidden` is the startup switch; `attributable` says the exit came from
 // an intercepted instruction; `overhead` is the measured world-switch cost for
-// this exit; `timer_shift` is IA32_VMX_MISC's preemption-timer/tsc relationship.
+// this exit; `timer_shift` is IA32_VMX_MISC's preemption-timer/tsc
+// relationship.
 inline tsc_compensation compensate(bool timing_hidden, bool attributable,
                                    uint64_t overhead, uint32_t timer_shift) {
     tsc_compensation result;
@@ -65,7 +67,8 @@ inline uint64_t adjust_perf_counter(uint64_t snapshot, uint64_t overhead) {
 // Whether IA32_FIXED_CTR2 (the reference TSC counter) is counting this context
 // and therefore needs the same correction. `cpl` is the guest CPL (0 or 3),
 // `enable_os`/`enable_user` are the EN2_OS/EN2_USR bits of IA32_FIXED_CTR_CTRL.
-inline bool fixed_ctr2_counting(uint32_t cpl, bool enable_os, bool enable_user) {
+inline bool fixed_ctr2_counting(uint32_t cpl, bool enable_os,
+                                bool enable_user) {
     return (cpl == 0 && enable_os) || (cpl == 3 && enable_user);
 }
 

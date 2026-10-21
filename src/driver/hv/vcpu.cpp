@@ -622,8 +622,8 @@ bool supported_cpu() {
     __cpuid(r, 1);
     // CPUID.1:ECX[31] (hypervisor present) is *expected* when this driver runs
     // nested, inside a VMware/Hyper-V/KVM guest: the outer hypervisor sets it.
-    // Rejecting it made the driver refuse to start in exactly the environment it
-    // is built to support, so it is deliberately not part of the gate (the
+    // Rejecting it made the driver refuse to start in exactly the environment
+    // it is built to support, so it is deliberately not part of the gate (the
     // bring-up report still records it as a reason code).
     if (!(r[2] & (1 << 5)) || !(r[2] & (1 << 26)))
         return false;

@@ -5,12 +5,13 @@
 
 // Bring-up diagnostics for a nested host.
 //
-// A hypervisor that hangs a guest is the worst kind of bug: nothing is logged and
-// nothing crashes. The two tools here make that state diagnosable from the host:
+// A hypervisor that hangs a guest is the worst kind of bug: nothing is logged
+// and nothing crashes. The two tools here make that state diagnosable from the
+// host:
 //
 //  * `stage()` writes a one-line breadcrumb to the kernel debug port (the guest
-//    has `debug on` with a serial port), so the last completed bring-up stage is
-//    visible in serial.log;
+//    has `debug on` with a serial port), so the last completed bring-up stage
+//    is visible in serial.log;
 //  * an exit-storm watchdog notices a processor that takes the same
 //    (exit reason, guest RIP) over and over - the signature of a handler that
 //    fails to advance the guest instruction - records it and aborts

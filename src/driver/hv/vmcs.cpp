@@ -184,10 +184,12 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
         breakpoint_bits |
             (hv::fault_trace_enabled() ? hv::fault_trace_exception_bitmap : 0));
 
-    vmx_vmwrite(VMCS_CTRL_VMEXIT_MSR_STORE_COUNT, (hv::timing_hidden() && !minimal) ? 4 : 0);
+    vmx_vmwrite(VMCS_CTRL_VMEXIT_MSR_STORE_COUNT,
+                (hv::timing_hidden() && !minimal) ? 4 : 0);
     vmx_vmwrite(VMCS_CTRL_VMEXIT_MSR_STORE_ADDRESS,
                 MmGetPhysicalAddress(&cpu->msr_exit_store).QuadPart);
-    vmx_vmwrite(VMCS_CTRL_VMENTRY_MSR_LOAD_COUNT, (hv::timing_hidden() && !minimal) ? 2 : 0);
+    vmx_vmwrite(VMCS_CTRL_VMENTRY_MSR_LOAD_COUNT,
+                (hv::timing_hidden() && !minimal) ? 2 : 0);
     vmx_vmwrite(VMCS_CTRL_VMENTRY_MSR_LOAD_ADDRESS,
                 MmGetPhysicalAddress(&cpu->msr_entry_load).QuadPart);
     vmx_vmwrite(VMCS_CTRL_VMEXIT_MSR_LOAD_COUNT, 0);

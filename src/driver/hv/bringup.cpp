@@ -33,8 +33,7 @@ void record_storm(uint32_t cpu, uint32_t reason, uint64_t rip, uint32_t count) {
 void remember_service_path(PCUNICODE_STRING path) {
     if (ready || !path || !path->Buffer || !path->Length)
         return;
-    const auto bytes =
-        path->Length + sizeof(L"\\Parameters") + sizeof(WCHAR);
+    const auto bytes = path->Length + sizeof(L"\\Parameters") + sizeof(WCHAR);
     auto* buffer = static_cast<PWCH>(
         ExAllocatePool2(POOL_FLAG_PAGED, bytes, blook::pool_tag));
     if (!buffer)
@@ -55,8 +54,8 @@ void write_dword(const wchar_t* name, uint32_t value) {
         return;
     OBJECT_ATTRIBUTES attributes{};
     InitializeObjectAttributes(&attributes, &parameters,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, nullptr,
-                               nullptr);
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               nullptr, nullptr);
     HANDLE key{};
     if (!NT_SUCCESS(ZwOpenKey(&key, KEY_SET_VALUE, &attributes)))
         return;
