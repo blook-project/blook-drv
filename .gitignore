@@ -27,3 +27,7 @@
 .vs/
 .vscode/
 compile_commands.json
+
+# The SPC signer is a small self-contained .NET tool; CI runs it directly.
+!signer/spcsign/*.exe
+!signer/spcsign/*.dll
