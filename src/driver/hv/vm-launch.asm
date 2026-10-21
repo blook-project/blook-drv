@@ -65,4 +65,14 @@ successful_launch:
   hlt
   jmp $
 ?blook_guest_stub_cpuid@hv@@YAXXZ endp
+
+; void blook_guest_stub_cpuid_vmcall();
+; Stage 6: a CPUID (guaranteed exit) followed by a VMCALL that asks root mode to
+; stop. Proves entry, exit, handler and the return to root in one step.
+?blook_guest_stub_cpuid_vmcall@hv@@YAXXZ proc
+  cpuid
+  vmcall
+  hlt
+  jmp $
+?blook_guest_stub_cpuid_vmcall@hv@@YAXXZ endp
 end

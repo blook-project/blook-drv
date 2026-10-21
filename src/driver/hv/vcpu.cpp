@@ -24,6 +24,7 @@ bool blook_vm_launch_stub(uint64_t guest_rip, uint64_t command);
 void blook_guest_stub();
 void blook_guest_stub_hlt();
 void blook_guest_stub_cpuid();
+void blook_guest_stub_cpuid_vmcall();
 
 // cache certain fixed values (CPUID results, MSRs, etc) that are used
 // frequently during VMX operation (to speed up vm-exit handling).
@@ -772,6 +773,25 @@ bool virtualize_cpu(vcpu* const cpu) {
         bringup::publish_stage();
         irql = KeRaiseIrqlToDpcLevel();
         _disable();
+    }
+    if (blook::tuning::start_stage() == 6) {
+        // Stage 6: CPUID (guaranteed VM exit) then VMCALL(stop). Reaching the
+        // stop path proves entry, exit handling and the return to root.
+        const uint64_t stop_command =
+            (static_cast<uint64_t>(call_tag) << 8) |
+            static_cast<uint8_t>(operation::stop);
+        if (!blook_vm_launch_stub(
+                reinterpret_cast<uint64_t>(&blook_guest_stub_cpuid_vmcall),
+                stop_command)) {
+            bringup::record_launch_error(vmx_vmread(VMCS_VM_INSTRUCTION_ERROR));
+            bringup::stage("stage6-vmlaunch-failed", cpu->index);
+            vmx_vmxoff();
+            rollback();
+            return false;
+        }
+        bringup::stage("stage6-stop-ok", cpu->index);
+        rollback();
+        return true;
     }
     if (blook::tuning::start_stage() == 5) {
         // Stage 5: the stub starts with a CPUID, which always VM-exits. If the

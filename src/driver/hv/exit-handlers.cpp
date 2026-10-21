@@ -231,7 +231,8 @@ void emulate_vmxon(vcpu*) {
 
 extern "C" char blook_vmcall_site;
 void emulate_vmcall(vcpu* const cpu) {
-    if (blook::tuning::start_stage() == 3) {
+    if (blook::tuning::start_stage() == 3 ||
+        blook::tuning::start_stage() == 6) {
         // Stage 3 diagnostic: the guest stub asked to stop; leave VMX on this
         // processor so hv::start can finish and the driver load can complete.
         cpu->stop_virtualization = true;
