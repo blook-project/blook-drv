@@ -51,6 +51,11 @@ uint32_t start_stage();
 // nested VM entry is not usable; hook operations then fail cleanly with
 // STATUS_DEVICE_NOT_READY instead of pretending to work.
 bool no_hypervisor();
+// Debug switch (Parameters\MaxCpus): virtualise only the first N logical
+// processors (0 = all). Nested AP bring-up can be tested on one vCPU.
+uint32_t max_cpus();
+// Debug switch (Parameters\BringupNoEpt): leave EPT disabled (hooks offline).
+bool bringup_no_ept();
 
 // Records a phase marker (best effort, PASSIVE_LEVEL only, ignores failures).
 void mark(uint32_t phase, uint32_t extra = 0);

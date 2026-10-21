@@ -14,6 +14,8 @@ bool skip_timing_value{};
 bool minimal_value{};
 uint32_t start_stage_value{};
 bool no_hypervisor_value{};
+uint32_t max_cpus_value{};
+bool no_ept_value{};
 
 bool read_dword(const wchar_t* name, uint32_t& value) {
     if (!parameters.Buffer)
@@ -88,6 +90,12 @@ void initialize(PCUNICODE_STRING service_path) {
     uint32_t skip_timing{};
     if (read_dword(L"SkipTimingCalibration", skip_timing))
         skip_timing_value = skip_timing != 0;
+    uint32_t max_cpus_dword{};
+    if (read_dword(L"MaxCpus", max_cpus_dword))
+        max_cpus_value = max_cpus_dword;
+    uint32_t no_ept{};
+    if (read_dword(L"BringupNoEpt", no_ept))
+        no_ept_value = no_ept != 0;
     uint32_t no_hv{};
     if (read_dword(L"NoHypervisor", no_hv))
         no_hypervisor_value = no_hv != 0;
@@ -121,6 +129,14 @@ uint32_t start_stage() {
 
 bool no_hypervisor() {
     return no_hypervisor_value;
+}
+
+uint32_t max_cpus() {
+    return max_cpus_value;
+}
+
+bool bringup_no_ept() {
+    return no_ept_value;
 }
 
 bool bringup_minimal() {

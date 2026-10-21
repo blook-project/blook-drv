@@ -725,6 +725,7 @@ bool virtualize_cpu(vcpu* const cpu) {
         return true;
     }
     if (!vm_launch()) {
+        bringup::record_launch_error(vmx_vmread(VMCS_VM_INSTRUCTION_ERROR));
         bringup::stage("vmlaunch-failed", cpu->index);
         vmx_vmxoff();
         rollback();

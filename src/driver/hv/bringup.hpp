@@ -36,8 +36,14 @@ extern exit_storm last_storm;
 extern volatile uint32_t stage_serial;
 extern volatile uint32_t stage_cpu;
 void publish_stage();
+// VMX instruction error from the last failed VMLAUNCH (VMCS_VM_INSTRUCTION_ERROR).
+extern volatile uint64_t launch_error;
+void record_launch_error(uint64_t error);
 extern volatile uint32_t storm_count;
 void publish_stage();
+// VMX instruction error from the last failed VMLAUNCH (VMCS_VM_INSTRUCTION_ERROR).
+extern volatile uint64_t launch_error;
+void record_launch_error(uint64_t error);
 
 // Breadcrumb with a stage name and the logical processor index.
 void stage(const char* name, uint32_t cpu);

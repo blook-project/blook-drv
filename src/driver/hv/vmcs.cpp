@@ -64,7 +64,8 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     // 3.24.6.2
     ia32_vmx_procbased_ctls2_register proc_based_ctrl2;
     proc_based_ctrl2.flags = 0;
-    proc_based_ctrl2.enable_ept = 1;
+    const bool use_ept = blook::tuning::bringup_no_ept() ? false : true;
+    proc_based_ctrl2.enable_ept = use_ept ? 1 : 0;
     // Optional second-level controls: each one is only requested when the
     // capability MSRs allow it on this CPU / nested host.
     proc_based_ctrl2.enable_rdtscp =
@@ -152,6 +153,7 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
 
     // 3.24.6.11
     ept_pointer eptp;
+    if (use_ept) {
     eptp.flags = 0;
     eptp.memory_type = MEMORY_TYPE_WRITE_BACK;
     eptp.page_walk_length = 3;
@@ -160,6 +162,7 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     eptp.page_frame_number =
         MmGetPhysicalAddress(&cpu->ept.pml4).QuadPart >> 12;
     vmx_vmwrite(VMCS_CTRL_EPT_POINTER, eptp.flags);
+    }
 
     // 3.24.6.12
     vmx_vmwrite(VMCS_CTRL_VIRTUAL_PROCESSOR_IDENTIFIER, guest_vpid);

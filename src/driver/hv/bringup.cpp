@@ -7,6 +7,7 @@ exit_storm last_storm{};
 volatile uint32_t storm_count{};
 volatile uint32_t stage_serial{};
 volatile uint32_t stage_cpu{};
+volatile uint64_t launch_error{};
 namespace {
 UNICODE_STRING parameters{};
 bool ready{};
@@ -66,7 +67,13 @@ void write_dword(const wchar_t* name, uint32_t value) {
 }
 }  // namespace
 
+void record_launch_error(uint64_t error) {
+    launch_error = error;
+}
+
 void publish_stage() {
+    write_dword(L"LaunchErrorLow", static_cast<uint32_t>(launch_error));
+    write_dword(L"LaunchErrorHigh", static_cast<uint32_t>(launch_error >> 32));
     write_dword(L"StageSerial", stage_serial);
     write_dword(L"StageCpu", stage_cpu);
 }

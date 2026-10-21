@@ -170,6 +170,9 @@ NTSTATUS start() {
     initialize_timing_switch();
     initialize_fault_trace();
     ghv.vcpu_count = KeQueryActiveProcessorCountEx(ALL_PROCESSOR_GROUPS);
+    if (const auto limit = blook::tuning::max_cpus();
+        limit && limit < ghv.vcpu_count)
+        ghv.vcpu_count = limit;
     g_stats.vcpu_count = ghv.vcpu_count;
     if (!ghv.vcpu_count)
         return STATUS_NOT_SUPPORTED;
