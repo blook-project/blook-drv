@@ -33,23 +33,24 @@ void record_storm(uint32_t cpu, uint32_t reason, uint64_t rip, uint32_t count) {
 }
 
 void remember_service_path(PCUNICODE_STRING path) {
-    if (ready || !path || !path->Buffer || !path->Length)
-        return;
-    const auto bytes = path->Length + sizeof(L"\\Parameters") + sizeof(WCHAR);
+    // Deliberately ignore the driver's own service key: the self-hide path
+    // deletes that key (including its Parameters subkey) when the hypervisor
+    // stops, which would erase exactly the evidence we are trying to keep. The
+    // bring-up record lives in its own key and survives a start failure, a
+    // self-hide and a host-side VM reset.
+    (void)path;
+    static constexpr wchar_t target[] = L"\\Registry\\Machine\\Software\\BlookBringup";
+    const auto bytes = sizeof(target);
     auto* buffer = static_cast<PWCH>(
         ExAllocatePool2(POOL_FLAG_PAGED, bytes, blook::pool_tag));
     if (!buffer)
         return;
-    RtlCopyMemory(buffer, path->Buffer, path->Length);
-    RtlCopyMemory(reinterpret_cast<UCHAR*>(buffer) + path->Length,
-                  L"\\Parameters", sizeof(L"\\Parameters"));
+    RtlCopyMemory(buffer, target, bytes);
     parameters.Buffer = buffer;
-    parameters.Length = static_cast<USHORT>(
-        path->Length + sizeof(L"\\Parameters") - sizeof(WCHAR));
+    parameters.Length = static_cast<USHORT>(bytes - sizeof(WCHAR));
     parameters.MaximumLength = static_cast<USHORT>(bytes);
     ready = true;
 }
-
 namespace {
 void write_dword(const wchar_t* name, uint32_t value) {
     if (!ready)
@@ -59,8 +60,11 @@ void write_dword(const wchar_t* name, uint32_t value) {
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                nullptr, nullptr);
     HANDLE key{};
-    if (!NT_SUCCESS(ZwOpenKey(&key, KEY_SET_VALUE, &attributes)))
-        return;
+    if (!NT_SUCCESS(ZwOpenKey(&key, KEY_SET_VALUE, &attributes))) {
+        if (!NT_SUCCESS(ZwCreateKey(&key, KEY_SET_VALUE, &attributes, 0, nullptr,
+                                    REG_OPTION_NON_VOLATILE, nullptr)))
+            return;
+    }
     UNICODE_STRING value_name;
     RtlInitUnicodeString(&value_name, name);
     ZwSetValueKey(key, &value_name, 0, REG_DWORD, &value, sizeof(value));
