@@ -14,6 +14,9 @@ param(
     [int]$InterceptDebug = 0,
     [int]$SkipTimingCalibration = 1,
     [int]$BringupMinimal = 1,
+    [int]$StartStage = 0,
+    [int]$MaxCpus = 0,
+    [int]$BringupNoEpt = 0,
     [string]$Artifacts
 )
 
@@ -207,7 +210,15 @@ try {
     Invoke-Guest -Command "cmd.exe /c reg.exe add $params /f /v TraceMarkers /t REG_DWORD /d 1" -TimeoutSeconds 60 | Out-Null
     Invoke-Guest -Command "cmd.exe /c reg.exe add $params /f /v SkipTimingCalibration /t REG_DWORD /d $SkipTimingCalibration" -TimeoutSeconds 60 | Out-Null
     Invoke-Guest -Command "cmd.exe /c reg.exe add $params /f /v BringupMinimal /t REG_DWORD /d $BringupMinimal" -TimeoutSeconds 60 | Out-Null
+    Invoke-Guest -Command "cmd.exe /c reg.exe add $params /f /v StartStage /t REG_DWORD /d $StartStage" -TimeoutSeconds 60 | Out-Null
+    Invoke-Guest -Command "cmd.exe /c reg.exe add $params /f /v MaxCpus /t REG_DWORD /d $MaxCpus" -TimeoutSeconds 60 | Out-Null
+    Invoke-Guest -Command "cmd.exe /c reg.exe add $params /f /v BringupNoEpt /t REG_DWORD /d $BringupNoEpt" -TimeoutSeconds 60 | Out-Null
     $start = Invoke-Guest -Command "cmd /c $guestRoot\blook-loader.exe start"
+    # Read the bring-up markers immediately: the service key is removed at the
+    # end of the preflight, so this is the only chance to see StageSerial,
+    # LaunchError and Storm*.
+    $markers = Invoke-Guest -Command "cmd.exe /c reg.exe query $params" -TimeoutSeconds 60
+    foreach ($line in ($markers.StdOut -split "`r?`n")) { if ($line.Trim()) { L ("  marker: " + $line.Trim()) } }
     L "  start exit=$($start.ExitCode): $($start.StdOut)"
     $afterState = Invoke-Bvmenv -Arguments @('state', $Vm, '--json') -TimeoutSeconds 60
     if ($afterState.StdOut -match '"classification":\s*"(bsod|hang)"') { Fail "guest crashed after driver start: $($afterState.StdOut)" }
