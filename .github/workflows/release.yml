@@ -45,7 +45,9 @@ jobs:
           $root = Join-Path $env:GITHUB_WORKSPACE '..\blook-kchannel'
           git clone --quiet https://github.com/blook-project/blook-kchannel $root
           git -C $root checkout --quiet 40a5337a2d69c79fb049361f616aacc58ae75d4d
-          "KCHANNEL_DIR=$root" >> $env:GITHUB_ENV      - name: Configure and build
+          "KCHANNEL_DIR=$root" >> $env:GITHUB_ENV
+
+      - name: Configure and build
         shell: pwsh
         run: |
           $env:BLOOK_VERSION = (Get-Content version.txt -Raw).Trim()
