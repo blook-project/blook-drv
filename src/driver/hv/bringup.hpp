@@ -28,7 +28,15 @@ struct exit_storm {
 };
 
 extern exit_storm last_storm;
+// Serial of the last stage reached (stage() increments it) and the processor it
+// ran on. The call order is fixed: vmxon, vmptrld, vmcs-ready, vmxon-only-ok /
+// launched, per processor. publish_stage() writes it to the service key so the
+// last stage survived a guest freeze.
+extern volatile uint32_t stage_serial;
+extern volatile uint32_t stage_cpu;
+void publish_stage();
 extern volatile uint32_t storm_count;
+void publish_stage();
 
 // Breadcrumb with a stage name and the logical processor index.
 void stage(const char* name, uint32_t cpu);

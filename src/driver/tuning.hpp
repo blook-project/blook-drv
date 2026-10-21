@@ -42,6 +42,9 @@ bool skip_timing_calibration();
 // bisect a nested host that freezes during hv::start(); hooks and hiding are
 // offline until the preset is turned off.
 bool bringup_minimal();
+// Bring-up stage bisect (Parameters\StartStage): 0 = full, 1 = VMXON + VMCS
+// load + VMXOFF only (never enters guest mode), 2 = full but without EPT.
+uint32_t start_stage();
 
 // Records a phase marker (best effort, PASSIVE_LEVEL only, ignores failures).
 void mark(uint32_t phase, uint32_t extra = 0);

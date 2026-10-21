@@ -2,6 +2,7 @@
 #include "vcpu.h"
 #include "stats.h"
 #include <ntimage.h>
+#include "driver/tuning.hpp"
 #include "hv.h"
 #include "gdt.h"
 #include "idt.h"
@@ -714,6 +715,15 @@ bool virtualize_cpu(vcpu* const cpu) {
     write_vmcs_host_fields(cpu);
     write_vmcs_guest_fields();
     bringup::stage("vmcs-ready", cpu->index);
+    if (blook::tuning::start_stage() == 1) {
+        // Stage 1: prove VMXON + VMPTRLD + VMXOFF work on this nested host
+        // without ever entering guest mode. This cannot hang the guest, so it
+        // separates "root-mode setup is broken" from "VM entry/exit is broken".
+        vmx_vmxoff();
+        rollback();
+        bringup::stage("vmxon-only-ok", cpu->index);
+        return true;
+    }
     if (!vm_launch()) {
         bringup::stage("vmlaunch-failed", cpu->index);
         vmx_vmxoff();

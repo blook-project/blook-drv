@@ -5,12 +5,16 @@
 namespace hv::bringup {
 exit_storm last_storm{};
 volatile uint32_t storm_count{};
+volatile uint32_t stage_serial{};
+volatile uint32_t stage_cpu{};
 namespace {
 UNICODE_STRING parameters{};
 bool ready{};
 }  // namespace
 
 void stage(const char* name, uint32_t cpu) {
+    stage_cpu = cpu;
+    ++stage_serial;
     // The guest is configured with a serial debug port; without a debugger
     // attached DbgPrint is cheap and lands in the serial log.
     DbgPrint("[blook] stage=%s cpu=%u\n", name, cpu);
@@ -62,6 +66,11 @@ void write_dword(const wchar_t* name, uint32_t value) {
     ZwClose(key);
 }
 }  // namespace
+
+void publish_stage() {
+    write_dword(L"StageSerial", stage_serial);
+    write_dword(L"StageCpu", stage_cpu);
+}
 
 void publish_storm() {
     if (!last_storm.active)

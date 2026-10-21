@@ -94,7 +94,8 @@ Current evidence status:
 |---|---|---|
 | `docs/evidence/20261021-031131-e2e-dryrun` | dry run (harness validation only) | 56/56 skipped, **not driver evidence** |
 | `docs/evidence/20261021-031954-e2e-dryrun` | dry run (harness validation only) | 56/56 skipped, **not driver evidence** |
-| real nested-VM run | pending env's rebuilt base image | to be committed with screenshots + `result.json` (`dry_run` absent) |
+| real 56-case matrix | pending nested hypervisor bring-up | not run yet |
+| `docs/evidence/20261021-*-vm-preflight` | real VM preflight (guest reachable, baseline antidetect, driver install) | hypervisor start freezes the guest; see [nested bring-up blocker](<docs/evidence/20261021-nested-bringup-blocker.md>) |
 
 ## Detection and evasion notes (honest limits)
 

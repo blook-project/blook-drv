@@ -239,6 +239,7 @@ NTSTATUS start() {
         if (!virtualize_cpu(ghv.vcpus[i])) {
             // The watchdog may have aborted this processor; publish what it saw
             // before tearing down so the failure is readable from the host.
+            bringup::publish_stage();
             bringup::publish_storm();
             stop();
             return STATUS_UNSUCCESSFUL;
@@ -247,6 +248,14 @@ NTSTATUS start() {
     // Measure the cost of a world switch so it can be removed from the guest
     // clock. This runs after this processor is virtualised, so the VMCALLs
     // inside the measurement perform a real non-root to root round trip.
+    if (blook::tuning::start_stage() == 1) {
+        // No processor entered guest mode: report success without calibrating
+        // timing, and record the stage so the host can read it.
+        bringup::publish_stage();
+        ghv.running = false;
+        ghv.vcpu_count = 0;
+        return STATUS_SUCCESS;
+    }
     uint64_t tsc_overhead{};
     uint64_t mperf_overhead{};
     uint64_t ref_overhead{};
