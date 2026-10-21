@@ -165,10 +165,11 @@ struct EnableRequest {
     Header header{};
 };
 // `flags` selects what happens on a hook hit:
-//   install_flag_read_hooked    - guest reads of the page see the hooked bytes
-//                                 instead of the original ones (default: the
-//                                 original bytes, so self-reads stay
-//                                 consistent)
+//   install_flag_read_hooked    - reserved: the driver keeps the original bytes
+//                                 visible to reads by design (so a target
+//                                 cannot find a hook by comparing its own
+//                                 memory) and rejects this flag with
+//                                 KC_ERR_UNSUPPORTED
 //   install_flag_once          - disarm after the first hit
 //   install_flag_swbreak       - install as an int3 software breakpoint: the
 //                                 shadow page holds 0xCC instead of `bytes`,

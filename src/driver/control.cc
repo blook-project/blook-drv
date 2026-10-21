@@ -198,10 +198,28 @@ NTSTATUS dispatch(context& caller, uint16_t op, const void* in, uint32_t in_len,
             if (!request.length || request.length > sizeof(request.bytes) ||
                 request.reserved)
                 return STATUS_INVALID_PARAMETER;
+            // A read-hooked view would need a second shadow page for data
+            // accesses; the design deliberately keeps the original view for
+            // reads (so a target cannot discover a hook by comparing its own
+            // bytes), and the flag is rejected instead of silently ignored.
+            if (request.flags & wire::install_flag_read_hooked)
+                return STATUS_NOT_SUPPORTED;
             auto* reply = prepare<wire::InstallResponse>(out, out_cap, out_len);
             if (!reply)
                 return STATUS_BUFFER_TOO_SMALL;
             const auto pid = request.pid ? request.pid : caller.pid;
+            if (request.flags & wire::install_flag_swbreak) {
+                // Software-breakpoint flavour: the same shadow-page machinery
+                // but the shadow holds 0xCC and the #BP path single-steps the
+                // original instruction (see hv/swbreak).
+                hv::swbreak::info info{};
+                const auto status = hv::swbreak::arm(
+                    {pid, wire::swbreak_execute, request.target, caller.token},
+                    info);
+                if (NT_SUCCESS(status))
+                    reply->id = info.id;
+                return status;
+            }
             uint64_t id{};
             const auto status = install_hook(
                 pid, caller.token, reinterpret_cast<void*>(request.target),
