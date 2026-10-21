@@ -56,6 +56,10 @@ bool no_hypervisor();
 uint32_t max_cpus();
 // Debug switch (Parameters\BringupNoEpt): leave EPT disabled (hooks offline).
 bool bringup_no_ept();
+// Debug switch (Parameters\HostPageTables, default 1): 0 makes root mode run on
+// the guest CR3 instead of the private identity page tables. Bisects a nested
+// wedge that happens on the first VM exit (host CR3 switch).
+bool host_page_tables();
 
 // Records a phase marker (best effort, PASSIVE_LEVEL only, ignores failures).
 void mark(uint32_t phase, uint32_t extra = 0);

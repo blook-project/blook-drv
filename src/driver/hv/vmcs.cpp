@@ -219,9 +219,16 @@ void write_vmcs_host_fields(vcpu const* const cpu) {
     host_cr3.flags = 0;
     host_cr3.page_level_cache_disable = 0;
     host_cr3.page_level_write_through = 0;
-    host_cr3.address_of_page_directory =
-        MmGetPhysicalAddress(&ghv.host_page_tables.pml4).QuadPart >> 12;
-    vmx_vmwrite(VMCS_HOST_CR3, host_cr3.flags);
+    if (blook::tuning::host_page_tables()) {
+        host_cr3.address_of_page_directory =
+            MmGetPhysicalAddress(&ghv.host_page_tables.pml4).QuadPart >> 12;
+        vmx_vmwrite(VMCS_HOST_CR3, host_cr3.flags);
+    } else {
+        // Bisect/fallback: root mode runs on whatever CR3 the guest had. The
+        // private identity tables are only an isolation nicety; sharing the
+        // guest's tables removes a whole class of first-VM-exit triple faults.
+        vmx_vmwrite(VMCS_HOST_CR3, __readcr3());
+    }
 
     cr4 host_cr4;
     host_cr4.flags = __readcr4();
