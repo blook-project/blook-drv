@@ -736,6 +736,14 @@ bool virtualize_cpu(vcpu* const cpu) {
     // processor.
     bringup::stage("launched", cpu->index);
     cpu->launched = true;
+    if (blook::tuning::start_stage() == 2) {
+        // Stage 2: guest mode is up; force one guest->host transition with a
+        // VMCALL round trip. If the guest dies here, the first VM exit (not the
+        // entry) is the broken half.
+        hypercall_input ping{operation::ping};
+        (void)vmx_vmcall(ping);
+        bringup::stage("vmcall-ok", cpu->index);
+    }
     _enable();
     KeLowerIrql(irql);
     return true;
