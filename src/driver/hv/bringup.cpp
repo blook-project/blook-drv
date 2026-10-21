@@ -83,10 +83,14 @@ void write_dword(const wchar_t* name, uint32_t value) {
 
 void stage_worker(PVOID) {
     LARGE_INTEGER interval{};
-    interval.QuadPart = -500000;  // 50 ms
+    interval.QuadPart = -10000;  // 1 ms poll
+    uint32_t written{};
     while (armed) {
-        write_dword(L"WatchStage", stage_serial);
-        write_dword(L"WatchCpu", last_stage_cpu);
+        if (stage_serial != written) {
+            written = stage_serial;
+            write_dword(L"WatchStage", written);
+            write_dword(L"WatchCpu", last_stage_cpu);
+        }
         KeDelayExecutionThread(KernelMode, FALSE, &interval);
     }
     PsTerminateSystemThread(STATUS_SUCCESS);

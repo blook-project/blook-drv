@@ -680,6 +680,7 @@ bool supported_cpu() {
 // virtualize the specified cpu. this assumes that execution is already
 // restricted to the desired logical proocessor.
 bool virtualize_cpu(vcpu* const cpu) {
+    bringup::stage("cpu-begin", cpu->index);
     cpu->original_cr0 = __readcr0();
     cpu->original_cr4 = __readcr4();
     cache_cpu_data(cpu->cached);
