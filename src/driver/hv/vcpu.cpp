@@ -296,9 +296,8 @@ bool handle_vm_exit(guest_context* const ctx) {
         // Root-mode safe: plain stores only; the PASSIVE stage thread persists
         // this immediately, so it survives a hard power-off of a wedged guest.
         bringup::first_exit_rip = vmx_vmread(VMCS_GUEST_RIP);
-        bringup::first_exit_reason = reason.basic_exit_reason
-                                         ? reason.basic_exit_reason
-                                         : 1;
+        bringup::first_exit_reason =
+            reason.basic_exit_reason ? reason.basic_exit_reason : 1;
     }
 
     cpu->stop_virtualization = false;
@@ -739,7 +738,8 @@ bool virtualize_cpu(vcpu* const cpu) {
     bringup::entry_activity = vmx_vmread(VMCS_GUEST_ACTIVITY_STATE);
     bringup::entry_gdtr_limit = vmx_vmread(VMCS_GUEST_GDTR_LIMIT);
     bringup::entry_idtr_limit = vmx_vmread(VMCS_GUEST_IDTR_LIMIT);
-    bringup::entry_interruptibility = vmx_vmread(VMCS_GUEST_INTERRUPTIBILITY_STATE);
+    bringup::entry_interruptibility =
+        vmx_vmread(VMCS_GUEST_INTERRUPTIBILITY_STATE);
     bringup::entry_pending_debug =
         vmx_vmread(VMCS_GUEST_PENDING_DEBUG_EXCEPTIONS);
     bringup::entry_link_pointer = vmx_vmread(VMCS_GUEST_VMCS_LINK_POINTER);
@@ -755,7 +755,8 @@ bool virtualize_cpu(vcpu* const cpu) {
     if (blook::tuning::probe_exits() || blook::tuning::start_stage() >= 2) {
         // Persist at PASSIVE level before entering the guest. Still in root
         // operation on the normal CR3, so interrupts/DPCs are the ordinary
-        // kernel ones; the host-state fields only matter once a VM exit happens.
+        // kernel ones; the host-state fields only matter once a VM exit
+        // happens.
         _enable();
         KeLowerIrql(irql);
         bringup::publish_stage();
@@ -778,16 +779,14 @@ bool virtualize_cpu(vcpu* const cpu) {
     if (blook::tuning::start_stage() == 3) {
         // Stage 3: enter guest mode straight into a three-instruction stub
         // (vmcall; hlt; jmp $) with the hypercall command in RAX. Nothing in
-        // this path depends on our C++ continuation, so the breadcrumbs separate
-        // "VM entry rejected" from "first VM exit broken".
+        // this path depends on our C++ continuation, so the breadcrumbs
+        // separate "VM entry rejected" from "first VM exit broken".
 
-        const uint64_t command =
-            (static_cast<uint64_t>(call_tag) << 8) |
-            static_cast<uint8_t>(operation::ping);
-        if (!blook_vm_launch_stub(
-                reinterpret_cast<uint64_t>(&blook_guest_stub), command)) {
-            bringup::record_launch_error(
-                vmx_vmread(VMCS_VM_INSTRUCTION_ERROR));
+        const uint64_t command = (static_cast<uint64_t>(call_tag) << 8) |
+                                 static_cast<uint8_t>(operation::ping);
+        if (!blook_vm_launch_stub(reinterpret_cast<uint64_t>(&blook_guest_stub),
+                                  command)) {
+            bringup::record_launch_error(vmx_vmread(VMCS_VM_INSTRUCTION_ERROR));
             bringup::stage("stub-vmlaunch-failed", cpu->index);
             vmx_vmxoff();
             rollback();

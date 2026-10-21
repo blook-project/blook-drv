@@ -155,12 +155,11 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     if (use_ept) {
         // Encode the EPTP explicitly (Intel SDM 25.6.11): bits 2:0 = EPT page
         // walk length (3 = 4 levels), bits 5:3 = memory type (6 = write-back),
-        // bit 6 = A/D support (off), bits 11:0 reserved, above that the PML4 PFN.
-        // The struct-based encoding used before produced 0x1E here - both fields
-        // at the wrong offsets - which makes VM entry reject the EPTP.
-        const auto pfn =
-            (MmGetPhysicalAddress(&cpu->ept.pml4).QuadPart >> 12) &
-            0x000FFFFFFFFFFull;
+        // bit 6 = A/D support (off), bits 11:0 reserved, above that the PML4
+        // PFN. The struct-based encoding used before produced 0x1E here - both
+        // fields at the wrong offsets - which makes VM entry reject the EPTP.
+        const auto pfn = (MmGetPhysicalAddress(&cpu->ept.pml4).QuadPart >> 12) &
+                         0x000FFFFFFFFFFull;
         const uint64_t eptp = (pfn << 12) | 3ull | (6ull << 3);
         vmx_vmwrite(VMCS_CTRL_EPT_POINTER, eptp);
     }
@@ -377,9 +376,9 @@ void write_vmcs_guest_fields() {
     vmx_vmwrite(VMCS_GUEST_VMCS_LINK_POINTER, MAXULONG64);
     // Pending debug exceptions and interruptibility must be consistent with the
     // entry controls: with "load debug controls" = 0 (minimal preset) a nonzero
-    // pending-debug field is an invalid guest state and VM entry fails. The VMCS
-    // region is reused memory, so this has to be written explicitly, not assumed
-    // zero.
+    // pending-debug field is an invalid guest state and VM entry fails. The
+    // VMCS region is reused memory, so this has to be written explicitly, not
+    // assumed zero.
     vmx_vmwrite(VMCS_GUEST_PENDING_DEBUG_EXCEPTIONS, 0);
     vmx_vmwrite(VMCS_GUEST_INTERRUPTIBILITY_STATE, 0);
 

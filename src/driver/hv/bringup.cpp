@@ -104,8 +104,8 @@ void write_dword(const wchar_t* name, uint32_t value) {
 }
 
 // One open + one flush for the whole entry snapshot: the guest can die inside
-// VMLAUNCH microseconds after this runs, and a flush per value loses most of the
-// record (verified on the nested host).
+// VMLAUNCH microseconds after this runs, and a flush per value loses most of
+// the record (verified on the nested host).
 void write_snapshot() {
     if (!ready)
         return;
@@ -134,12 +134,12 @@ void write_snapshot() {
     (void)controls_snapshot;
     OBJECT_ATTRIBUTES attributes{};
     InitializeObjectAttributes(&attributes, &parameters,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, nullptr,
-                               nullptr);
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               nullptr, nullptr);
     HANDLE key{};
     if (!NT_SUCCESS(ZwOpenKey(&key, KEY_SET_VALUE, &attributes))) {
-        if (!NT_SUCCESS(ZwCreateKey(&key, KEY_SET_VALUE, &attributes, 0, nullptr,
-                                    REG_OPTION_NON_VOLATILE, nullptr)))
+        if (!NT_SUCCESS(ZwCreateKey(&key, KEY_SET_VALUE, &attributes, 0,
+                                    nullptr, REG_OPTION_NON_VOLATILE, nullptr)))
             return;
     }
     const struct {
@@ -208,14 +208,18 @@ void stage_worker(PVOID) {
             write_dword(L"EntryEfer", static_cast<uint32_t>(entry_efer));
             write_dword(L"EntryCr0", static_cast<uint32_t>(entry_cr0));
             write_dword(L"EntryCr4", static_cast<uint32_t>(entry_cr4));
-            write_dword(L"EntryActivity", static_cast<uint32_t>(entry_activity));
+            write_dword(L"EntryActivity",
+                        static_cast<uint32_t>(entry_activity));
             write_dword(L"EntryGdtrLimit",
                         static_cast<uint32_t>(entry_gdtr_limit));
             write_dword(L"EntryIdtrLimit",
                         static_cast<uint32_t>(entry_idtr_limit));
-            write_dword(L"EntryIntr", static_cast<uint32_t>(entry_interruptibility));
-            write_dword(L"EntryPendDbg", static_cast<uint32_t>(entry_pending_debug));
-            write_dword(L"EntryLinkPtr", static_cast<uint32_t>(entry_link_pointer));
+            write_dword(L"EntryIntr",
+                        static_cast<uint32_t>(entry_interruptibility));
+            write_dword(L"EntryPendDbg",
+                        static_cast<uint32_t>(entry_pending_debug));
+            write_dword(L"EntryLinkPtr",
+                        static_cast<uint32_t>(entry_link_pointer));
             write_dword(L"EntryEptp", static_cast<uint32_t>(entry_eptp));
             write_dword(L"HostCr0Low", static_cast<uint32_t>(host_cr0));
             write_dword(L"HostCr4Low", static_cast<uint32_t>(host_cr4));
