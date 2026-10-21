@@ -60,11 +60,20 @@ jobs:
       - name: Host unit tests
         shell: pwsh
         run: |
+          # Run the built executables directly instead of `xmake run`: the exit
+          # code of the program is then unambiguous, and a crash (no gtest
+          # summary) is distinguishable from an assertion failure.
           $failed = @()
-          foreach ($target in @("blook-tests", "blook-client-tests", "blook-loader-tests", "blook-protocol-tests")) {
-            Write-Host "=== $target ==="
-            xmake run $target
-            if ($LASTEXITCODE -ne 0) { $failed += $target }
+          foreach ($target in @("blook-tests", "blook-client-tests", "blook-loader-tests", "blook-protocol-tests", "blook-terminal-tests", "blook-image-page-tests")) {
+            $exe = Get-ChildItem -Recurse build -Filter "$target.exe" -File | Select-Object -First 1
+            if (-not $exe) { Write-Host "missing $target.exe"; $failed += "$target (missing)"; continue }
+            Write-Host "=== $target ($($exe.FullName)) ==="
+            $out = & $exe.FullName 2>&1
+            $code = $LASTEXITCODE
+            $out | ForEach-Object { Write-Host $_ }
+            $assertions = @($out | Select-String -Pattern '\[  FAILED  \]')
+            Write-Host "exit code: $code, failed assertions: $($assertions.Count)"
+            if ($code -ne 0 -or $assertions.Count -ne 0) { $failed += $target }
           }
           if ($failed.Count -ne 0) { throw "unit tests failed: $($failed -join ', ')" }
 

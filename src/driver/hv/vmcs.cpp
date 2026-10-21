@@ -154,14 +154,14 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     // 3.24.6.11
     ept_pointer eptp;
     if (use_ept) {
-    eptp.flags = 0;
-    eptp.memory_type = MEMORY_TYPE_WRITE_BACK;
-    eptp.page_walk_length = 3;
-    eptp.enable_access_and_dirty_flags = 0;
-    eptp.enable_supervisor_shadow_stack_pages = 0;
-    eptp.page_frame_number =
-        MmGetPhysicalAddress(&cpu->ept.pml4).QuadPart >> 12;
-    vmx_vmwrite(VMCS_CTRL_EPT_POINTER, eptp.flags);
+        eptp.flags = 0;
+        eptp.memory_type = MEMORY_TYPE_WRITE_BACK;
+        eptp.page_walk_length = 3;
+        eptp.enable_access_and_dirty_flags = 0;
+        eptp.enable_supervisor_shadow_stack_pages = 0;
+        eptp.page_frame_number =
+            MmGetPhysicalAddress(&cpu->ept.pml4).QuadPart >> 12;
+        vmx_vmwrite(VMCS_CTRL_EPT_POINTER, eptp.flags);
     }
 
     // 3.24.6.12
