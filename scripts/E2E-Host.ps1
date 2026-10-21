@@ -171,21 +171,38 @@ Invoke-Case "uninstall-cleanup" {
 
 # ---- documented skips (vm-only, need nested VT-x/EPT) ----------------------
 foreach ($skip in @(
-    @{ name = "vmx-bringup"; status = "skip"; detail = "requires VT-x: VMXON/VMLAUNCH/EPT need nested VT-x; covered by the bvmenv VM matrix (docs/evidence/20261021-nested-*)" },
-    @{ name = "ept-software-breakpoint-hook"; status = "skip"; detail = "requires VT-x: EPT execute hook in a live guest (bvmenv matrix)" },
-    @{ name = "hardware-breakpoint-hook"; status = "skip"; detail = "requires VT-x: DR0-3/#DB interception (bvmenv matrix)" },
-    @{ name = "target-process-hook"; status = "skip"; detail = "requires VT-x: cross-process EPT hook needs the hypervisor (bvmenv matrix)" },
-    @{ name = "with-hypervisor-antidetect"; status = "skip"; detail = "requires VT-x: masking CPUID/MSR needs the hypervisor running (bvmenv matrix)" },
-    @{ name = "kchannel-ipc-tools"; status = "skip"; detail = "requires VT-x: the control channel is created by the hypervisor session (bvmenv matrix)" },
-    @{ name = "self-hide-trace-scan"; status = "skip"; detail = "requires VT-x: self-hide/trace-scan are driven over the control channel (bvmenv matrix)" }
+    @{ name = "vmx-bringup"; status = "skip"; detail = "platform-skip: requires VT-x - VMXON/VMLAUNCH/EPT need nested VT-x; covered by the bvmenv VM matrix (docs/evidence/20261021-nested-*)" },
+    @{ name = "ept-software-breakpoint-hook"; status = "skip"; detail = "platform-skip: requires VT-x - EPT execute hook in a live guest (bvmenv matrix)" },
+    @{ name = "hardware-breakpoint-hook"; status = "skip"; detail = "platform-skip: requires VT-x - DR0-3/#DB interception (bvmenv matrix)" },
+    @{ name = "target-process-hook"; status = "skip"; detail = "platform-skip: requires VT-x - cross-process EPT hook needs the hypervisor (bvmenv matrix)" },
+    @{ name = "with-hypervisor-antidetect"; status = "skip"; detail = "platform-skip: requires VT-x - masking CPUID/MSR needs the hypervisor running (bvmenv matrix)" },
+    @{ name = "kchannel-ipc-tools"; status = "skip"; detail = "platform-skip: requires VT-x - the control channel is created by the hypervisor session (bvmenv matrix)" },
+    @{ name = "self-hide-trace-scan"; status = "skip"; detail = "platform-skip: requires VT-x - self-hide/trace-scan are driven over the control channel (bvmenv matrix)" }
 )) {
     $skips.Add([ordered]@{ name = $skip.name; status = $skip.status; detail = $skip.detail })
     Write-Host ("[skip] {0}: {1}" -f $skip.name, $skip.detail)
 }
 
+$platform = [ordered]@{}
+try {
+    $bcd = (& bcdedit /enum '{current}' | Out-String)
+    $platform.testsigning = if ($bcd -match '(?im)^testsigning\s+Yes') { "Yes" } elseif ($bcd -match '(?im)^testsigning\s+No') { "No" } else { "unknown" }
+    $platform.nointegritychecks = if ($bcd -match '(?im)^nointegritychecks\s+Yes') { "Yes" } elseif ($bcd -match '(?im)^nointegritychecks\s+No') { "No" } else { "unknown" }
+} catch { $platform.testsigning = "unknown" }
+$signtool = Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin' -Recurse -Filter signtool.exe -ErrorAction SilentlyContinue |
+    Where-Object { $_.FullName -match '\\x64\\' } | Select-Object -First 1
+if ($signtool -and (Test-Path $Sys)) {
+    $kp = (& $signtool.FullName verify /kp $Sys 2>&1 | Out-String)
+    $platform.kp_verified = ($LASTEXITCODE -eq 0)
+    $platform.kp_output = $kp.Trim().Substring(0, [Math]::Min(400, $kp.Trim().Length))
+} else {
+    $platform.kp_verified = $null
+}
+
 $failures = @($cases | Where-Object { $_.status -eq "fail" })
 $result = [ordered]@{
     schema = "blook.e2e.host.v1"
+    platform = $platform
     generated_at = (Get-Date).ToUniversalTime().ToString("o")
     cases = @($cases) + @($skips)
     summary = [ordered]@{
@@ -194,6 +211,8 @@ $result = [ordered]@{
         skip = $skips.Count
     }
 }
-$result | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $Artifacts "result.json")
-Write-Host ("host e2e: {0} pass, {1} fail, {2} documented skips" -f $result.summary.pass, $result.summary.fail, $result.summary.skip)
+# The result file is written even when cases fail: the CI gate consumes it.
+$resultPath = Join-Path $Artifacts "result.json"
+$result | ConvertTo-Json -Depth 6 | Set-Content $resultPath
+Write-Host ("host e2e: {0} pass, {1} fail, {2} documented skips -> {3}" -f $result.summary.pass, $result.summary.fail, $result.summary.skip, $resultPath)
 if ($failures.Count -ne 0) { throw ("host e2e failures: " + (($failures | ForEach-Object { $_.name }) -join ', ')) }

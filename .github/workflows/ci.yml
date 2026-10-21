@@ -143,6 +143,7 @@ jobs:
     # change cannot turn the whole CI red. Flip to blocking once verified.
     continue-on-error: true
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: blook-drv-ci

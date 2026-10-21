@@ -96,6 +96,7 @@ Current evidence status:
 | `docs/evidence/20261021-031954-e2e-dryrun` | dry run (harness validation only) | 56/56 skipped, **not driver evidence** |
 | real 56-case matrix | pending nested hypervisor bring-up | not run yet |
 | `docs/evidence/20261021-*-vm-preflight` | real VM preflight (guest reachable, baseline antidetect, driver install) | hypervisor start freezes the guest; see [nested bring-up blocker](<docs/evidence/20261021-nested-bringup-blocker.md>) |
+| `docs/evidence/20261021-host-e2e-vm/result.json` | **real VM e2e: 7 pass, 0 fail, 7 documented `platform-skip: requires VT-x`** | non-VT-x feature matrix (install/start/kernel round trip/restart cycles/negative input/uninstall) green inside a bvmenv VMware guest |
 
 ## Detection and evasion notes (honest limits)
 
