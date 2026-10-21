@@ -49,9 +49,6 @@ extern volatile uint64_t vmwrite_error;
 void record_vmwrite_failure(uint64_t field);
 extern volatile uint32_t storm_count;
 void publish_stage();
-// First-exit probe breadcrumbs (Parameters\ProbeExits); they go to the
-// independent bring-up key so a self-hide on failure cannot erase them.
-void publish_probe(uint32_t code, uint32_t extra = 0);
 // VMX instruction error from the last failed VMLAUNCH
 // (VMCS_VM_INSTRUCTION_ERROR).
 extern volatile uint64_t launch_error;
