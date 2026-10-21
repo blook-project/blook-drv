@@ -18,6 +18,7 @@ uint32_t max_cpus_value{};
 bool no_ept_value{};
 bool host_page_tables_value{true};
 bool probe_exits_value{};
+uint32_t raw_entry_ctls_value{};
 
 bool read_dword(const wchar_t* name, uint32_t& value) {
     if (!parameters.Buffer)
@@ -95,6 +96,9 @@ void initialize(PCUNICODE_STRING service_path) {
     uint32_t max_cpus_dword{};
     if (read_dword(L"MaxCpus", max_cpus_dword))
         max_cpus_value = max_cpus_dword;
+    uint32_t raw_entry{};
+    if (read_dword(L"RawEntryCtls", raw_entry))
+        raw_entry_ctls_value = raw_entry;
     uint32_t probe{};
     if (read_dword(L"ProbeExits", probe))
         probe_exits_value = probe != 0;
@@ -145,6 +149,10 @@ uint32_t max_cpus() {
 
 bool probe_exits() {
     return probe_exits_value;
+}
+
+uint32_t raw_entry_ctls() {
+    return raw_entry_ctls_value;
 }
 
 bool host_page_tables() {

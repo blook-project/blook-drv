@@ -65,6 +65,11 @@ bool host_page_tables();
 // marks land in the service key (on disk), so they survive a guest freeze and a
 // host-side VM reset: the highest TraceLast tells us which step wedged.
 bool probe_exits();
+// Debug switch (Parameters\RawEntryCtls, nonzero): write this value into
+// VMCS_CTRL_VMENTRY_CONTROLS verbatim instead of merging with the capability
+// MSRs. VMware nested VMX can expose entry-control capability values that do not
+// behave like bare metal, so the merge has to be bypassable to test.
+uint32_t raw_entry_ctls();
 
 // Records a phase marker (best effort, PASSIVE_LEVEL only, ignores failures).
 void mark(uint32_t phase, uint32_t extra = 0);
