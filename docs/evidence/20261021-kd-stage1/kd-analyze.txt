@@ -1,0 +1,2091 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.016 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4202 AMD64
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+Opened \\.\pipe\blook-vm-drv-kd
+Kernel Debug Target Status: [no_debuggee]; Retries: [0] times in last [7] seconds.
+Waiting to reconnect...
+Connected to Windows 10 26100 x64 target at (Wed Oct 21 14:30:25.900 2026 (UTC + 8:00)), ptr64 TRUE
+Kernel Debugger connection established.
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*Y:\symbols*https://msdl.microsoft.com/download/symbols
+OK                                             D:\blook-kernel-project\blook-drv\build\windows\x64\releasedbg
+Symbol search path is: srv*Y:\symbols*https://msdl.microsoft.com/download/symbols;D:\blook-kernel-project\blook-drv\build\windows\x64\releasedbg
+Executable search path is: 
+Windows 10 Kernel Version 26100 MP (4 procs) Free x64
+Product: WinNt, suite: TerminalServer SingleUserTS
+Edition build lab: 26100.1.amd64fre.ge_release.240331-1435
+Kernel base = 0xfffff805`a1200000 PsLoadedModuleList = 0xfffff805`a20f4fc0
+Debug session time: Wed Oct 21 14:28:10.083 2026 (UTC + 8:00)
+System Uptime: 0 days 0:02:05.443
+Break instruction exception - code 80000003 (first chance)
+
+A fatal system error has occurred.
+Debugger entered on first try; Bugcheck callbacks have not been invoked.
+
+A fatal system error has occurred.
+
+For analysis of this file, run !analyze -v
+nt!DbgBreakPointWithStatus:
+fffff805`a16fc0c0 cc              int     3
+0: kd> kd: Reading initial command '!analyze -v; lm kv; q'
+Connected to Windows 10 26100 x64 target at (Wed Oct 21 14:30:37.256 2026 (UTC + 8:00)), ptr64 TRUE
+Loading Kernel Symbols
+...............................
+
+Press ctrl-c (cdb, kd, ntsd) or ctrl-break (windbg) to abort symbol loads that take too long.
+Run !sym noisy before .reload to track down problems loading symbols.
+
+................................
+................................................................
+..................................
+Loading User Symbols
+
+Loading unloaded module list
+.......
+*******************************************************************************
+*                                                                             *
+*                        Bugcheck Analysis                                    *
+*                                                                             *
+*******************************************************************************
+
+SYSTEM_THREAD_EXCEPTION_NOT_HANDLED (7e)
+This is a very common BugCheck.  Usually the exception address pinpoints
+the driver/function that caused the problem.  Always note this address
+as well as the link date of the driver/image that contains this address.
+Arguments:
+Arg1: ffffffffc0000096, The exception code that was not handled
+Arg2: fffff805375b0ae2, The address that the exception occurred at
+Arg3: fffff682852372b8, Exception Record Address
+Arg4: fffff80533b5e8f0, Context Record Address
+
+Debugging Details:
+------------------
+
+
+KEY_VALUES_STRING: 1
+
+    Key  : Analysis.CPU.mSec
+    Value: 2609
+
+    Key  : Analysis.Elapsed.mSec
+    Value: 16871
+
+    Key  : Analysis.IO.Other.Mb
+    Value: 1
+
+    Key  : Analysis.IO.Read.Mb
+    Value: 1
+
+    Key  : Analysis.IO.Write.Mb
+    Value: 21
+
+    Key  : Analysis.Init.CPU.mSec
+    Value: 1983
+
+    Key  : Analysis.Init.Elapsed.mSec
+    Value: 38579
+
+    Key  : Analysis.Memory.CommitPeak.Mb
+    Value: 91
+
+    Key  : Bugcheck.Code.KiBugCheckData
+    Value: 0x7e
+
+    Key  : Bugcheck.Code.LegacyAPI
+    Value: 0x7e
+
+    Key  : Failure.Bucket
+    Value: 0x7E_C0000096_blook_drv!hv::write_tr
+
+    Key  : Failure.Hash
+    Value: {cd75edf5-e61b-dadb-c610-7a4c7f28d2fe}
+
+    Key  : Hypervisor.Enlightenments.Value
+    Value: 13088
+
+    Key  : Hypervisor.Enlightenments.ValueHex
+    Value: 3320
+
+    Key  : Hypervisor.Flags.AnyHypervisorPresent
+    Value: 1
+
+    Key  : Hypervisor.Flags.ApicEnlightened
+    Value: 0
+
+    Key  : Hypervisor.Flags.ApicVirtualizationAvailable
+    Value: 0
+
+    Key  : Hypervisor.Flags.AsyncMemoryHint
+    Value: 0
+
+    Key  : Hypervisor.Flags.CoreSchedulerRequested
+    Value: 0
+
+    Key  : Hypervisor.Flags.CpuManager
+    Value: 0
+
+    Key  : Hypervisor.Flags.DeprecateAutoEoi
+    Value: 1
+
+    Key  : Hypervisor.Flags.DynamicCpuDisabled
+    Value: 0
+
+    Key  : Hypervisor.Flags.Epf
+    Value: 0
+
+    Key  : Hypervisor.Flags.ExtendedProcessorMasks
+    Value: 0
+
+    Key  : Hypervisor.Flags.HardwareMbecAvailable
+    Value: 1
+
+    Key  : Hypervisor.Flags.MaxBankNumber
+    Value: 0
+
+    Key  : Hypervisor.Flags.MemoryZeroingControl
+    Value: 0
+
+    Key  : Hypervisor.Flags.NoExtendedRangeFlush
+    Value: 1
+
+    Key  : Hypervisor.Flags.NoNonArchCoreSharing
+    Value: 0
+
+    Key  : Hypervisor.Flags.Phase0InitDone
+    Value: 1
+
+    Key  : Hypervisor.Flags.PowerSchedulerQos
+    Value: 0
+
+    Key  : Hypervisor.Flags.RootScheduler
+    Value: 0
+
+    Key  : Hypervisor.Flags.SynicAvailable
+    Value: 1
+
+    Key  : Hypervisor.Flags.UseQpcBias
+    Value: 0
+
+    Key  : Hypervisor.Flags.Value
+    Value: 667704
+
+    Key  : Hypervisor.Flags.ValueHex
+    Value: a3038
+
+    Key  : Hypervisor.Flags.VpAssistPage
+    Value: 1
+
+    Key  : Hypervisor.Flags.VsmAvailable
+    Value: 0
+
+    Key  : Hypervisor.RootFlags.AccessStats
+    Value: 0
+
+    Key  : Hypervisor.RootFlags.CrashdumpEnlightened
+    Value: 0
+
+    Key  : Hypervisor.RootFlags.CreateVirtualProcessor
+    Value: 0
+
+    Key  : Hypervisor.RootFlags.DisableHyperthreading
+    Value: 0
+
+    Key  : Hypervisor.RootFlags.HostTimelineSync
+    Value: 0
+
+    Key  : Hypervisor.RootFlags.HypervisorDebuggingEnabled
+    Value: 0
+
+    Key  : Hypervisor.RootFlags.IsHyperV
+    Value: 0
+
+    Key  : Hypervisor.RootFlags.LivedumpEnlightened
+    Value: 0
+
+    Key  : Hypervisor.RootFlags.MapDeviceInterrupt
+    Value: 0
+
+    Key  : Hypervisor.RootFlags.MceEnlightened
+    Value: 0
+
+    Key  : Hypervisor.RootFlags.Nested
+    Value: 0
+
+    Key  : Hypervisor.RootFlags.StartLogicalProcessor
+    Value: 0
+
+    Key  : Hypervisor.RootFlags.Value
+    Value: 0
+
+    Key  : Hypervisor.RootFlags.ValueHex
+    Value: 0
+
+    Key  : SecureKernel.HalpHvciEnabled
+    Value: 0
+
+    Key  : WER.OS.Branch
+    Value: ge_release
+
+    Key  : WER.OS.Version
+    Value: 10.0.26100.1
+
+
+BUGCHECK_CODE:  7e
+
+BUGCHECK_P1: ffffffffc0000096
+
+BUGCHECK_P2: fffff805375b0ae2
+
+BUGCHECK_P3: fffff682852372b8
+
+BUGCHECK_P4: fffff80533b5e8f0
+
+EXCEPTION_RECORD:  fffff682852372b8 -- (.exr 0xfffff682852372b8)
+ExceptionAddress: fffff805375b0ae2 (blook_drv!hv::write_tr)
+   ExceptionCode: c0000096
+  ExceptionFlags: 00000000
+NumberParameters: 0
+
+CONTEXT:  fffff80533b5e8f0 -- (.cxr 0xfffff80533b5e8f0)
+rax=0000000000000000 rbx=0000000000000000 rcx=0000000000000040
+rdx=0000000000000000 rsi=0000000000000000 rdi=0000000000000040
+rip=fffff805375b0ae2 rsp=fffff682852374f8 rbp=fffff80532217000
+ r8=0000000000000000  r9=0000000000000001 r10=fffff805a20f49d0
+r11=fffff68285237580 r12=0000000000000000 r13=0000000000000000
+r14=00000000001aa000 r15=ffffffff8000293c
+iopl=0         nv up di pl zr na po nc
+cs=0010  ss=0018  ds=002b  es=002b  fs=0053  gs=002b             efl=00050046
+blook_drv!hv::write_tr:
+fffff805`375b0ae2 0f00d9          ltr     cx
+Resetting default scope
+
+PROCESS_NAME:  System
+
+ERROR_CODE: (NTSTATUS) 0xc0000096 - {    }
+
+EXCEPTION_CODE_STR:  c0000096
+
+EXCEPTION_STR:  0xc0000096
+
+STACK_TEXT:  
+fffff682`852374f8 fffff805`375a7224     : 00000000`00000000 00000000`00000fff 00000000`00000000 fffff805`a141707d : blook_drv!hv::write_tr
+fffff682`85237500 fffff805`375a8d30     : ffffffff`8000293c ffffa50d`6fa1d000 ffffa50d`6bbd0000 fffff805`375a8d56 : blook_drv!hv::fatal_root_error+0xe4
+fffff682`85237580 fffff805`375a8010     : fffff682`85237659 00000000`000f6ffb ffffa50d`6bbd0000 ffffa50d`6bbdd000 : blook_drv!hv::write_vmcs_guest_fields+0x670
+fffff682`852375d0 fffff805`375a3f7d     : 00000001`21bd1000 00000000`00000098 00000000`00000000 00000000`00000098 : blook_drv!hv::virtualize_cpu+0x310
+fffff682`85237610 fffff805`3759ba02     : 00000000`00000000 00000000`00000000 00000000`c0000034 00000000`00000000 : blook_drv!hv::start+0x4bd
+fffff682`852376c0 fffff805`3759b3f4     : ffffa50d`6a7dfc90 00000000`00000000 ffffffff`80001710 ffffa50d`6f1ac7bd : blook_drv!blook::initialize_sessions+0x182
+fffff682`85237730 fffff805`3759b556     : 00000000`00000000 ffffffff`80001710 ffffa50d`6eac3e20 00000000`00000005 : blook_drv!`anonymous namespace'::run+0x54
+fffff682`85237760 fffff805`a1bcb238     : ffffa50d`6f1ac7bd ffffa50d`6ebff000 ffffffff`80002901 ffffa50d`00000000 : blook_drv!DriverEntry+0xb6
+fffff682`852377a0 fffff805`a1bcd1d2     : 00000000`00000012 ffffb786`2356bb90 ffffa50d`6ebff000 ffffa50d`00001000 : nt!PnpCallDriverEntry+0x54
+fffff682`852377f0 fffff805`a1cbc453     : 00000000`00000057 00000000`00000000 00000000`00000000 ffffa50d`6a6f2c00 : nt!IopLoadDriver+0x6f2
+fffff682`852379c0 fffff805`a151e74b     : ffffa50d`00000000 ffffffff`8000293c ffffa50d`6aecf080 ffffa50d`6a6a1010 : nt!IopLoadUnloadDriver+0x83
+fffff682`85237a00 fffff805`a168c4da     : ffffa50d`6aecf080 ffffa50d`6aecf080 fffff805`a151e290 ffffa50d`6a6a1010 : nt!ExpWorkerThread+0x4bb
+fffff682`85237bb0 fffff805`a18a32d4     : ffffda01`80251180 ffffa50d`6aecf080 fffff805`a168c480 0fc13b48`ffffcae4 : nt!PspSystemThreadStartup+0x5a
+fffff682`85237c00 00000000`00000000     : fffff682`85238000 fffff682`85231000 00000000`00000000 00000000`00000000 : nt!KiStartSystemThread+0x34
+
+
+SYMBOL_NAME:  blook_drv!hv::write_tr+0
+
+MODULE_NAME: blook_drv
+
+IMAGE_NAME:  blook-drv.sys
+
+STACK_COMMAND:  .cxr 0xfffff80533b5e8f0 ; kb
+
+BUCKET_ID_FUNC_OFFSET:  0
+
+FAILURE_BUCKET_ID:  0x7E_C0000096_blook_drv!hv::write_tr
+
+OS_VERSION:  10.0.26100.1
+
+BUILDLAB_STR:  ge_release
+
+OSPLATFORM_TYPE:  x64
+
+OSNAME:  Windows 10
+
+FAILURE_ID_HASH:  {cd75edf5-e61b-dadb-c610-7a4c7f28d2fe}
+
+Followup:     MachineOwner
+---------
+
+start             end                 module name
+fffff805`32450000 fffff805`327c2000   mcupdate_GenuineIntel   (deferred)             
+    Image path: \SystemRoot\system32\mcupdate_GenuineIntel.dll
+    Image name: mcupdate_GenuineIntel.dll
+    Browse all global symbols  functions  data
+    Timestamp:        Fri Feb  2 05:57:52 2024 (65BC13E0)
+    CheckSum:         00375FEC
+    ImageSize:        00372000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`32bd0000 fffff805`32be0000   kdcom      (deferred)             
+    Image path: kdcom.dll
+    Image name: kdcom.dll
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        AF9BBE4B (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00017EA9
+    ImageSize:        00010000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`32bf0000 fffff805`32bfc000   symcryptk   (deferred)             
+    Image path: \SystemRoot\system32\symcryptk.dll
+    Image name: symcryptk.dll
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        B5E1261F (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001C83F
+    ImageSize:        0000C000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`32c00000 fffff805`32c2c000   tm         (deferred)             
+    Image path: \SystemRoot\System32\drivers\tm.sys
+    Image name: tm.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        089D3444 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00033164
+    ImageSize:        0002C000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`32c30000 fffff805`32cbc000   CLFS       (deferred)             
+    Image path: \SystemRoot\System32\drivers\CLFS.SYS
+    Image name: CLFS.SYS
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        2AB63749 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00096B9B
+    ImageSize:        0008C000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`32cc0000 fffff805`32da0000   cng        (deferred)             
+    Image path: \SystemRoot\System32\drivers\cng.sys
+    Image name: cng.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        17AD1E01 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000E8B7A
+    ImageSize:        000E0000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`32db0000 fffff805`32dc5000   winaccel   (deferred)             
+    Image path: \SystemRoot\System32\drivers\winaccel.sys
+    Image name: winaccel.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        FF85D401 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001E7BF
+    ImageSize:        00015000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`32dd0000 fffff805`32deb000   PSHED      (deferred)             
+    Image path: \SystemRoot\system32\PSHED.dll
+    Image name: PSHED.dll
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        C3D34E7C (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0002C44F
+    ImageSize:        0001B000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`32df0000 fffff805`32dfd000   BOOTVID    (deferred)             
+    Image path: \SystemRoot\system32\BOOTVID.dll
+    Image name: BOOTVID.dll
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        6E4A77D6 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000178AC
+    ImageSize:        0000D000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`32e00000 fffff805`32f14000   clipsp     (deferred)             
+    Image path: \SystemRoot\System32\drivers\clipsp.sys
+    Image name: clipsp.sys
+    Browse all global symbols  functions  data
+    Timestamp:        Fri Jan  9 04:54:34 2026 (6960198A)
+    CheckSum:         0011DFA5
+    ImageSize:        00114000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`32f20000 fffff805`32fb5000   FLTMGR     (deferred)             
+    Image path: \SystemRoot\System32\drivers\FLTMGR.SYS
+    Image name: FLTMGR.SYS
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        8FCE603C (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00097803
+    ImageSize:        00095000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`32fc0000 fffff805`32ff1000   ksecdd     (deferred)             
+    Image path: \SystemRoot\System32\drivers\ksecdd.sys
+    Image name: ksecdd.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        8EBB62DF (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00038BAF
+    ImageSize:        00031000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`33000000 fffff805`33062000   msrpc      (deferred)             
+    Image path: \SystemRoot\System32\drivers\msrpc.sys
+    Image name: msrpc.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        1B9FD221 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00073A55
+    ImageSize:        00062000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`33070000 fffff805`33080000   cmimcext   (deferred)             
+    Image path: \SystemRoot\System32\drivers\cmimcext.sys
+    Image name: cmimcext.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        CF1A95F2 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00014564
+    ImageSize:        00010000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`33090000 fffff805`330a6000   werkernel   (deferred)             
+    Image path: \SystemRoot\System32\drivers\werkernel.sys
+    Image name: werkernel.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        9DFDEA74 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001AF19
+    ImageSize:        00016000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`330b0000 fffff805`330bd000   ntosext    (deferred)             
+    Image path: \SystemRoot\System32\drivers\ntosext.sys
+    Image name: ntosext.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        33F8A971 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000171DA
+    ImageSize:        0000D000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`330c0000 fffff805`33186000   win32k     (deferred)             
+    Image path: \SystemRoot\System32\win32k.sys
+    Image name: win32k.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        483EA796 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000D4FF2
+    ImageSize:        000C6000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`33190000 fffff805`331b0000   watchdog   (deferred)             
+    Image path: \SystemRoot\System32\drivers\watchdog.sys
+    Image name: watchdog.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        1609C879 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0002FBD5
+    ImageSize:        00020000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`331c0000 fffff805`336b2000   dxgkrnl    (deferred)             
+    Image path: \SystemRoot\System32\drivers\dxgkrnl.sys
+    Image name: dxgkrnl.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        1AFF4C2E (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         004F7C45
+    ImageSize:        004F2000
+    File version:     10.0.26100.7623
+    Product version:  10.0.26100.7623
+    File flags:       0 (Mask 3F)
+    File OS:          40004 NT Win32
+    File type:        3.7 Driver
+    File date:        00000000.00000000
+    Translations:     0409.04b0
+    Information from resource tables:
+        CompanyName:      Microsoft Corporation
+        ProductName:      Microsoft? Windows? Operating System
+        InternalName:     dxgkrnl.sys
+        OriginalFilename: dxgkrnl.sys
+        ProductVersion:   10.0.26100.7623
+        FileVersion:      10.0.26100.7623 (WinBuild.160101.0800)
+        FileDescription:  DirectX Graphics Kernel
+        LegalCopyright:   ? Microsoft Corporation. All rights reserved.
+fffff805`336c0000 fffff805`336cd000   WMILIB     (deferred)             
+    Image path: \SystemRoot\System32\drivers\WMILIB.SYS
+    Image name: WMILIB.SYS
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        BF8195C9 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001C823
+    ImageSize:        0000D000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`336d0000 fffff805`337e0000   CI         (deferred)             
+    Image path: \SystemRoot\system32\CI.dll
+    Image name: CI.dll
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        1EADBEE2 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0011EEB9
+    ImageSize:        00110000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`337f0000 fffff805`33811000   globmerger   (deferred)             
+    Image path: \SystemRoot\System32\drivers\globmerger.sys
+    Image name: globmerger.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        A2D0B098 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0002CFD6
+    ImageSize:        00021000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`33820000 fffff805`33911000   Wdf01000   (private pdb symbols)  y:\symbols\Wdf01000.pdb\C6D71584443D320612B4B127D50B31751\Wdf01000.pdb
+    Loaded symbol image file: Wdf01000.sys
+    Image path: \SystemRoot\system32\drivers\Wdf01000.sys
+    Image name: Wdf01000.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        0A5B0E20 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000F8C06
+    ImageSize:        000F1000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`33920000 fffff805`33937000   WDFLDR     (deferred)             
+    Image path: \SystemRoot\system32\drivers\WDFLDR.SYS
+    Image name: WDFLDR.SYS
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        16B70E3C (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001F991
+    ImageSize:        00017000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`33940000 fffff805`33954000   WppRecorder   (deferred)             
+    Image path: \SystemRoot\system32\drivers\WppRecorder.sys
+    Image name: WppRecorder.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        F7273807 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001AA95
+    ImageSize:        00014000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`33960000 fffff805`3396f000   PRM        (deferred)             
+    Image path: \SystemRoot\System32\DriverStore\FileRepository\prm.inf_amd64_7c38475757a1f016\PRM.sys
+    Image name: PRM.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        514FAA80 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00018CCC
+    ImageSize:        0000F000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`33980000 fffff805`339aa000   acpiex     (deferred)             
+    Image path: \SystemRoot\System32\Drivers\acpiex.sys
+    Image name: acpiex.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        04691F0B (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00032584
+    ImageSize:        0002A000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`339b0000 fffff805`339bf000   msseccore   (deferred)             
+    Image path: \SystemRoot\system32\drivers\msseccore.sys
+    Image name: msseccore.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        B5A80D29 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001D832
+    ImageSize:        0000F000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`339d0000 fffff805`33aa6000   ACPI       (deferred)             
+    Image path: \SystemRoot\System32\drivers\ACPI.sys
+    Image name: ACPI.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        6D722FD4 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000D8C7B
+    ImageSize:        000D6000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`33ec0000 fffff805`33ece000   amdwps     (deferred)             
+    Image path: \SystemRoot\System32\drivers\amdwps.sys
+    Image name: amdwps.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        3DC3FE93 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00011029
+    ImageSize:        0000E000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`33ee0000 fffff805`33ef8000   WindowsTrustedRT   (deferred)             
+    Image path: \SystemRoot\system32\drivers\WindowsTrustedRT.sys
+    Image name: WindowsTrustedRT.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        50C114D5 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00028955
+    ImageSize:        00018000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`33f00000 fffff805`33fa4000   intelpep   (deferred)             
+    Image path: \SystemRoot\System32\drivers\intelpep.sys
+    Image name: intelpep.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        60D13FE4 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000B380B
+    ImageSize:        000A4000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`33fb0000 fffff805`33fbc000   WindowsTrustedRTProxy   (deferred)             
+    Image path: \SystemRoot\System32\drivers\WindowsTrustedRTProxy.sys
+    Image name: WindowsTrustedRTProxy.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        7DDA7461 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00014CCA
+    ImageSize:        0000C000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`33fc0000 fffff805`33fd3000   IntelPMT   (deferred)             
+    Image path: \SystemRoot\System32\drivers\IntelPMT.sys
+    Image name: IntelPMT.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        E22C4B63 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00019B42
+    ImageSize:        00013000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`33fe0000 fffff805`33ff6000   pcw        (deferred)             
+    Image path: \SystemRoot\System32\drivers\pcw.sys
+    Image name: pcw.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        4F589BED (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00026E1F
+    ImageSize:        00016000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`34000000 fffff805`3400c000   msisadrv   (deferred)             
+    Image path: \SystemRoot\System32\drivers\msisadrv.sys
+    Image name: msisadrv.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        C0CACEA5 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001A1FE
+    ImageSize:        0000C000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`34010000 fffff805`340a3000   pci        (deferred)             
+    Image path: \SystemRoot\System32\drivers\pci.sys
+    Image name: pci.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        FEF155B5 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0009A63E
+    ImageSize:        00093000
+    File version:     10.0.26100.7309
+    Product version:  10.0.26100.7309
+    File flags:       0 (Mask 3F)
+    File OS:          40004 NT Win32
+    File type:        2.0 Dll
+    File date:        00000000.00000000
+    Translations:     0409.04b0
+    Information from resource tables:
+        CompanyName:      Microsoft Corporation
+        ProductName:      Microsoft? Windows? Operating System
+        InternalName:     pci.sys
+        OriginalFilename: pci.sys
+        ProductVersion:   10.0.26100.7309
+        FileVersion:      10.0.26100.7309 (WinBuild.160101.0800)
+        FileDescription:  NT Plug and Play PCI Enumerator
+        LegalCopyright:   ? Microsoft Corporation. All rights reserved.
+fffff805`340b0000 fffff805`340cc000   vdrvroot   (deferred)             
+    Image path: \SystemRoot\System32\drivers\vdrvroot.sys
+    Image name: vdrvroot.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        87DB0809 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001E981
+    ImageSize:        0001C000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`340d0000 fffff805`34108000   pdc        (deferred)             
+    Image path: \SystemRoot\system32\drivers\pdc.sys
+    Image name: pdc.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        725D0A91 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00038DCB
+    ImageSize:        00038000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`34110000 fffff805`34128000   CEA        (deferred)             
+    Image path: \SystemRoot\system32\drivers\CEA.sys
+    Image name: CEA.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        19D0BDA7 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001B0FF
+    ImageSize:        00018000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`34130000 fffff805`34165000   partmgr    (deferred)             
+    Image path: \SystemRoot\System32\drivers\partmgr.sys
+    Image name: partmgr.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        0A36A48F (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00041F1A
+    ImageSize:        00035000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`34170000 fffff805`34268000   spaceport   (deferred)             
+    Image path: \SystemRoot\System32\drivers\spaceport.sys
+    Image name: spaceport.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        8B60F31A (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00104AEF
+    ImageSize:        000F8000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`34270000 fffff805`3428e000   volmgr     (deferred)             
+    Image path: \SystemRoot\System32\drivers\volmgr.sys
+    Image name: volmgr.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        14774C80 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0002467B
+    ImageSize:        0001E000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`342a0000 fffff805`342ac000   intelide   (deferred)             
+    Image path: \SystemRoot\System32\drivers\intelide.sys
+    Image name: intelide.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        458EB443 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000158C2
+    ImageSize:        0000C000
+    File version:     10.0.26100.7309
+    Product version:  10.0.26100.7309
+    File flags:       0 (Mask 3F)
+    File OS:          40004 NT Win32
+    File type:        3.7 Driver
+    File date:        00000000.00000000
+    Translations:     0409.04b0
+    Information from resource tables:
+        CompanyName:      Microsoft Corporation
+        ProductName:      Microsoft? Windows? Operating System
+        InternalName:     intelide.sys
+        OriginalFilename: intelide.sys
+        ProductVersion:   10.0.26100.7309
+        FileVersion:      10.0.26100.7309 (WinBuild.160101.0800)
+        FileDescription:  Intel PCI IDE Driver
+        LegalCopyright:   ? Microsoft Corporation. All rights reserved.
+fffff805`342b0000 fffff805`342c4000   PCIIDEX    (deferred)             
+    Image path: \SystemRoot\System32\drivers\PCIIDEX.SYS
+    Image name: PCIIDEX.SYS
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        76200563 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00018A2A
+    ImageSize:        00014000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`342d0000 fffff805`34334000   volmgrx    (deferred)             
+    Image path: \SystemRoot\System32\drivers\volmgrx.sys
+    Image name: volmgrx.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        A3A7F6F3 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00075136
+    ImageSize:        00064000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`34340000 fffff805`34358000   vsock      (deferred)             
+    Image path: \SystemRoot\system32\DRIVERS\vsock.sys
+    Image name: vsock.sys
+    Browse all global symbols  functions  data
+    Timestamp:        Thu May 29 14:18:13 2025 (6837FC25)
+    CheckSum:         0001D848
+    ImageSize:        00018000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`34360000 fffff805`3437d000   vmci       (deferred)             
+    Image path: \SystemRoot\System32\drivers\vmci.sys
+    Image name: vmci.sys
+    Browse all global symbols  functions  data
+    Timestamp:        Thu Mar 20 09:25:27 2025 (67DB6E87)
+    CheckSum:         0001C0CE
+    ImageSize:        0001D000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`34380000 fffff805`3439f000   mountmgr   (deferred)             
+    Image path: \SystemRoot\System32\drivers\mountmgr.sys
+    Image name: mountmgr.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        F7AA24C6 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000275E6
+    ImageSize:        0001F000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`343b0000 fffff805`343be000   atapi      (deferred)             
+    Image path: \SystemRoot\System32\drivers\atapi.sys
+    Image name: atapi.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        36CB8C09 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00019E8F
+    ImageSize:        0000E000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`343d0000 fffff805`34413000   ataport    (deferred)             
+    Image path: \SystemRoot\System32\drivers\ataport.SYS
+    Image name: ataport.SYS
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        61A4FCAB (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00046018
+    ImageSize:        00043000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`34420000 fffff805`34457000   storahci   (deferred)             
+    Image path: \SystemRoot\System32\drivers\storahci.sys
+    Image name: storahci.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        139C8757 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00040CC3
+    ImageSize:        00037000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`34460000 fffff805`346cf000   storport   (deferred)             
+    Image path: \SystemRoot\System32\drivers\storport.sys
+    Image name: storport.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        74A1128D (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         002776B7
+    ImageSize:        0026F000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`346e0000 fffff805`34706000   EhStorClass   (deferred)             
+    Image path: \SystemRoot\System32\drivers\EhStorClass.sys
+    Image name: EhStorClass.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        8832BA0B (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0002BF15
+    ImageSize:        00026000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`34710000 fffff805`3472d000   fileinfo   (deferred)             
+    Image path: \SystemRoot\System32\drivers\fileinfo.sys
+    Image name: fileinfo.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        E7D4AA87 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00029659
+    ImageSize:        0001D000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`34730000 fffff805`34774000   Wof        (deferred)             
+    Image path: \SystemRoot\System32\Drivers\Wof.sys
+    Image name: Wof.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        E0D7BBBD (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000515BA
+    ImageSize:        00044000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`34780000 fffff805`3481b000   WdFilter   (deferred)             
+    Image path: \SystemRoot\system32\drivers\WdFilter.sys
+    Image name: WdFilter.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        6DE7A78C (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000A10CE
+    ImageSize:        0009B000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`34820000 fffff805`34b89000   Ntfs       (deferred)             
+    Image path: \SystemRoot\System32\Drivers\Ntfs.sys
+    Image name: Ntfs.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        51B6C2FA (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00370DFE
+    ImageSize:        00369000
+    File version:     10.0.26100.7623
+    Product version:  10.0.26100.7623
+    File flags:       0 (Mask 3F)
+    File OS:          40004 NT Win32
+    File type:        3.7 Driver
+    File date:        00000000.00000000
+    Translations:     0409.04b0
+    Information from resource tables:
+        CompanyName:      Microsoft Corporation
+        ProductName:      Microsoft? Windows? Operating System
+        InternalName:     ntfs.sys
+        OriginalFilename: ntfs.sys
+        ProductVersion:   10.0.26100.7623
+        FileVersion:      10.0.26100.7623 (WinBuild.160101.0800)
+        FileDescription:  NT File System Driver
+        LegalCopyright:   ? Microsoft Corporation. All rights reserved.
+fffff805`34b90000 fffff805`34b9f000   Fs_Rec     (deferred)             
+    Image path: \SystemRoot\System32\Drivers\Fs_Rec.sys
+    Image name: Fs_Rec.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        1671DC59 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00013F9C
+    ImageSize:        0000F000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`34bb0000 fffff805`34d74000   ndis       (deferred)             
+    Image path: \SystemRoot\system32\drivers\ndis.sys
+    Image name: ndis.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        2D7529A5 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         001CA0A9
+    ImageSize:        001C4000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`34d80000 fffff805`34e38000   NETIO      (deferred)             
+    Image path: \SystemRoot\system32\drivers\NETIO.SYS
+    Image name: NETIO.SYS
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        1BC09B70 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000B8D14
+    ImageSize:        000B8000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`34e40000 fffff805`34e77000   ksecpkg    (deferred)             
+    Image path: \SystemRoot\System32\Drivers\ksecpkg.sys
+    Image name: ksecpkg.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        58D47782 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00040B39
+    ImageSize:        00037000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`34e80000 fffff805`34ea1000   Kerb3961Kernel   (deferred)             
+    Image path: \SystemRoot\System32\Drivers\Kerb3961Kernel.sys
+    Image name: Kerb3961Kernel.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        7B8502EF (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0002A581
+    ImageSize:        00021000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`34eb0000 fffff805`3520c000   tcpip      (deferred)             
+    Image path: \SystemRoot\System32\drivers\tcpip.sys
+    Image name: tcpip.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        A12411A8 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0035E1DB
+    ImageSize:        0035C000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35210000 fffff805`3529c000   fwpkclnt   (deferred)             
+    Image path: \SystemRoot\System32\drivers\fwpkclnt.sys
+    Image name: fwpkclnt.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        EA224782 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00091329
+    ImageSize:        0008C000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`352a0000 fffff805`352da000   wfplwfs    (deferred)             
+    Image path: \SystemRoot\System32\drivers\wfplwfs.sys
+    Image name: wfplwfs.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        0263D148 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0004B29A
+    ImageSize:        0003A000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`352e0000 fffff805`353ca000   fvevol     (deferred)             
+    Image path: \SystemRoot\System32\DRIVERS\fvevol.sys
+    Image name: fvevol.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        473905C5 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000F7A4C
+    ImageSize:        000EA000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`353d0000 fffff805`353db000   volume     (deferred)             
+    Image path: \SystemRoot\System32\drivers\volume.sys
+    Image name: volume.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        B2729186 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00012A1D
+    ImageSize:        0000B000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`353e0000 fffff805`35460000   volsnap    (deferred)             
+    Image path: \SystemRoot\System32\drivers\volsnap.sys
+    Image name: volsnap.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        24E2F87A (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0008C52B
+    ImageSize:        00080000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35470000 fffff805`354be000   rdyboost   (deferred)             
+    Image path: \SystemRoot\System32\drivers\rdyboost.sys
+    Image name: rdyboost.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        F12C2932 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00058160
+    ImageSize:        0004E000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`354d0000 fffff805`354ed000   nvmedisk   (deferred)             
+    Image path: \SystemRoot\System32\drivers\nvmedisk.sys
+    Image name: nvmedisk.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        673CD0D0 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0002D394
+    ImageSize:        0001D000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`354f0000 fffff805`3551a000   mup        (deferred)             
+    Image path: \SystemRoot\System32\Drivers\mup.sys
+    Image name: mup.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        B1CE429C (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0003A951
+    ImageSize:        0002A000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35520000 fffff805`35535000   iorate     (deferred)             
+    Image path: \SystemRoot\system32\drivers\iorate.sys
+    Image name: iorate.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        ECA78369 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0002560A
+    ImageSize:        00015000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35560000 fffff805`35581000   disk       (deferred)             
+    Image path: \SystemRoot\System32\drivers\disk.sys
+    Image name: disk.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        9EA006C8 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0002EA4F
+    ImageSize:        00021000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35590000 fffff805`35609000   CLASSPNP   (deferred)             
+    Image path: \SystemRoot\System32\drivers\CLASSPNP.SYS
+    Image name: CLASSPNP.SYS
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        91093DD2 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000836E0
+    ImageSize:        00079000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35800000 fffff805`35857000   netbt      (deferred)             
+    Image path: \SystemRoot\System32\DRIVERS\netbt.sys
+    Image name: netbt.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        962325CD (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00065349
+    ImageSize:        00057000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35860000 fffff805`35876000   afunix     (deferred)             
+    Image path: \SystemRoot\system32\drivers\afunix.sys
+    Image name: afunix.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        EC553BB1 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001C274
+    ImageSize:        00016000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35880000 fffff805`35933000   afd        (deferred)             
+    Image path: \SystemRoot\system32\drivers\afd.sys
+    Image name: afd.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        5D088826 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000BFB4F
+    ImageSize:        000B3000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35940000 fffff805`3595e000   vwififlt   (deferred)             
+    Image path: \SystemRoot\System32\drivers\vwififlt.sys
+    Image name: vwififlt.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        C0D47BA2 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00021EFE
+    ImageSize:        0001E000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35970000 fffff805`359a0000   pacer      (deferred)             
+    Image path: \SystemRoot\System32\drivers\pacer.sys
+    Image name: pacer.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        DC2C849D (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000355E6
+    ImageSize:        00030000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`359b0000 fffff805`359c5000   ndiscap    (deferred)             
+    Image path: \SystemRoot\System32\drivers\ndiscap.sys
+    Image name: ndiscap.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        2E869705 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000197F9
+    ImageSize:        00015000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`359d0000 fffff805`359e6000   netbios    (deferred)             
+    Image path: \SystemRoot\system32\drivers\netbios.sys
+    Image name: netbios.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        E5427ADD (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00024502
+    ImageSize:        00016000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`359f0000 fffff805`35acd000   Vid        (deferred)             
+    Image path: \SystemRoot\System32\drivers\Vid.sys
+    Image name: Vid.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        8B50EFBC (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000E8A26
+    ImageSize:        000DD000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35ad0000 fffff805`35af9000   winhvr     (deferred)             
+    Image path: \SystemRoot\System32\drivers\winhvr.sys
+    Image name: winhvr.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        A3D86297 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0002A0B5
+    ImageSize:        00029000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35b00000 fffff805`35b8d000   rdbss      (deferred)             
+    Image path: \SystemRoot\system32\DRIVERS\rdbss.sys
+    Image name: rdbss.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        29981585 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00095632
+    ImageSize:        0008D000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35b90000 fffff805`35c29000   csc        (deferred)             
+    Image path: \SystemRoot\system32\drivers\csc.sys
+    Image name: csc.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        3040D476 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000A6631
+    ImageSize:        00099000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35c30000 fffff805`35c43000   nsiproxy   (deferred)             
+    Image path: \SystemRoot\system32\drivers\nsiproxy.sys
+    Image name: nsiproxy.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        D50EAEAD (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00020F58
+    ImageSize:        00013000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35c50000 fffff805`35c5f000   npsvctrig   (deferred)             
+    Image path: \SystemRoot\System32\drivers\npsvctrig.sys
+    Image name: npsvctrig.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        0FBC183A (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001BC45
+    ImageSize:        0000F000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35c70000 fffff805`35c81000   mssmbios   (pdb symbols)          y:\symbols\mssmbios.pdb\4B2A2F630CB99A74A9450D75775464C51\mssmbios.pdb
+    Loaded symbol image file: mssmbios.sys
+    Image path: \SystemRoot\System32\drivers\mssmbios.sys
+    Image name: mssmbios.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        C7C306A0 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00014CBF
+    ImageSize:        00011000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35c90000 fffff805`35cc0000   dfsc       (deferred)             
+    Image path: \SystemRoot\System32\Drivers\dfsc.sys
+    Image name: dfsc.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        64E1FA29 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00038AAC
+    ImageSize:        00030000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35cd0000 fffff805`35cf1000   BATTC      (deferred)             
+    Image path: \SystemRoot\System32\drivers\BATTC.SYS
+    Image name: BATTC.SYS
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        411EB55F (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0002D15C
+    ImageSize:        00021000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35d20000 fffff805`35d3d000   bam        (deferred)             
+    Image path: \SystemRoot\system32\drivers\bam.sys
+    Image name: bam.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        80B9EF1C (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0002DCC8
+    ImageSize:        0001D000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35d40000 fffff805`35d9c000   ahcache    (deferred)             
+    Image path: \SystemRoot\system32\DRIVERS\ahcache.sys
+    Image name: ahcache.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        5B4FB14E (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00062CB0
+    ImageSize:        0005C000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35da0000 fffff805`35db4000   CompositeBus   (deferred)             
+    Image path: \SystemRoot\System32\DriverStore\FileRepository\compositebus.inf_amd64_8cf6fa9d3afdfa25\CompositeBus.sys
+    Image name: CompositeBus.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        ACD7DA51 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0002333F
+    ImageSize:        00014000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35dc0000 fffff805`35dd1000   kdnic      (deferred)             
+    Image path: \SystemRoot\System32\drivers\kdnic.sys
+    Image name: kdnic.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        041B7A7C (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001AD24
+    ImageSize:        00011000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35de0000 fffff805`35df6000   umbus      (deferred)             
+    Image path: \SystemRoot\System32\DriverStore\FileRepository\umbus.inf_amd64_914dd46b4b013b1b\umbus.sys
+    Image name: umbus.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        74744632 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001E6A2
+    ImageSize:        00016000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35e00000 fffff805`35e26000   i8042prt   (deferred)             
+    Image path: \SystemRoot\System32\drivers\i8042prt.sys
+    Image name: i8042prt.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        F9330180 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0002C108
+    ImageSize:        00026000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35e30000 fffff805`35e45000   kbdclass   (deferred)             
+    Image path: \SystemRoot\System32\drivers\kbdclass.sys
+    Image name: kbdclass.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        6EACDCB4 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000215C9
+    ImageSize:        00015000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35e50000 fffff805`35e59000   vmmouse    (deferred)             
+    Image path: \SystemRoot\System32\drivers\vmmouse.sys
+    Image name: vmmouse.sys
+    Browse all global symbols  functions  data
+    Timestamp:        Thu Nov 28 23:28:36 2024 (67488C24)
+    CheckSum:         0000B6C8
+    ImageSize:        00009000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35e60000 fffff805`35e75000   mouclass   (deferred)             
+    Image path: \SystemRoot\System32\drivers\mouclass.sys
+    Image name: mouclass.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        45D9B600 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001B1DD
+    ImageSize:        00015000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35e80000 fffff805`35e8a000   vm3dmp_loader   (deferred)             
+    Image path: \SystemRoot\System32\DriverStore\FileRepository\vm3d.inf_amd64_eba3f0b96d8538e4\vm3dmp_loader.sys
+    Image name: vm3dmp_loader.sys
+    Browse all global symbols  functions  data
+    Timestamp:        Fri Dec 20 03:58:05 2024 (67647ACD)
+    CheckSum:         0001026A
+    ImageSize:        0000A000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35e90000 fffff805`35ee9000   vm3dmp     (deferred)             
+    Image path: \SystemRoot\System32\DriverStore\FileRepository\vm3d.inf_amd64_eba3f0b96d8538e4\vm3dmp.sys
+    Image name: vm3dmp.sys
+    Browse all global symbols  functions  data
+    Timestamp:        Fri Dec 20 03:58:09 2024 (67647AD1)
+    CheckSum:         0005744B
+    ImageSize:        00059000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35ef0000 fffff805`35f83000   e1i68x64   (deferred)             
+    Image path: \SystemRoot\System32\drivers\e1i68x64.sys
+    Image name: e1i68x64.sys
+    Browse all global symbols  functions  data
+    Timestamp:        Sun May 23 20:12:40 2021 (60AA46B8)
+    CheckSum:         000986DB
+    ImageSize:        00093000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35f90000 fffff805`35f9c000   vmgencounter   (deferred)             
+    Image path: \SystemRoot\System32\drivers\vmgencounter.sys
+    Image name: vmgencounter.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        11B1135E (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000196A3
+    ImageSize:        0000C000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35fa0000 fffff805`35fb7000   CmBatt     (deferred)             
+    Image path: \SystemRoot\System32\drivers\CmBatt.sys
+    Image name: CmBatt.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        CAE4A74B (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000188C2
+    ImageSize:        00017000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`35fd0000 fffff805`36006000   cdrom      (deferred)             
+    Image path: \SystemRoot\System32\drivers\cdrom.sys
+    Image name: cdrom.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        E6F8A628 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00045F8B
+    ImageSize:        00036000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36010000 fffff805`36027000   filecrypt   (deferred)             
+    Image path: \SystemRoot\system32\drivers\filecrypt.sys
+    Image name: filecrypt.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        C6C0A88B (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000179E9
+    ImageSize:        00017000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36030000 fffff805`36041000   tbs        (deferred)             
+    Image path: \SystemRoot\system32\drivers\tbs.sys
+    Image name: tbs.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        7361500A (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001FB5A
+    ImageSize:        00011000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36050000 fffff805`3605b000   Null       (deferred)             
+    Image path: \SystemRoot\System32\Drivers\Null.SYS
+    Image name: Null.SYS
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        DA485F57 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0000B1D4
+    ImageSize:        0000B000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36060000 fffff805`3606a000   Beep       (deferred)             
+    Image path: \SystemRoot\System32\Drivers\Beep.SYS
+    Image name: Beep.SYS
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        59390532 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00010915
+    ImageSize:        0000A000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36070000 fffff805`36081000   vmrawdsk   (deferred)             
+    Image path: \SystemRoot\system32\DRIVERS\vmrawdsk.sys
+    Image name: vmrawdsk.sys
+    Browse all global symbols  functions  data
+    Timestamp:        Thu Nov 28 23:33:05 2024 (67488D31)
+    CheckSum:         0001C0C1
+    ImageSize:        00011000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`360b0000 fffff805`360ca000   BasicDisplay   (deferred)             
+    Image path: \SystemRoot\System32\DriverStore\FileRepository\basicdisplay.inf_amd64_2753efdbb0d9a226\BasicDisplay.sys
+    Image name: BasicDisplay.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        9C875403 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00023996
+    ImageSize:        0001A000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`360d0000 fffff805`360e4000   BasicRender   (deferred)             
+    Image path: \SystemRoot\System32\DriverStore\FileRepository\basicrender.inf_amd64_3ee4bbe654c2a277\BasicRender.sys
+    Image name: BasicRender.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        64F2D5B7 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001F4FD
+    ImageSize:        00014000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`360f0000 fffff805`3610c000   Npfs       (deferred)             
+    Image path: \SystemRoot\System32\Drivers\Npfs.SYS
+    Image name: Npfs.SYS
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        D2E1F0D0 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001DE53
+    ImageSize:        0001C000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36110000 fffff805`36122000   Msfs       (deferred)             
+    Image path: \SystemRoot\System32\Drivers\Msfs.SYS
+    Image name: Msfs.SYS
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        5E0BEA81 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00018044
+    ImageSize:        00012000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36130000 fffff805`36175000   CimFS      (deferred)             
+    Image path: \SystemRoot\System32\Drivers\CimFS.SYS
+    Image name: CimFS.SYS
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        4F381373 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00049797
+    ImageSize:        00045000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36180000 fffff805`361ab000   tdx        (deferred)             
+    Image path: \SystemRoot\system32\DRIVERS\tdx.sys
+    Image name: tdx.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        B4FE1C94 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0003B3E2
+    ImageSize:        0002B000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`361b0000 fffff805`361c3000   TDI        (deferred)             
+    Image path: \SystemRoot\system32\DRIVERS\TDI.SYS
+    Image name: TDI.SYS
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        40AC4ECB (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00016F53
+    ImageSize:        00013000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`361d0000 fffff805`361df000   ws2ifsl    (deferred)             
+    Image path: \SystemRoot\system32\drivers\ws2ifsl.sys
+    Image name: ws2ifsl.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        8F6BA37C (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0000FF39
+    ImageSize:        0000F000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36200000 fffff805`36286000   ks         (deferred)             
+    Image path: \SystemRoot\System32\drivers\ks.sys
+    Image name: ks.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        FF4C2E9B (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0008AC1C
+    ImageSize:        00086000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36290000 fffff805`3629e000   rdpbus     (deferred)             
+    Image path: \SystemRoot\System32\drivers\rdpbus.sys
+    Image name: rdpbus.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        ABD7CFCC (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001AB4D
+    ImageSize:        0000E000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`362b0000 fffff805`362d0000   cdfs       (deferred)             
+    Image path: \SystemRoot\system32\DRIVERS\cdfs.sys
+    Image name: cdfs.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        1F4B8954 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00025749
+    ImageSize:        00020000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`362e0000 fffff805`36612000   win32kbase   (deferred)             
+    Image path: \SystemRoot\System32\win32kbase.sys
+    Image name: win32kbase.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        0DB1A84B (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00338D28
+    ImageSize:        00332000
+    File version:     10.0.26100.7623
+    Product version:  10.0.26100.7623
+    File flags:       0 (Mask 3F)
+    File OS:          40004 NT Win32
+    File type:        3.7 Driver
+    File date:        00000000.00000000
+    Translations:     0409.04b0
+    Information from resource tables:
+        CompanyName:      Microsoft Corporation
+        ProductName:      Microsoft? Windows? Operating System
+        InternalName:     win32kbase.sys
+        OriginalFilename: win32kbase.sys
+        ProductVersion:   10.0.26100.7623
+        FileVersion:      10.0.26100.7623 (WinBuild.160101.0800)
+        FileDescription:  Base Win32k Kernel Driver
+        LegalCopyright:   ? Microsoft Corporation. All rights reserved.
+fffff805`36620000 fffff805`36634000   HIDPARSE   (deferred)             
+    Image path: \SystemRoot\System32\drivers\HIDPARSE.SYS
+    Image name: HIDPARSE.SYS
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        B67F0FC6 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001F889
+    ImageSize:        00014000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36640000 fffff805`36a54000   win32kfull   (deferred)             
+    Image path: \SystemRoot\System32\win32kfull.sys
+    Image name: win32kfull.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        B7A27B8B (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         004130E6
+    ImageSize:        00414000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36a60000 fffff805`36a87000   win32kbase_rs   (deferred)             
+    Image path: \SystemRoot\System32\win32kbase_rs.sys
+    Image name: win32kbase_rs.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        7ABD7057 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00034B80
+    ImageSize:        00027000
+    File version:     10.0.26100.7309
+    Product version:  10.0.26100.7309
+    File flags:       0 (Mask 3F)
+    File OS:          40004 NT Win32
+    File type:        3.7 Driver
+    File date:        00000000.00000000
+    Translations:     0409.04b0
+    Information from resource tables:
+        CompanyName:      Microsoft Corporation
+        ProductName:      Microsoft? Windows? Operating System
+        InternalName:     win32kbase_rs.sys
+        OriginalFilename: win32kbase_rs.sys
+        ProductVersion:   10.0.26100.7309
+        FileVersion:      10.0.26100.7309 (WinBuild.160101.0800)
+        FileDescription:  Base Win32k Kernel Driver
+        LegalCopyright:   ? Microsoft Corporation. All rights reserved.
+fffff805`36a90000 fffff805`36aaf000   monitor    (deferred)             
+    Image path: \SystemRoot\System32\drivers\monitor.sys
+    Image name: monitor.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        BF89EC26 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0002DBAA
+    ImageSize:        0001F000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36b10000 fffff805`36b60000   intelppm   (deferred)             
+    Image path: \SystemRoot\System32\drivers\intelppm.sys
+    Image name: intelppm.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        BAF3E329 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00058FB5
+    ImageSize:        00050000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36b70000 fffff805`36b7e000   NdisVirtualBus   (deferred)             
+    Image path: \SystemRoot\System32\drivers\NdisVirtualBus.sys
+    Image name: NdisVirtualBus.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        9CF5D8E6 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0000FAC3
+    ImageSize:        0000E000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36b90000 fffff805`36b9c000   swenum     (deferred)             
+    Image path: \SystemRoot\System32\DriverStore\FileRepository\swenum.inf_amd64_8b9dd76f362e3ec6\swenum.sys
+    Image name: swenum.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        8DBCE1D4 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000177B9
+    ImageSize:        0000C000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36c00000 fffff805`36c92000   cldflt     (deferred)             
+    Image path: \SystemRoot\system32\drivers\cldflt.sys
+    Image name: cldflt.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        9F25CCC7 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000A0CB5
+    ImageSize:        00092000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36ca0000 fffff805`36d17000   UnionFS    (deferred)             
+    Image path: \SystemRoot\system32\drivers\UnionFS.sys
+    Image name: UnionFS.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        91196180 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0007B2F1
+    ImageSize:        00077000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36d20000 fffff805`36d3b000   storqosflt   (deferred)             
+    Image path: \SystemRoot\system32\drivers\storqosflt.sys
+    Image name: storqosflt.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        60548146 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0002082D
+    ImageSize:        0001B000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36d40000 fffff805`36d69000   UCPD       (deferred)             
+    Image path: \SystemRoot\system32\drivers\UCPD.sys
+    Image name: UCPD.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        356982E9 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00039D91
+    ImageSize:        00029000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36d70000 fffff805`36d9d000   bindflt    (deferred)             
+    Image path: \SystemRoot\system32\drivers\bindflt.sys
+    Image name: bindflt.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        4B5DF659 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000355AC
+    ImageSize:        0002D000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36da0000 fffff805`36dba000   lltdio     (deferred)             
+    Image path: \SystemRoot\system32\drivers\lltdio.sys
+    Image name: lltdio.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        BEEF0173 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001DBCE
+    ImageSize:        0001A000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36dc0000 fffff805`36dda000   mslldp     (deferred)             
+    Image path: \SystemRoot\system32\drivers\mslldp.sys
+    Image name: mslldp.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        E6C56FD1 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0001EED0
+    ImageSize:        0001A000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36de0000 fffff805`36dfe000   rspndr     (deferred)             
+    Image path: \SystemRoot\system32\drivers\rspndr.sys
+    Image name: rspndr.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        B2DE7031 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00023B11
+    ImageSize:        0001E000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`36e10000 fffff805`37002000   HTTP       (deferred)             
+    Image path: \SystemRoot\system32\drivers\HTTP.sys
+    Image name: HTTP.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        1B17F049 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         001FC895
+    ImageSize:        001F2000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`37010000 fffff805`3703a000   bowser     (deferred)             
+    Image path: \SystemRoot\system32\DRIVERS\bowser.sys
+    Image name: bowser.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        FA1BFE89 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0002ADF5
+    ImageSize:        0002A000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`37040000 fffff805`3705c000   mpsdrv     (deferred)             
+    Image path: \SystemRoot\System32\drivers\mpsdrv.sys
+    Image name: mpsdrv.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        3BFD9489 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00025E4B
+    ImageSize:        0001C000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`37060000 fffff805`37142000   mrxsmb     (deferred)             
+    Image path: \SystemRoot\system32\DRIVERS\mrxsmb.sys
+    Image name: mrxsmb.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        146E3B1A (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000EFD25
+    ImageSize:        000E2000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`37150000 fffff805`371ad000   mrxsmb20   (deferred)             
+    Image path: \SystemRoot\system32\DRIVERS\mrxsmb20.sys
+    Image name: mrxsmb20.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        A52436AF (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0006E29A
+    ImageSize:        0005D000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`371b0000 fffff805`371ba000   vmmemctl   (deferred)             
+    Image path: \SystemRoot\system32\DRIVERS\vmmemctl.sys
+    Image name: vmmemctl.sys
+    Browse all global symbols  functions  data
+    Timestamp:        Thu Nov 28 23:33:27 2024 (67488D47)
+    CheckSum:         00011EB5
+    ImageSize:        0000A000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`371c0000 fffff805`37223000   srvnet     (deferred)             
+    Image path: \SystemRoot\System32\DRIVERS\srvnet.sys
+    Image name: srvnet.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        E56D0360 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00067A90
+    ImageSize:        00063000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`37230000 fffff805`37247000   mmcss      (deferred)             
+    Image path: \SystemRoot\system32\drivers\mmcss.sys
+    Image name: mmcss.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        5E587A4A (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00017BF1
+    ImageSize:        00017000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`37250000 fffff805`3727d000   Ndu        (deferred)             
+    Image path: \SystemRoot\system32\drivers\Ndu.sys
+    Image name: Ndu.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        9A5122ED (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00031EF7
+    ImageSize:        0002D000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`37280000 fffff805`37379000   srv2       (deferred)             
+    Image path: \SystemRoot\System32\DRIVERS\srv2.sys
+    Image name: srv2.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        5F8F35D2 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00106972
+    ImageSize:        000F9000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`373a0000 fffff805`37475000   peauth     (deferred)             
+    Image path: \SystemRoot\system32\drivers\peauth.sys
+    Image name: peauth.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        8195BAE2 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000DBB69
+    ImageSize:        000D5000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`37480000 fffff805`37496000   tcpipreg   (deferred)             
+    Image path: \SystemRoot\System32\drivers\tcpipreg.sys
+    Image name: tcpipreg.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        EF30C293 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00016B88
+    ImageSize:        00016000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`374a0000 fffff805`374bd000   wtd        (deferred)             
+    Image path: \SystemRoot\System32\drivers\wtd.sys
+    Image name: wtd.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        1CFF4525 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00022BE6
+    ImageSize:        0001D000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`374c0000 fffff805`374ec000   vmhgfs     (deferred)             
+    Image path: \SystemRoot\system32\DRIVERS\vmhgfs.sys
+    Image name: vmhgfs.sys
+    Browse all global symbols  functions  data
+    Timestamp:        Thu Nov 28 23:32:12 2024 (67488CFC)
+    CheckSum:         0002D659
+    ImageSize:        0002C000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`374f0000 fffff805`37504000   condrv     (deferred)             
+    Image path: \SystemRoot\System32\drivers\condrv.sys
+    Image name: condrv.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        168584B4 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000182AE
+    ImageSize:        00014000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`37510000 fffff805`37565000   KslD       (deferred)             
+    Image path: \SystemRoot\system32\drivers\KslD.sys
+    Image name: KslD.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        021A84F0 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00054CFC
+    ImageSize:        00055000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`37570000 fffff805`3758b000   WdNisDrv   (deferred)             
+    Image path: \SystemRoot\system32\Drivers\WdNisDrv.sys
+    Image name: WdNisDrv.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        6C9C800B (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00023E9E
+    ImageSize:        0001B000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`37590000 fffff805`377c7000   blook_drv   (private pdb symbols)  d:\blook-kernel-project\blook-drv\build\windows\x64\releasedbg\blook-drv.pdb
+    Loaded symbol image file: blook-drv.sys
+    Image path: \??\C:\blook-e2e\blook-drv.sys
+    Image name: blook-drv.sys
+    Browse all global symbols  functions  data
+    Timestamp:        Wed Oct 21 14:17:17 2026 (6AD858ED)
+    CheckSum:         00032A16
+    ImageSize:        00237000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`37b80000 fffff805`37ca3000   dxgmms2    (deferred)             
+    Image path: \SystemRoot\System32\drivers\dxgmms2.sys
+    Image name: dxgmms2.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        E489153C (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0012B0FE
+    ImageSize:        00123000
+    File version:     10.0.26100.7623
+    Product version:  10.0.26100.7623
+    File flags:       0 (Mask 3F)
+    File OS:          40004 NT Win32
+    File type:        3.7 Driver
+    File date:        00000000.00000000
+    Translations:     0409.04b0
+    Information from resource tables:
+        CompanyName:      Microsoft Corporation
+        ProductName:      Microsoft? Windows? Operating System
+        InternalName:     dxgmms2.sys
+        OriginalFilename: dxgmms2.sys
+        ProductVersion:   10.0.26100.7623
+        FileVersion:      10.0.26100.7623 (WinBuild.160101.0800)
+        FileDescription:  DirectX Graphics MMS
+        LegalCopyright:   ? Microsoft Corporation. All rights reserved.
+fffff805`37cb0000 fffff805`37d02000   cdd        (deferred)             
+    Image path: \SystemRoot\System32\cdd.dll
+    Image name: cdd.dll
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        32C9DF4C (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         0005ACE8
+    ImageSize:        00052000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`37d10000 fffff805`37d33000   bfs        (deferred)             
+    Image path: \SystemRoot\system32\drivers\bfs.sys
+    Image name: bfs.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        CCA742D6 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000310AB
+    ImageSize:        00023000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`37d80000 fffff805`37dbc000   wcifs      (deferred)             
+    Image path: \SystemRoot\system32\drivers\wcifs.sys
+    Image name: wcifs.sys
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        5854B9DB (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         000432A9
+    ImageSize:        0003C000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`a1200000 fffff805`a2650000   nt         (pdb symbols)          y:\symbols\ntkrnlmp.pdb\0385A3E51169BA7F84716B1C792977F71\ntkrnlmp.pdb
+    Loaded symbol image file: ntkrnlmp.exe
+    Image path: ntkrnlmp.exe
+    Image name: ntkrnlmp.exe
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        E50BE785 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00C6E93F
+    ImageSize:        01450000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+fffff805`a2a00000 fffff805`a2a06000   hal        (deferred)             
+    Image path: hal.dll
+    Image name: hal.dll
+    Browse all global symbols  functions  data
+    Image was built with /Brepro flag.
+    Timestamp:        EB9DEAA9 (This is a reproducible build file hash, not a timestamp)
+    CheckSum:         00009D94
+    ImageSize:        00006000
+    Translations:     0000.04b0 0000.04e4 0409.04b0 0409.04e4
+    Information from resource tables:
+
+Unloaded modules:
+fffff805`37380000 fffff805`3739f000   NetworkPrivacyPolicy.sys
+    Timestamp: unavailable (00000000)
+    Checksum:  00000000
+    ImageSize:  0001F000
+fffff805`37d40000 fffff805`37d71000   luafv.sys
+    Timestamp: unavailable (00000000)
+    Checksum:  00000000
+    ImageSize:  00031000
+fffff805`35cd0000 fffff805`35cf3000   dam.sys 
+    Timestamp: unavailable (00000000)
+    Checksum:  00000000
+    ImageSize:  00023000
+fffff805`35d00000 fffff805`35d14000   KMPDC.sys
+    Timestamp: unavailable (00000000)
+    Checksum:  00000000
+    ImageSize:  00014000
+fffff805`36090000 fffff805`360a5000   uiomap.sys
+    Timestamp: unavailable (00000000)
+    Checksum:  00000000
+    ImageSize:  00015000
+fffff805`33ab0000 fffff805`33abc000   WdBoot.sys
+    Timestamp: unavailable (00000000)
+    Checksum:  00000000
+    ImageSize:  0000C000
+fffff805`35540000 fffff805`35554000   hwpolicy.sys
+    Timestamp: unavailable (00000000)
+    Checksum:  00000000
+    ImageSize:  00014000
+quit:
+NatVis script unloaded from 'Y:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'Y:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'Y:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'Y:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'Y:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Kernel.natvis'
+NatVis script unloaded from 'Y:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\stl.natvis'
+NatVis script unloaded from 'Y:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'Y:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'Y:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'Y:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'Y:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\windows.natvis'
+NatVis script unloaded from 'Y:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\winrt.natvis'
+NatVis script unloaded from 'Y:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Usb4Kd.natvis'

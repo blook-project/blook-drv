@@ -777,7 +777,16 @@ bool virtualize_cpu(vcpu* const cpu) {
     __writemsr(IA32_FS_BASE, guest_fs);
     _lgdt(&gdtr);
     __lidt(&idtr);
-    write_tr(guest_tr);
+    // Restoring TR is best effort: LTR raises #GP when the guest's GDT entry is
+    // not a valid TSS, and a fatal path that bugchecks inside its own recovery
+    // loses the original reason. The dump still works without a restored TR.
+    {
+        auto* descriptor = reinterpret_cast<segment_descriptor_32*>(
+            gdtr.base_address) + (guest_tr >> 3);
+        if ((guest_tr >> 3) != 0 && (guest_tr >> 3) < (gdtr.limit / 8) &&
+            descriptor->type == SEGMENT_DESCRIPTOR_TYPE_TSS_AVAILABLE)
+            write_tr(guest_tr);
+    }
     // MANUALLY_INITIATED_CRASH (0xE2) with a private tag and where we gave up.
     KeBugCheckEx(0x000000E2, 0x424C4F4F4Bull, guest_rip, guest_cr3, guest_gs);
     for (;;)

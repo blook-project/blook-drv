@@ -50,8 +50,13 @@ inline bool vmx_vmptrld(uint64_t vmcs_phys_addr) {
 
 // VMWRITE instruction
 inline void vmx_vmwrite(uint64_t const field, uint64_t const value) {
+    // A failed VMWRITE used to bugcheck immediately; on a nested host VMware can
+    // reject a field the capability MSRs claim, and the bugcheck ran in root
+    // mode with the guest still loaded (a second fault there resets the VM and
+    // loses all evidence). Record the field instead: hv::start fails cleanly
+    // and Parameters\VmwriteField names the culprit.
     if (__vmx_vmwrite(field, value))
-        fatal_root_error();
+        bringup::record_vmwrite_failure(field);
 }
 
 // VMREAD instruction

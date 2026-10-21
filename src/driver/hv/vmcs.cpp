@@ -364,7 +364,17 @@ void write_vmcs_guest_fields() {
 
     vmx_vmwrite(VMCS_GUEST_VMCS_LINK_POINTER, MAXULONG64);
 
-    vmx_vmwrite(VMCS_GUEST_VMX_PREEMPTION_TIMER_VALUE, MAXULONG64);
+    // The timer *value* field only exists when the "activate VMX preemption
+    // timer" control is 1: writing it with the control clear fails the VMWRITE
+    // (this is what froze the nested guest: the timer is usually masked there,
+    // so the control was off while the field was still written).
+    {
+        ia32_vmx_pinbased_ctls_register pin_ctls;
+        pin_ctls.flags = static_cast<uint32_t>(
+            vmx_vmread(VMCS_CTRL_PIN_BASED_VM_EXECUTION_CONTROLS));
+        if (pin_ctls.activate_vmx_preemption_timer)
+            vmx_vmwrite(VMCS_GUEST_VMX_PREEMPTION_TIMER_VALUE, MAXULONG64);
+    }
 }
 
 }  // namespace hv

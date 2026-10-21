@@ -1,0 +1,13 @@
+{
+  "bytes": 2398,
+  "command": "Y:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x64\\kd.exe -k com:pipe,port=\\\\.\\pipe\\blook-vm-drv-kd,resets=0,reconnect",
+  "connected": true,
+  "kd_exe": "Y:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x64\\kd.exe",
+  "log_path": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-kd-stage1\\kd.log",
+  "pipe": "\\\\.\\pipe\\blook-vm-drv-kd",
+  "reset": true,
+  "schema": "bvmenv.kd.v1",
+  "seconds": 240,
+  "timed_out": true,
+  "vm": "vm-drv"
+}

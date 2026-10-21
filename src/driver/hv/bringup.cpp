@@ -8,6 +8,7 @@ volatile uint32_t storm_count{};
 volatile uint32_t stage_serial{};
 volatile uint32_t stage_cpu{};
 volatile uint64_t launch_error{};
+volatile uint64_t vmwrite_error{};
 namespace {
 UNICODE_STRING parameters{};
 bool ready{};
@@ -67,6 +68,11 @@ void write_dword(const wchar_t* name, uint32_t value) {
 }
 }  // namespace
 
+void record_vmwrite_failure(uint64_t field) {
+    if (!vmwrite_error)
+        vmwrite_error = field ? field : 1;
+}
+
 void record_launch_error(uint64_t error) {
     launch_error = error;
 }
@@ -74,6 +80,8 @@ void record_launch_error(uint64_t error) {
 void publish_stage() {
     write_dword(L"LaunchErrorLow", static_cast<uint32_t>(launch_error));
     write_dword(L"LaunchErrorHigh", static_cast<uint32_t>(launch_error >> 32));
+    write_dword(L"VmwriteFieldLow", static_cast<uint32_t>(vmwrite_error));
+    write_dword(L"VmwriteFieldHigh", static_cast<uint32_t>(vmwrite_error >> 32));
     write_dword(L"StageSerial", stage_serial);
     write_dword(L"StageCpu", stage_cpu);
 }

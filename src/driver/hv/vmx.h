@@ -1,6 +1,7 @@
 // Adapted from jonomango/hv (MIT). See LICENSES/jonomango-hv.txt and
 // docs/REFERENCES.md.
 #pragma once
+#include "bringup.hpp"
 
 #include "arch.h"
 #include "guest-context.h"

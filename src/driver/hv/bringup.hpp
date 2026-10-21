@@ -40,12 +40,20 @@ void publish_stage();
 // (VMCS_VM_INSTRUCTION_ERROR).
 extern volatile uint64_t launch_error;
 void record_launch_error(uint64_t error);
+// First VMCS field whose VMWRITE failed (0 = none). A failed write is recorded
+// and the bring-up fails cleanly instead of bugchecking inside root mode.
+extern volatile uint64_t vmwrite_error;
+void record_vmwrite_failure(uint64_t field);
 extern volatile uint32_t storm_count;
 void publish_stage();
 // VMX instruction error from the last failed VMLAUNCH
 // (VMCS_VM_INSTRUCTION_ERROR).
 extern volatile uint64_t launch_error;
 void record_launch_error(uint64_t error);
+// First VMCS field whose VMWRITE failed (0 = none). A failed write is recorded
+// and the bring-up fails cleanly instead of bugchecking inside root mode.
+extern volatile uint64_t vmwrite_error;
+void record_vmwrite_failure(uint64_t field);
 
 // Breadcrumb with a stage name and the logical processor index.
 void stage(const char* name, uint32_t cpu);

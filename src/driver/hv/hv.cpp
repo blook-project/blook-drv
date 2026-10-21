@@ -251,6 +251,12 @@ NTSTATUS start() {
     // Measure the cost of a world switch so it can be removed from the guest
     // clock. This runs after this processor is virtualised, so the VMCALLs
     // inside the measurement perform a real non-root to root round trip.
+    if (bringup::vmwrite_error) {
+        bringup::publish_stage();
+        bringup::publish_storm();
+        stop();
+        return STATUS_UNSUCCESSFUL;
+    }
     if (blook::tuning::start_stage() == 1) {
         // No processor entered guest mode: report success without calibrating
         // timing, and record the stage so the host can read it.
