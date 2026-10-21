@@ -129,7 +129,7 @@ jobs:
           }
           if ($bad.Count -ne 0) { throw "clang-format violations in: $($bad -join ', ')" }
 
-  e2e-non-vmx:
+  e2e-matrix:
     name: e2e matrix (non-VT-x, hosted runner)
     # Runs on a disposable GitHub runner (a VM, never the physical lab host) and
     # loads the signed driver with the hypervisor disabled, so the job exercises
@@ -138,10 +138,7 @@ jobs:
     # stays in the VM-only e2e harness (scripts/E2E.ps1).
     runs-on: windows-latest
     needs: build
-    # Signature-acceptance on a hosted runner depends on its Secure Boot and
-    # revocation state; the job reports the result either way so a runner-image
-    # change cannot turn the whole CI red. Flip to blocking once verified.
-    continue-on-error: true
+    # Required: the full non-VT-x e2e matrix is part of the release gate.
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
