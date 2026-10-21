@@ -480,7 +480,21 @@ bool write_text(const std::string& path, const std::string& text) {
 }
 }  // namespace
 
+namespace {
+// HOST-SAFETY: the probe is read-only but it is part of the kernel test matrix
+// and only meaningful inside the bvmenv guest.
+bool inside_guest_harness() {
+    return std::getenv("BLOOK_VM_GUEST") != nullptr;
+}
+}  // namespace
+
 int main(int argc, char** argv) {
+    if (!inside_guest_harness()) {
+        std::fprintf(stderr,
+                     "refusing to run outside a bvmenv guest "
+                     "(BLOOK_VM_GUEST is not set)\n");
+        return 78;
+    }
     const auto args = parse(argc, argv);
     std::printf("blook-antidetect: %s\n", "VMAware-style in-guest probe");
 

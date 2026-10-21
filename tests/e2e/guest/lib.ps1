@@ -8,6 +8,14 @@
 # Exit-code contract: 0 = pass, 1 = fail, 77 = feature not implemented in this
 # build (the host records a skip), 124 = timeout (the host normally kills first).
 
+# HOST-SAFETY: the guest helpers drive blook-loader / the test binaries, which
+# start the hypervisor. They only run inside a bvmenv-managed guest; the harness
+# sets this variable on the bvmenv command line.
+if (-not $env:BLOOK_VM_GUEST) {
+    Write-Output 'refusing to run kernel code outside a bvmenv guest (BLOOK_VM_GUEST is not set)'
+    exit 78
+}
+
 $ErrorActionPreference = 'Continue'
 
 $script:Root = 'C:\blook-e2e'

@@ -643,7 +643,21 @@ int invalid_parameters() {
 }
 }  // namespace
 
+namespace {
+// HOST-SAFETY: this binary starts/uses the hypervisor, so it must only ever run
+// inside a bvmenv-managed VMware guest. The e2e harness sets this variable on
+// the bvmenv command line; a host shell does not have it.
+bool inside_guest_harness() {
+    return std::getenv("BLOOK_VM_GUEST") != nullptr;
+}
+}  // namespace
 int main(int argc, char** argv) {
+    if (!inside_guest_harness()) {
+        std::fprintf(stderr,
+                     "refusing to run kernel code outside a bvmenv guest "
+                     "(BLOOK_VM_GUEST is not set)\n");
+        return 78;
+    }
     const auto args = arguments::parse(argc, argv);
     if (args.mode == "target")
         return run_target(args);

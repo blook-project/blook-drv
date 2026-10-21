@@ -75,8 +75,15 @@ namespace {
 // platform. BLOOK_ALLOW_HOST_LOAD=1 is the explicit, documented escape hatch
 // for a dedicated lab machine.
 bool inside_virtual_machine() {
+    // Structural guard: only the bvmenv e2e harness sets these variables, on a
+    // command line that runs inside the VM. A host shell never has them, so a
+    // driver can never be loaded on the physical machine by accident.
     if (std::getenv("BLOOK_ALLOW_HOST_LOAD") != nullptr) {
         return true;
+    }
+    if (std::getenv("BLOOK_VM_GUEST") == nullptr ||
+        std::getenv("BLOOK_ALLOW_KERNEL_LOAD") == nullptr) {
+        return false;
     }
     int regs[4]{};
     __cpuid(regs, 1);

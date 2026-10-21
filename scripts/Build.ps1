@@ -30,6 +30,14 @@ param(
 # step below checks $LASTEXITCODE itself and throws explicitly.
 $ErrorActionPreference = "Continue"
 
+# HOST-SAFETY: Build.ps1 builds, signs and unit-tests only. Loading a driver is
+# only ever done by scripts/E2E.ps1 through bvmenv, inside a VMware guest, so the
+# deploy/start switches are rejected outright instead of being conditionally
+# guarded: a host-mode load can take the whole machine down.
+if ($Deploy -or $Start -or $StopRunningDriver) {
+    throw "Deploy/Start/StopRunningDriver are disabled: kernel loads run only through scripts/E2E.ps1 (bvmenv guest). Build.ps1 stops after signing and tests."
+}
+
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 . (Join-Path $PSScriptRoot "BuildPolicy.ps1")
 $BuildRoot = if ([IO.Path]::IsPathRooted($BuildDir)) { $BuildDir } else { Join-Path $RepoRoot $BuildDir }
