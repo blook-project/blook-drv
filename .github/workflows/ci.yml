@@ -124,3 +124,99 @@ jobs:
             if ($LASTEXITCODE -ne 0) { $bad += $f.FullName; Write-Host $diff }
           }
           if ($bad.Count -ne 0) { throw "clang-format violations in: $($bad -join ', ')" }
+
+  kernel-load-smoke:
+    name: kernel load smoke (non-hypervisor)
+    # Runs on a disposable GitHub runner (a VM, never the physical lab host) and
+    # loads the signed driver with the hypervisor disabled, so the job exercises
+    # signature acceptance, DriverEntry, the service lifecycle and DriverUnload
+    # without VT-x and without ever entering guest mode. The hypervisor matrix
+    # stays in the VM-only e2e harness (scripts/E2E.ps1).
+    runs-on: windows-latest
+    needs: build
+    # Signature-acceptance on a hosted runner depends on its Secure Boot and
+    # revocation state; the job reports the result either way so a runner-image
+    # change cannot turn the whole CI red. Flip to blocking once verified.
+    continue-on-error: true
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: blook-drv-ci
+          path: out
+
+      - name: Unpack package
+        shell: pwsh
+        run: |
+          $zip = Get-ChildItem out -Filter *.zip | Select-Object -First 1
+          if (-not $zip) { throw "no package artefact" }
+          Expand-Archive $zip.FullName -DestinationPath stage -Force
+          Get-ChildItem stage | Select-Object Name
+
+      - name: Import signing certificate
+        shell: pwsh
+        env:
+          SPC_PFX_BASE64: ${{ secrets.SPC_PFX_BASE64 }}
+          SPC_PFX_PASSWORD: ${{ secrets.SPC_PFX_PASSWORD }}
+        run: |
+          if (-not $env:SPC_PFX_BASE64) {
+            Write-Host "SPC_PFX_BASE64 is not configured - kernel load smoke skipped"
+            "SKIP=1" >> $env:GITHUB_ENV
+            exit 0
+          }
+          $pfx = Join-Path $env:RUNNER_TEMP 'spc.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:SPC_PFX_BASE64))
+          $pw = ConvertTo-SecureString $env:SPC_PFX_PASSWORD -AsPlainText -Force
+          Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:\CurrentUser\My -Password $pw | Out-Null
+          $tsa = Get-ChildItem -Recurse stage -Filter tsa-root.cer | Select-Object -First 1
+          if (-not $tsa) { throw "tsa-root.cer missing from the package" }
+          certutil -addstore -f root $tsa.FullName
+
+      - name: Sign driver
+        if: env.SKIP != '1'
+        shell: pwsh
+        run: |
+          $stage = (Get-ChildItem -Directory stage | Select-Object -First 1).FullName
+          $sys = Join-Path $stage 'blook-drv.sys'
+          $signer = Join-Path $stage 'signer\spcsign\spcsign.exe'
+          & $signer sign --sha1 --cert XINDA --tsa-time 2013-01-01T00:00:00Z `
+            --chain (Join-Path $stage 'signer\certs\verisign-cscs-2010.cer') `
+            --chain (Join-Path $stage 'signer\certs\verisign-g5-mcvr.cer') $sys
+          if ($LASTEXITCODE -ne 0) { throw "spcsign failed" }
+
+      - name: Load and unload without the hypervisor
+        if: env.SKIP != '1'
+        shell: pwsh
+        run: |
+          $stage = (Get-ChildItem -Directory stage | Select-Object -First 1).FullName
+          $sys = Join-Path $stage 'blook-drv.sys'
+          # NoHypervisor keeps DriverEntry away from VT-x; Solo means no channel
+          # peer, so start does not wait for one.
+          $key = 'HKLM\SYSTEM\CurrentControlSet\Services\BlookDrv\Parameters'
+          & sc.exe @('create', 'BlookDrv', 'type=', 'kernel', 'start=', 'demand',
+                     "binPath= $sys") | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw "sc create failed" }
+          reg add $key /f /v NoHypervisor /t REG_DWORD /d 1 | Out-Null
+          reg add $key /f /v Solo /t REG_DWORD /d 1 | Out-Null
+          $env:BLOOK_VM_GUEST = 'ci'
+          $env:BLOOK_ALLOW_KERNEL_LOAD = '1'
+          sc.exe start BlookDrv
+          $deadline = (Get-Date).AddSeconds(90)
+          $state = ''
+          while ((Get-Date) -lt $deadline) {
+            $state = sc.exe query BlookDrv | Out-String
+            if ($state -match 'RUNNING') { break }
+            Start-Sleep 2
+          }
+          Write-Host $state
+          if ($state -notmatch 'RUNNING') {
+            sc.exe stop BlookDrv | Out-Null
+            sc.exe delete BlookDrv | Out-Null
+            throw 'driver did not reach RUNNING'
+          }
+          sc.exe stop BlookDrv
+          Start-Sleep 5
+          $stopped = sc.exe query BlookDrv | Out-String
+          Write-Host $stopped
+          if ($stopped -notmatch 'STOPPED') { throw 'driver did not stop cleanly' }
+          sc.exe delete BlookDrv | Out-Null
+          Write-Host 'kernel load smoke passed'
