@@ -1,0 +1,81 @@
+{
+    "schema":  "blook.e2e.host.v1",
+    "generated_at":  "2026-10-21T12:31:08.6096286Z",
+    "cases":  [
+                  {
+                      "name":  "loader-install",
+                      "status":  "pass",
+                      "detail":  "service installed from C:\\blook-e2e\\blook-drv.sys"
+                  },
+                  {
+                      "name":  "start-no-hypervisor",
+                      "status":  "pass",
+                      "detail":  "STATE 4 RUNNING"
+                  },
+                  {
+                      "name":  "kernel-roundtrip-markers",
+                      "status":  "pass",
+                      "detail":  "TraceLast=0x3 TraceCount=3 (kernel-written, read back)"
+                  },
+                  {
+                      "name":  "start-when-running",
+                      "status":  "pass",
+                      "detail":  "duplicate start handled (loader exit )"
+                  },
+                  {
+                      "name":  "lifecycle-restart-cycle",
+                      "status":  "pass",
+                      "detail":  "3 stop/start cycles"
+                  },
+                  {
+                      "name":  "negative-invalid-image-path",
+                      "status":  "pass",
+                      "detail":  "rejected cleanly (exit )"
+                  },
+                  {
+                      "name":  "uninstall-cleanup",
+                      "status":  "pass",
+                      "detail":  "service removed"
+                  },
+                  {
+                      "name":  "vmx-bringup",
+                      "status":  "skip",
+                      "detail":  "requires VT-x: VMXON/VMLAUNCH/EPT need nested VT-x; covered by the bvmenv VM matrix (docs/evidence/20261021-nested-*)"
+                  },
+                  {
+                      "name":  "ept-software-breakpoint-hook",
+                      "status":  "skip",
+                      "detail":  "requires VT-x: EPT execute hook in a live guest (bvmenv matrix)"
+                  },
+                  {
+                      "name":  "hardware-breakpoint-hook",
+                      "status":  "skip",
+                      "detail":  "requires VT-x: DR0-3/#DB interception (bvmenv matrix)"
+                  },
+                  {
+                      "name":  "target-process-hook",
+                      "status":  "skip",
+                      "detail":  "requires VT-x: cross-process EPT hook needs the hypervisor (bvmenv matrix)"
+                  },
+                  {
+                      "name":  "with-hypervisor-antidetect",
+                      "status":  "skip",
+                      "detail":  "requires VT-x: masking CPUID/MSR needs the hypervisor running (bvmenv matrix)"
+                  },
+                  {
+                      "name":  "kchannel-ipc-tools",
+                      "status":  "skip",
+                      "detail":  "requires VT-x: the control channel is created by the hypervisor session (bvmenv matrix)"
+                  },
+                  {
+                      "name":  "self-hide-trace-scan",
+                      "status":  "skip",
+                      "detail":  "requires VT-x: self-hide/trace-scan are driven over the control channel (bvmenv matrix)"
+                  }
+              ],
+    "summary":  {
+                    "pass":  7,
+                    "fail":  0,
+                    "skip":  7
+                }
+}

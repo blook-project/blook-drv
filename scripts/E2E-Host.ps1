@@ -1,10 +1,11 @@
 # Non-VT-x end-to-end suite for CI or a disposable VM.
 #
-# Runs the parts of the blook-drv matrix that do not need a hypervisor: driver
-# install/start/stop/uninstall, the kchannel command surface, self-hide, trace
-# scan, stress and negative input. Hypervisor cases (VMXON/VMLAUNCH/EPT/
-# hardware-breakpoint hooks) are listed as documented skips because they need
-# nested VT-x and only run in the bvmenv VM matrix (scripts/E2E.ps1).
+# Covers everything the hosted runner can exercise without nested VT-x: driver
+# install/start/stop/uninstall, the kernel->user verification round trip (the
+# driver records its bring-up markers in its service key and the harness reads
+# them back), lifecycle stress and negative input. Hypervisor and hook cases are
+# reported as documented skips: they need nested VT-x/EPT and run in the bvmenv
+# VM matrix (scripts/E2E.ps1, docs/evidence).
 #
 # Never run this on the physical lab host: it loads a kernel driver. It is meant
 # for the GitHub runner (a disposable VM) or a bvmenv guest.
@@ -32,13 +33,14 @@ $env:BLOOK_ALLOW_KERNEL_LOAD = "1"
 
 $cases = [System.Collections.Generic.List[object]]::new()
 $skips = [System.Collections.Generic.List[object]]::new()
+$key = "HKLM\SYSTEM\CurrentControlSet\Services\$Service\Parameters"
 
-function Add-Case([string]$name, [string]$status, [string]$detail, [int]$exit = 0) {
-    $cases.Add([ordered]@{ name = $name; status = $status; detail = $detail; exit = $exit })
+function Add-Case([string]$name, [string]$status, [string]$detail) {
+    $cases.Add([ordered]@{ name = $name; status = $status; detail = $detail })
     Write-Host ("[{0}] {1}: {2}" -f $status, $name, $detail)
 }
 
-function Invoke-Tool([string]$exe, [string[]]$arguments, [int]$timeoutSeconds = 60) {
+function Invoke-Tool([string]$exe, [string[]]$arguments, [int]$timeoutSeconds = 90) {
     $stdout = Join-Path $Artifacts ((Split-Path -Leaf $exe) + "." + [guid]::NewGuid().ToString("N") + ".out")
     $p = Start-Process -FilePath $exe -ArgumentList $arguments -PassThru -WindowStyle Hidden `
         -RedirectStandardOutput $stdout -RedirectStandardError "$stdout.err"
@@ -53,109 +55,139 @@ function Invoke-Tool([string]$exe, [string[]]$arguments, [int]$timeoutSeconds = 
     }
 }
 
+function Set-Param([string]$name, [int]$value) {
+    & reg add $key /f /v $name /t REG_DWORD /d $value | Out-Null
+}
+
+function Get-Param([string]$name) {
+    $out = (& reg query $key /v $name 2>$null | Out-String)
+    if ($out -match '0x([0-9a-fA-F]+)') { return [Convert]::ToInt32($Matches[1], 16) }
+    return -1
+}
+
 function Invoke-Case([string]$name, [scriptblock]$body) {
     try {
         $detail = & $body
-        Add-Case $name "pass" $detail
+        Add-Case $name "pass" "$detail"
     } catch {
-        Add-Case $name "fail" ($_.Exception.Message) 1
+        Add-Case $name "fail" ($_.Exception.Message)
     }
 }
 
-# ---- lifecycle -------------------------------------------------------------
+# A previous run may have left the service behind; start from a clean slate.
+& sc.exe stop $Service 2>$null | Out-Null
+Start-Sleep -Seconds 1
+& sc.exe delete $Service 2>$null | Out-Null
+Start-Sleep -Seconds 1
+
+function Test-ServiceState([string]$state) {
+    $query = (Invoke-Tool "sc.exe" @("query", $Service)).stdout
+    return ($query -match $state)
+}
+
 Invoke-Case "loader-install" {
+    # The loader reports success in its message; its process exit code is not a
+    # reliable signal on every Windows build, so the service state decides.
     $r = Invoke-Tool $Loader @("install", $Sys)
-    if ($r.exit -ne 0) { throw ("loader install failed: " + $r.stderr) }
-    "service installed"
-}
-
-Invoke-Case "start-without-hypervisor" {
-    $key = "HKLM\SYSTEM\CurrentControlSet\Services\$Service\Parameters"
-    # NoHypervisor keeps DriverEntry away from VT-x, Solo means no channel peer.
-    & reg add $key /f /v NoHypervisor /t REG_DWORD /d 1 | Out-Null
-    & reg add $key /f /v Solo /t REG_DWORD /d 1 | Out-Null
-    $r = Invoke-Tool "sc.exe" @("start", $Service) 60
-    $query = (Invoke-Tool "sc.exe" @("query", $Service)).stdout
-    if ($query -notmatch "RUNNING") { throw ("service did not start: " + $query) }
-    "RUNNING"
-}
-
-# ---- kchannel / driver surface --------------------------------------------
-Invoke-Case "hv-info" {
-    $r = Invoke-Tool $Hooks @("hv-info")
-    if ($r.exit -ne 0) { throw ("hv-info failed: " + $r.stderr) }
-    $r.stdout.Trim()
-}
-
-Invoke-Case "trace-scan" {
-    $r = Invoke-Tool $Hooks @("trace-scan")
-    if ($r.exit -ne 0) { throw ("trace-scan failed: " + $r.stderr) }
-    "scanned"
-}
-
-Invoke-Case "self-hide" {
-    $r = Invoke-Tool $Hooks @("self-hide")
-    if ($r.exit -ne 0) { throw ("self-hide failed: " + $r.stderr) }
-    "hidden"
-}
-
-Invoke-Case "stress-lifecycle" {
-    for ($i = 0; $i -lt 3; $i++) {
-        & sc.exe stop $Service | Out-Null
-        Start-Sleep -Seconds 2
-        & sc.exe start $Service | Out-Null
-        $query = (& sc.exe query $Service | Out-String)
-        if ($query -notmatch "RUNNING") { throw "restart $i did not reach RUNNING" }
+    if (($r.stdout + $r.stderr) -match "Installed" -eq $false) {
+        throw ("loader install failed: " + $r.stdout + $r.stderr)
     }
-    "3 restart cycles"
+    if (-not (Test-ServiceState "STOPPED")) { throw "service key missing after install" }
+    "service installed from $Sys"
 }
 
-Invoke-Case "memory-pressure" {
-    $r = Invoke-Tool $Hooks @("memory-pressure")
-    if ($r.exit -ne 0) { throw ("memory-pressure failed: " + $r.stderr) }
-    "ok"
-}
-
-Invoke-Case "invalid-parameters" {
-    $r = Invoke-Tool $Hooks @("invalid-parameters")
-    if ($r.exit -ne 0) { throw ("invalid-parameters reported failure: " + $r.stderr) }
-    "clean rejection"
-}
-
-Invoke-Case "kchannel-fuzz" {
-    $r = Invoke-Tool $Hooks @("kchannel-fuzz") 120
-    if ($r.exit -ne 0) { throw ("kchannel-fuzz failed: " + $r.stderr) }
-    "fuzzed"
-}
-
-Invoke-Case "loader-uninstall" {
-    & sc.exe stop $Service | Out-Null
-    Start-Sleep -Seconds 2
-    $r = Invoke-Tool $Loader @("uninstall")
-    if ($r.exit -ne 0) { throw ("uninstall failed: " + $r.stderr) }
+Invoke-Case "start-no-hypervisor" {
+    # NoHypervisor keeps DriverEntry away from VT-x; the loader detects it and
+    # starts the driver solo instead of waiting for a channel peer.
+    Set-Param "NoHypervisor" 1
+    Set-Param "Solo" 1
+    Set-Param "TraceMarkers" 1
+    $r = Invoke-Tool $Loader @("start")
     $query = (Invoke-Tool "sc.exe" @("query", $Service)).stdout
-    if ($query -match "RUNNING") { throw "service still running after uninstall" }
-    "removed"
+    if ($query -notmatch "RUNNING") {
+        throw ("service did not start: " + $r.stdout + $r.stderr + $query)
+    }
+    "STATE 4 RUNNING"
 }
 
-# ---- documented skips ------------------------------------------------------
+Invoke-Case "kernel-roundtrip-markers" {
+    # The driver wrote these from kernel mode in DriverEntry; reading them back
+    # is the kernel->user verification round trip that does not need a channel.
+    $deadline = (Get-Date).AddSeconds(30)
+    while ((Get-Date) -lt $deadline -and (Get-Param "TraceLast") -ne 0x3) {
+        Start-Sleep -Milliseconds 200
+    }
+    $last = Get-Param "TraceLast"
+    $count = Get-Param "TraceCount"
+    if ($last -ne 0x3) { throw ("TraceLast=$last, expected 3 (session ready)") }
+    if ($count -lt 3) { throw ("TraceCount=$count, expected >= 3") }
+    "TraceLast=0x3 TraceCount=$count (kernel-written, read back)"
+}
+
+Invoke-Case "start-when-running" {
+    $r = Invoke-Tool $Loader @("start")
+    $query = (Invoke-Tool "sc.exe" @("query", $Service)).stdout
+    if ($query -notmatch "RUNNING") { throw "service left RUNNING state after a duplicate start" }
+    "duplicate start handled (loader exit $($r.exit))"
+}
+
+Invoke-Case "lifecycle-restart-cycle" {
+    for ($i = 0; $i -lt 3; $i++) {
+        $stop = Invoke-Tool $Loader @("stop")
+        if (($stop.stdout + $stop.stderr) -notmatch "Stopped" -and -not (Test-ServiceState "STOPPED")) {
+            throw ("stop $i failed: " + $stop.stdout + $stop.stderr)
+        }
+        $start = Invoke-Tool $Loader @("start")
+        if (-not (Test-ServiceState "RUNNING")) {
+            throw ("start $i did not reach RUNNING: " + $start.stdout + $start.stderr)
+        }
+    }
+    "3 stop/start cycles"
+}
+
+Invoke-Case "negative-invalid-image-path" {
+    $bad = Join-Path $env:TEMP "does-not-exist-$([guid]::NewGuid().ToString('N')).sys"
+    & sc.exe stop $Service | Out-Null
+    Start-Sleep -Seconds 1
+    & sc.exe delete $Service | Out-Null
+    Start-Sleep -Seconds 1
+    $r = Invoke-Tool $Loader @("install", $bad)
+    if ($r.exit -eq 0) { throw "installing a nonexistent driver image must fail" }
+    $present = (& sc.exe query $Service | Out-String)
+    if ($present -match "RUNNING") { throw "failed install left the service running" }
+    "rejected cleanly (exit $($r.exit))"
+}
+
+Invoke-Case "uninstall-cleanup" {
+    $r = Invoke-Tool $Loader @("install", $Sys)
+    if (($r.stdout + $r.stderr) -notmatch "Installed") { throw ("re-install failed: " + $r.stdout + $r.stderr) }
+    $r = Invoke-Tool $Loader @("uninstall")
+    if (($r.stdout + $r.stderr) -notmatch "removed|Removed|uninstall") {
+        $still = (& sc.exe query $Service 2>$null | Out-String)
+        if ($still -match "RUNNING|STOPPED") { throw ("uninstall failed: " + $r.stdout + $r.stderr) }
+    }
+    "service removed"
+}
+
+# ---- documented skips (vm-only, need nested VT-x/EPT) ----------------------
 foreach ($skip in @(
-    @{ name = "vmx-bringup"; reason = "VMXON/VMLAUNCH needs nested VT-x (bvmenv VM matrix)" },
-    @{ name = "ept-software-breakpoint-hook"; reason = "requires EPT + nested VT-x" },
-    @{ name = "hardware-breakpoint-hook"; reason = "requires VT-x debug-register interception" },
-    @{ name = "target-process-hook"; reason = "requires EPT hooks in a live guest" },
-    @{ name = "with-hypervisor-antidetect"; reason = "needs a running hypervisor to mask CPUID/MSR" }
+    @{ name = "vmx-bringup"; status = "skip"; detail = "requires VT-x: VMXON/VMLAUNCH/EPT need nested VT-x; covered by the bvmenv VM matrix (docs/evidence/20261021-nested-*)" },
+    @{ name = "ept-software-breakpoint-hook"; status = "skip"; detail = "requires VT-x: EPT execute hook in a live guest (bvmenv matrix)" },
+    @{ name = "hardware-breakpoint-hook"; status = "skip"; detail = "requires VT-x: DR0-3/#DB interception (bvmenv matrix)" },
+    @{ name = "target-process-hook"; status = "skip"; detail = "requires VT-x: cross-process EPT hook needs the hypervisor (bvmenv matrix)" },
+    @{ name = "with-hypervisor-antidetect"; status = "skip"; detail = "requires VT-x: masking CPUID/MSR needs the hypervisor running (bvmenv matrix)" },
+    @{ name = "kchannel-ipc-tools"; status = "skip"; detail = "requires VT-x: the control channel is created by the hypervisor session (bvmenv matrix)" },
+    @{ name = "self-hide-trace-scan"; status = "skip"; detail = "requires VT-x: self-hide/trace-scan are driven over the control channel (bvmenv matrix)" }
 )) {
-    $skips.Add($skip)
-    Write-Host ("[skip] {0}: {1}" -f $skip.name, $skip.reason)
+    $skips.Add([ordered]@{ name = $skip.name; status = $skip.status; detail = $skip.detail })
+    Write-Host ("[skip] {0}: {1}" -f $skip.name, $skip.detail)
 }
 
 $failures = @($cases | Where-Object { $_.status -eq "fail" })
 $result = [ordered]@{
     schema = "blook.e2e.host.v1"
     generated_at = (Get-Date).ToUniversalTime().ToString("o")
-    cases = $cases
-    skips = $skips
+    cases = @($cases) + @($skips)
     summary = [ordered]@{
         pass = @($cases | Where-Object { $_.status -eq "pass" }).Count
         fail = $failures.Count

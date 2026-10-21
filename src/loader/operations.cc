@@ -142,6 +142,33 @@ result service_command(const cli::command& command, output_sink& output) {
                 "takes the host down. Run the driver inside a bvmenv VMware "
                 "guest (scripts/E2E.ps1 sets the required markers).");
         }
+        // NoHypervisor evidence mode has no channel peer by design, so the
+        // bootstrap handshake can never complete: start it as a solo driver
+        // instead of waiting for a channel that will not appear.
+        bool no_hypervisor = false;
+        {
+            HKEY key{};
+            if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                              L"SYSTEM\\CurrentControlSet\\Services\\BlookDrv\\Parameters",
+                              0, KEY_READ, &key) == ERROR_SUCCESS) {
+                DWORD value = 0;
+                DWORD size = sizeof(value);
+                no_hypervisor =
+                    RegQueryValueExW(key, L"NoHypervisor", nullptr, nullptr,
+                                     reinterpret_cast<LPBYTE>(&value),
+                                     &size) == ERROR_SUCCESS &&
+                    value != 0;
+                RegCloseKey(key);
+            }
+        }
+        if (no_hypervisor) {
+            if (!StartServiceW(service.get(), 0, nullptr) &&
+                GetLastError() != ERROR_SERVICE_ALREADY_RUNNING)
+                return failed("Start service");
+            output.message(
+                "Started in NoHypervisor evidence mode (no control channel).");
+            return operation_result{};
+        }
         // Start through the channel bootstrap: create the anonymous shared
         // region, hand the descriptor to the driver through its service key,
         // start the service and complete the handshake. A plain StartServiceW
