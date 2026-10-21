@@ -78,3 +78,16 @@ The merged entry controls (0x53FB) validated against the TRUE MSRs too; the raw
 3. Fallback if nested entry stays unusable: `Parameters\NoHypervisor=1` evidence
    mode (driver, IPC, self-hide, lifecycle, non-hook matrix run for real) plus an
    explicit documented limitation; do not tag a hypervisor claim.
+## P-core pinning experiment (2026-10-21 22:30, closed)
+
+Hybrid-core hypothesis tested with `bvmenv 0.2.2 pin-vcpu --pcores` (runtime
+`SetProcessAffinityMask` on the fork's `vmware-vmx`, retried elevated; JSON
+reported `applied: true`, `matches: true`). A fresh fork created with
+`--pin-pcores` booted normally and `StartStage=5 + BareEntry=1` was re-run with
+the vCPUs pinned to P-core logical CPUs:
+
+Result: **same wedge** — `StageSerial` stays at the pre-launch value, no
+`LaunchError`, no `FirstExitReason`, snapshot shows `PinCtls=0`, `ProcCtls=0`,
+`ExitCtls=0x200`, `EntryCtls=0x1`, `EntryEptp=0x…E033` (walk 3, WB),
+`HostStateOk=0x3`. The hybrid-core hypothesis is closed; the nested VM-entry
+limitation is an L0 (VMware) property of this build, not an E-core artefact.
