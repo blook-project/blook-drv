@@ -175,7 +175,8 @@ target("blook-tests")
               "tests/unit/features.cc", "tests/unit/gate_entry.cc",
               "tests/unit/ept/*.cc", "tests/unit/ept_edges/*.cc",
               "tests/unit/policy_cpuid.cc", "tests/unit/policy_msr.cc",
-              "tests/unit/policy_breakpoint.cc", "tests/unit/policy_nested.cc")
+              "tests/unit/policy_breakpoint.cc", "tests/unit/policy_nested.cc",
+              "tests/unit/policy_timing.cc")
     add_files("src/driver/hv/ept.cpp", "src/driver/hv/mtrr_policy.cpp")
     add_includedirs("tests", "tests/unit", "src", "include", "third_party/ia32")
     add_defines("BLOOK_EPT_TEST", "NOMINMAX")

@@ -1,5 +1,6 @@
 #include "hv.h"
 
+#include "bringup.hpp"
 #include "driver/tuning.hpp"
 
 #include "driver/hooks.hpp"
@@ -225,15 +226,20 @@ NTSTATUS start() {
             stop();
             return STATUS_INSUFFICIENT_RESOURCES;
         }
+        ghv.vcpus[i]->index = i;
     }
     KAPC_STATE state{};
     KeStackAttachProcess(PsInitialSystemProcess, &state);
     ghv.system_cr3.flags = __readcr3();
     prepare_host_page_tables();
     KeUnstackDetachProcess(&state);
+    bringup::stage("preflight-ok", ghv.vcpu_count);
     for (ULONG i = 0; i < ghv.vcpu_count; ++i) {
         affinity_guard affinity{i};
         if (!virtualize_cpu(ghv.vcpus[i])) {
+            // The watchdog may have aborted this processor; publish what it saw
+            // before tearing down so the failure is readable from the host.
+            bringup::publish_storm();
             stop();
             return STATUS_UNSUCCESSFUL;
         }

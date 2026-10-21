@@ -1,0 +1,21 @@
+[SC] StartService 失败 3224698910:
+
+虚拟机监控程序功能对于该用户来说不可用。
+
+
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\BlookDrv\Parameters
+    Solo    REG_DWORD    0x1
+    TraceMarkers    REG_DWORD    0x1
+    InterceptDebug    REG_DWORD    0x0
+    TraceLast    REG_DWORD    0x102
+    TraceExtra    REG_DWORD    0xc035001e
+    TraceCount    REG_DWORD    0x3
+
+
+SERVICE_NAME: BlookDrv 
+        TYPE               : 1  KERNEL_DRIVER  
+        STATE              : 1  STOPPED 
+        WIN32_EXIT_CODE    : 3224698910  (0xc035001e)
+        SERVICE_EXIT_CODE  : 0  (0x0)
+        CHECKPOINT         : 0x0
+        WAIT_HINT          : 0x0

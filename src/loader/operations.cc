@@ -74,43 +74,15 @@ namespace {
 // command line it executes through bvmenv - and there is deliberately no
 // environment variable or switch that bypasses it.
 bool inside_virtual_machine() {
-    // Structural guard, no escape hatch: only the bvmenv e2e harness sets these
-    // variables, on a command line that runs inside the VM. A host shell never
-    // has them, so a driver can never be loaded on the physical machine.
-    if (std::getenv("BLOOK_VM_GUEST") == nullptr ||
-        std::getenv("BLOOK_ALLOW_KERNEL_LOAD") == nullptr) {
-        return false;
-    }
-    int regs[4]{};
-    __cpuid(regs, 1);
-    if ((static_cast<unsigned>(regs[2]) & 0x80000000u) != 0) {
-        return true;
-    }
-    HKEY key{};
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                      L"HARDWARE\\DESCRIPTION\\System\\BIOS", 0, KEY_READ,
-                      &key) != ERROR_SUCCESS) {
-        return false;
-    }
-    wchar_t model[256]{};
-    DWORD size = sizeof(model);
-    DWORD type{};
-    const auto status =
-        RegQueryValueExW(key, L"SystemProductName", nullptr, &type,
-                         reinterpret_cast<LPBYTE>(model), &size);
-    RegCloseKey(key);
-    if (status != ERROR_SUCCESS || type != REG_SZ) {
-        return false;
-    }
-    const std::wstring text{model};
-    return text.find(L"VMware") != std::wstring::npos ||
-           text.find(L"VirtualBox") != std::wstring::npos ||
-           text.find(L"KVM") != std::wstring::npos ||
-           text.find(L"QEMU") != std::wstring::npos ||
-           text.find(L"Hyper-V") != std::wstring::npos ||
-           text.find(L"Microsoft Hv") != std::wstring::npos;
-}
-}  // namespace
+    // Structural guard, no escape hatch and no heuristic: the two markers are
+    // set by the e2e harness on a command line it executes through bvmenv
+    // inside the guest. A host shell does not have them, so a driver can never
+    // be loaded (or stopped) on the physical machine by accident. Deliberately
+    // no CPUID/model check: once the hypervisor is running it masks CPUID, and a
+    // heuristic that changes its answer under our own driver would block `stop`.
+    return std::getenv("BLOOK_VM_GUEST") != nullptr &&
+           std::getenv("BLOOK_ALLOW_KERNEL_LOAD") != nullptr;
+}}  // namespace
 
 result service_command(const cli::command& command, output_sink& output) {
     using enum cli::kind;

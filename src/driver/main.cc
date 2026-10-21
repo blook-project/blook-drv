@@ -25,6 +25,7 @@
 #include "driver/hide/self.hpp"
 #include "driver/pool.hpp"
 #include "driver/session.hpp"
+#include "driver/hv/bringup.hpp"
 #include "driver/tuning.hpp"
 #include "ipc/kchannel.hpp"
 #include "policy/integer.hpp"
@@ -180,6 +181,7 @@ extern "C" NTSTATUS DriverEntry(PDRIVER_OBJECT driver,
     blook::hide::self::remember_service_path(registry_path);
 
     blook::tuning::initialize(registry_path);
+    hv::bringup::remember_service_path(registry_path);
     void* blob{};
     ULONG blob_size{};
     bool solo{};

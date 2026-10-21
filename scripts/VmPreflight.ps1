@@ -9,8 +9,9 @@
 param(
     [string]$Vm = "vm-drv",
     [string]$Bvmenv,
-    [int]$ReadyTimeoutSeconds = 300,
+    [int]$ReadyTimeoutSeconds = 600,
     [switch]$KeepVm,
+    [int]$InterceptDebug = 0,
     [string]$Artifacts
 )
 
@@ -54,8 +55,18 @@ function Invoke-Bvmenv {
     L "  $ bvmenv $commandLine"
     $out = "$env:TEMP\bv-out.txt"
     $err = "$env:TEMP\bv-err.txt"
-    $p = Start-Process -FilePath $Bvmenv -ArgumentList $Arguments -PassThru -WindowStyle Hidden `
-        -RedirectStandardOutput $out -RedirectStandardError $err
+    $p = $null
+    foreach ($attempt in 1..3) {
+        try {
+            $p = Start-Process -FilePath $Bvmenv -ArgumentList $Arguments -PassThru -WindowStyle Hidden `
+                -RedirectStandardOutput $out -RedirectStandardError $err
+            break
+        } catch {
+            # bvmenv may be rebuilt in place while we run; retry briefly.
+            Start-Sleep -Seconds 2
+        }
+    }
+    if (-not $p) { L "  cannot start bvmenv ($Bvmenv)"; return [pscustomobject]@{ ExitCode = 127; StdOut = ''; StdErr = 'missing bvmenv' } }
     if (-not $p.WaitForExit($TimeoutSeconds * 1000)) {
         try { & taskkill /PID $p.Id /T /F | Out-Null } catch { }
         L "  TIMEOUT after ${TimeoutSeconds}s"
@@ -73,10 +84,13 @@ function Invoke-Bvmenv {
 
 function Invoke-Guest {
     param([string]$Command, [int]$TimeoutSeconds = 180)
-    $marker = "set BLOOK_VM_GUEST=$Vm&& set BLOOK_ALLOW_KERNEL_LOAD=1&& "
+    # The markers are set by run-guest.cmd inside the guest, not by an inline
+    # `set` in the bvmenv command line: bvmenv runs the command through a
+    # generated job script / SYSTEM task, where an inline `set` does not reach
+    # the child process.
     return Invoke-Bvmenv -TimeoutSeconds ($TimeoutSeconds + 60) -Arguments @(
         'exec', $Vm, '--timeout', [string]$TimeoutSeconds, '--elevated', '--',
-        'cmd.exe', '/c', ($marker + $Command)) -Echo
+        'cmd.exe', '/c', "C:\blook-e2e\run-guest.cmd $Command") -Echo
 }
 
 try {
@@ -111,33 +125,64 @@ try {
     L "=== vm lifecycle"
     $list = Invoke-Bvmenv -Arguments @('list', '--json') -TimeoutSeconds 60
     if ($list.ExitCode -ne 0) { Fail "bvmenv list failed: $($list.StdErr)" }
-    $known = $false
-    try { $json = $list.StdOut | ConvertFrom-Json; $known = @($json.vms | Where-Object { $_.name -eq $Vm }).Count -gt 0 } catch { }
-    if (-not $known) {
-        $created = Invoke-Bvmenv -Arguments @('create', $Vm, '--cpus', '4', '--memory', '6144') -TimeoutSeconds 180 -Echo
-        if ($created.ExitCode -ne 0) { Fail "create failed: $($created.StdOut) $($created.StdErr)" }
+    # "does the fork exist" is answered by the VMX file, not by parsing the
+    # list output: a fresh clone and an existing one must not be distinguished by
+    # a help-text footer.
+    $vmx = Join-Path (Join-Path (Join-Path 'C:\blook-vms' 'vms') $Vm) "$Vm.vmx"
+    if (-not (Test-Path -LiteralPath $vmx)) {
+        L "  creating $Vm"
+        $created = Invoke-Bvmenv -Arguments @('create', $Vm, '--no-start', '--cpus', '4', '--memory', '6144') -TimeoutSeconds 240 -Echo
+        if ($created.ExitCode -ne 0 -and -not (Test-Path -LiteralPath $vmx)) {
+            Fail "create failed: $($created.StdOut) $($created.StdErr)"
+        }
+    } else {
+        L "  $Vm already exists"
     }
     $started = Invoke-Bvmenv -Arguments @('start', $Vm) -TimeoutSeconds 120
     if ($started.ExitCode -ne 0) { L "  start returned $($started.ExitCode) (may already be running)" }
-    $ready = Invoke-Bvmenv -Arguments @('wait-ready', $Vm, '--timeout', [string]$ReadyTimeoutSeconds) -TimeoutSeconds ($ReadyTimeoutSeconds + 60) -Echo
-    if ($ready.ExitCode -ne 0) { Fail "wait-ready failed" }
+    # Readiness is "a guest command round-trips", not "the desktop is up":
+    # bvmenv exec falls back to a SYSTEM scheduled task while the guest sits at
+    # the lock UI, so this is the condition the tests actually need (and
+    # wait-ready's user-session probe is known to stall on a lock-UI clone).
+    $deadline = (Get-Date).AddSeconds($ReadyTimeoutSeconds)
+    $guestReady = $false
+    while ((Get-Date) -lt $deadline) {
+        $probe = Invoke-Bvmenv -Arguments @('exec', $Vm, '--timeout', '15', '--', 'cmd.exe', '/c', 'echo READY') -TimeoutSeconds 45
+        if ($probe.ExitCode -eq 0 -and $probe.StdOut -match 'READY') { $guestReady = $true; break }
+        Start-Sleep -Seconds 10
+    }
+    if (-not $guestReady) { Fail "guest never became reachable (exec poll, ${ReadyTimeoutSeconds}s)" }
+    L "  guest reachable"
     $state = Invoke-Bvmenv -Arguments @('state', $Vm, '--json') -TimeoutSeconds 60
     L "  state: $($state.StdOut)"
 
     # ------------------------------------------------------------ bundle
     L "=== push bundle"
     $guestRoot = 'C:\blook-e2e'
-    Invoke-Guest -Command "cmd /c if not exist $guestRoot mkdir $guestRoot" -TimeoutSeconds 60 | Out-Null
+    # No wrapper for this one: it creates the directory the wrapper is pushed to.
+    $boot = Invoke-Bvmenv -TimeoutSeconds 90 -Arguments @(
+        'exec', $Vm, '--timeout', '60', '--elevated', '--',
+        'cmd.exe', '/c', "if not exist $guestRoot mkdir $guestRoot") -Echo
+    if ($boot.ExitCode -ne 0) { Fail "cannot create $guestRoot in the guest" }
     foreach ($name in @('blook-drv.sys', 'blook-loader.exe', 'blook-antidetect.exe', 'blook-guest-hooks.exe')) {
         $r = Invoke-Bvmenv -Arguments @('push', $Vm, (Join-Path $build $name), "$guestRoot\$name") -TimeoutSeconds 120
         if ($r.ExitCode -ne 0) { Fail "push $name failed: $($r.StdErr)" }
         L "  pushed $name"
     }
-    Get-ChildItem (Join-Path $repo 'tests\e2e\guest') -Filter *.ps1 -File | ForEach-Object {
+    Get-ChildItem (Join-Path $repo 'tests\e2e\guest') -File |
+        Where-Object { $_.Extension -in '.ps1', '.cmd' } | ForEach-Object {
         $r = Invoke-Bvmenv -Arguments @('push', $Vm, $_.FullName, "$guestRoot\$($_.Name)") -TimeoutSeconds 120
         if ($r.ExitCode -ne 0) { Fail "push $($_.Name) failed" }
     }
+    if (-not (Test-Path -LiteralPath (Join-Path $repo 'tests\e2e\guest\run-guest.cmd'))) {
+        Fail "tests\e2e\guest\run-guest.cmd is missing"
+    }
     L "  pushed guest helpers"
+    # Belt and braces: machine-wide markers so any process the guest starts
+    # (including SYSTEM scheduled tasks) sees them even if a wrapper is missed.
+    Invoke-Guest -Command "cmd.exe /c setx /M BLOOK_VM_GUEST $Vm" -TimeoutSeconds 60 | Out-Null
+    Invoke-Guest -Command "cmd.exe /c setx /M BLOOK_ALLOW_KERNEL_LOAD 1" -TimeoutSeconds 60 | Out-Null
+    L "  machine markers set"
 
     # ------------------------------------------------------------ baseline
     L "=== antidetect baseline (no driver)"
@@ -151,6 +196,13 @@ try {
     L "=== driver install + start"
     $install = Invoke-Guest -Command "cmd /c $guestRoot\blook-loader.exe install $guestRoot\blook-drv.sys"
     L "  install exit=$($install.ExitCode): $($install.StdOut)"
+    # Startup-only switches: keep the first nested bring-up minimal (no MOV-DR /
+    # #BP / #DB interception) and enable the stage breadcrumbs. They are read by
+    # DriverEntry from the service key's Parameters subkey.
+    $params = "HKLM\SYSTEM\CurrentControlSet\Services\BlookDrv\Parameters"
+    Invoke-Guest -Command "cmd.exe /c reg.exe add $params /f /v InterceptDebug /t REG_DWORD /d $InterceptDebug" -TimeoutSeconds 60 | Out-Null
+    Invoke-Guest -Command "cmd.exe /c reg.exe add $params /f /v InterceptRdtscp /t REG_DWORD /d 0" -TimeoutSeconds 60 | Out-Null
+    Invoke-Guest -Command "cmd.exe /c reg.exe add $params /f /v TraceMarkers /t REG_DWORD /d 1" -TimeoutSeconds 60 | Out-Null
     $start = Invoke-Guest -Command "cmd /c $guestRoot\blook-loader.exe start"
     L "  start exit=$($start.ExitCode): $($start.StdOut)"
     $afterState = Invoke-Bvmenv -Arguments @('state', $Vm, '--json') -TimeoutSeconds 60
@@ -183,6 +235,10 @@ try {
     L "  final state: $($finalState.StdOut)"
     if ($finalState.StdOut -match '"classification":\s*"(bsod|hang)"') { Fail "guest not healthy at the end" }
 
+    # Serial carries the kernel debug breadcrumbs (bringup::stage) and the
+    # exit-storm watchdog record; keep it with the evidence either way.
+    Invoke-Bvmenv -Arguments @('pull', $Vm, 'C:\blook-vms\vms\vm-drv\serial.log', "$Artifacts\serial.log") -TimeoutSeconds 60 | Out-Null
+    Invoke-Bvmenv -Arguments @('state', $Vm, '--json') -TimeoutSeconds 60 | Out-Null
     L "PREFLIGHT OK"
 } finally {
     if (-not $KeepVm) {

@@ -1,0 +1,35 @@
+ 驱动器 C 中的卷是 Windows
+ 卷的序列号是 70EE-0B18
+
+ C:\blook-e2e 的目录
+
+2026/10/21  12:52    <DIR>          .
+2026/10/21  12:22            66,048 blook-antidetect.exe
+2026/10/21  12:48           176,648 blook-drv.sys
+2026/10/21  12:22            99,840 blook-guest-hooks.exe
+2026/10/21  12:47           139,776 blook-loader.exe
+2026/10/21  03:00             1,237 boot-baseline.ps1
+2026/10/21  03:00             1,390 detect-check.ps1
+2026/10/21  12:52                 0 dir.txt
+2026/10/21  03:00             3,324 driver-lifecycle.ps1
+2026/10/21  03:01             5,771 get-dr-context.ps1
+2026/10/21  03:01               830 guest-hooks.ps1
+2026/10/21  03:02               490 hang-helper.ps1
+2026/10/21  03:01             1,981 hook-target.ps1
+2026/10/21  03:00             3,199 hv-info.ps1
+2026/10/21  03:12             2,554 invalid-parameters.ps1
+2026/10/21  03:12             2,912 kchannel-fuzz.ps1
+2026/10/21  11:48             7,373 lib.ps1
+2026/10/21  03:02             2,086 memory-pressure.ps1
+2026/10/21  03:11             4,008 run-antidetect.ps1
+2026/10/21  03:02             2,496 run-ept-hook.ps1
+2026/10/21  03:02             2,916 run-unload-under-load.ps1
+2026/10/21  03:01             5,900 scan-devices.ps1
+2026/10/21  03:01             3,472 scan-drivers.ps1
+2026/10/21  03:02             4,193 scan-pool.ps1
+2026/10/21  03:01             1,569 scan-services.ps1
+2026/10/21  03:02             1,341 self-hide-then-unload.ps1
+2026/10/21  03:02             2,221 trace-scan.ps1
+2026/10/21  12:52             4,451 who.txt
+              27 个文件        548,026 字节
+               1 个目录 60,710,543,360 可用字节

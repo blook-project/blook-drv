@@ -1,0 +1,60 @@
+
+用户信息
+----------------
+
+用户名              SID     
+=================== ========
+nt authority\system S-1-5-18
+
+
+组信息
+-----------------
+
+组名                                   类型   SID                                                           属性                            
+====================================== ====== ============================================================= ================================
+Mandatory Label\System Mandatory Level 标签   S-1-16-16384                                                                                  
+Everyone                               已知组 S-1-1-0                                                       必需的组, 启用于默认, 启用的组  
+BUILTIN\Users                          别名   S-1-5-32-545                                                  必需的组, 启用于默认, 启用的组  
+NT AUTHORITY\SERVICE                   已知组 S-1-5-6                                                       必需的组, 启用于默认, 启用的组  
+CONSOLE LOGON                          已知组 S-1-2-1                                                       必需的组, 启用于默认, 启用的组  
+NT AUTHORITY\Authenticated Users       已知组 S-1-5-11                                                      必需的组, 启用于默认, 启用的组  
+NT AUTHORITY\This Organization         已知组 S-1-5-15                                                      必需的组, 启用于默认, 启用的组  
+NT SERVICE\Schedule                    已知组 S-1-5-80-4125092361-1567024937-842823819-2091237918-836075745 启用于默认, 启用的组, 组的所有者
+LOCAL                                  已知组 S-1-2-0                                                       必需的组, 启用于默认, 启用的组  
+BUILTIN\Administrators                 别名   S-1-5-32-544                                                  启用于默认, 启用的组, 组的所有者
+
+
+特权信息
+----------------------
+
+特权名                                    描述                               状态  
+========================================= ================================== ======
+SeAssignPrimaryTokenPrivilege             替换一个进程级令牌                 已禁用
+SeLockMemoryPrivilege                     锁定内存页                         已启用
+SeIncreaseQuotaPrivilege                  为进程调整内存配额                 已禁用
+SeTcbPrivilege                            以操作系统方式执行                 已启用
+SeSecurityPrivilege                       管理审核和安全日志                 已禁用
+SeTakeOwnershipPrivilege                  取得文件或其他对象的所有权         已禁用
+SeLoadDriverPrivilege                     加载和卸载设备驱动程序             已禁用
+SeSystemProfilePrivilege                  配置文件系统性能                   已启用
+SeSystemtimePrivilege                     更改系统时间                       已禁用
+SeProfileSingleProcessPrivilege           配置文件单一进程                   已启用
+SeIncreaseBasePriorityPrivilege           提高计划优先级                     已启用
+SeCreatePagefilePrivilege                 创建一个页面文件                   已启用
+SeCreatePermanentPrivilege                创建永久共享对象                   已启用
+SeBackupPrivilege                         备份文件和目录                     已禁用
+SeRestorePrivilege                        还原文件和目录                     已禁用
+SeShutdownPrivilege                       关闭系统                           已禁用
+SeDebugPrivilege                          调试程序                           已启用
+SeAuditPrivilege                          生成安全审核                       已启用
+SeSystemEnvironmentPrivilege              修改固件环境值                     已禁用
+SeChangeNotifyPrivilege                   绕过遍历检查                       已启用
+SeUndockPrivilege                         从扩展坞上取下计算机               已禁用
+SeManageVolumePrivilege                   执行卷维护任务                     已禁用
+SeImpersonatePrivilege                    身份验证后模拟客户端               已启用
+SeCreateGlobalPrivilege                   创建全局对象                       已启用
+SeIncreaseWorkingSetPrivilege             增加进程工作集                     已启用
+SeTimeZonePrivilege                       更改时区                           已启用
+SeCreateSymbolicLinkPrivilege             创建符号链接                       已启用
+SeDelegateSessionUserImpersonatePrivilege 获取同一会话中另一个用户的模拟令牌 已启用
+

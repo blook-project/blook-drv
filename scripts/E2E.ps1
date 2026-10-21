@@ -687,7 +687,7 @@ param(
 function Invoke-Build {
     Write-Step "build driver + sdk + guest binaries ($Configuration)"
     if ($script:IsDryRun) {
-        Write-Log '[dry-run] xmake f -p windows -a x64 -m <config> -y'
+        Write-Log '[dry-run] xmake f -p windows -a x64 -m <config> --kchannel_dir=<checkout> -y'
         Write-Log '[dry-run] xmake build blook-drv blook-sdk blook-loader blook-antidetect blook-guest-hooks'
         Write-Log '[dry-run] signer\spcsign\spcsign.exe sign ... blook-drv.sys'
         return
@@ -699,8 +699,14 @@ function Invoke-Build {
 
     Push-Location -LiteralPath $script:RepoRoot
     try {
+        # The driver links the real blook-kchannel sources: the checkout is
+        # required (env var, sibling repo, or the vendored snapshot).
+        $kchannel = if ($env:KCHANNEL_DIR) { $env:KCHANNEL_DIR } else { Join-Path (Split-Path -Parent $script:RepoRoot) 'blook-kchannel' }
+        if (-not (Test-Path -LiteralPath (Join-Path $kchannel 'include\blook\kchannel.h'))) {
+            throw "blook-kchannel not found at $kchannel; set KCHANNEL_DIR or place the checkout next to this repo."
+        }
         Invoke-HostStep -FilePath $xmake.Source `
-            -Arguments @('f', '-p', 'windows', '-a', 'x64', '-m', $Configuration, '-y') `
+            -Arguments @('f', '-p', 'windows', '-a', 'x64', '-m', $Configuration, '--kchannel_dir=' + $kchannel, '-y') `
             -Label 'xmake configure'
         Invoke-HostStep -FilePath $xmake.Source `
             -Arguments @('build', 'blook-drv', 'blook-sdk', 'blook-loader', 'blook-antidetect', 'blook-guest-hooks') `

@@ -4,6 +4,7 @@
 #include "idt.h"
 #include "ept.h"
 #include "timing.h"
+#include "bringup.hpp"
 #include "policy/breakpoint_policy.hpp"
 #include "vmx.h"
 namespace hv {
@@ -60,6 +61,15 @@ struct vcpu {
     bool stop_virtualization{};
     bool launched{};
     uint64_t original_cr0{}, original_cr4{};
+
+    // Bring-up: logical processor index and exit-storm tracking. A processor
+    // that keeps taking the same (exit reason, guest RIP) is a handler that
+    // fails to advance the guest instruction; the watchdog turns that into a
+    // clean start failure instead of a guest-wide freeze (see bringup.hpp).
+    uint32_t index{};
+    uint32_t last_exit_reason{};
+    uint64_t last_exit_rip{};
+    uint32_t same_exit_count{};
 
     // Debug-register interception state (see hwbreak.hpp / swbreak.hpp).
     // DR0-DR3/DR6 are not switched by VMX (only DR7 is, with the save/load

@@ -8,6 +8,8 @@
 // resynchronised.
 #include "timing.h"
 
+#include "policy/timing_policy.hpp"
+
 #include <intrin.h>
 
 #include "driver/configuration_state.hpp"
@@ -52,7 +54,13 @@ bool timing_hidden() {
 }
 
 void hide_vm_exit_overhead(vcpu* const cpu) {
-    if (!timing_hidden()) {
+    // The arithmetic (attributable window, resynchronisation, preemption timer
+    // clamp) is pure policy and unit-tested on the host; this function performs
+    // the VMCS/MSR side effects.
+    const auto plan = blook::policy::compensate(
+        timing_hidden(), cpu->hide_vm_exit_overhead, cpu->vm_exit_tsc_overhead,
+        cpu->cached.vmx_misc.preemption_timer_tsc_relationship);
+    if (!plan.restore_perf_counters) {
         cpu->tsc_offset = 0;
         cpu->preemption_timer = ~0ull;
         return;
@@ -61,13 +69,11 @@ void hide_vm_exit_overhead(vcpu* const cpu) {
     perf_global_ctrl.flags = cpu->msr_exit_store.perf_global_ctrl.msr_data;
 
     // Make the processor reload the snapshot taken on this exit.
-    cpu->msr_entry_load.aperf.msr_data = cpu->msr_exit_store.aperf.msr_data;
-    cpu->msr_entry_load.mperf.msr_data = cpu->msr_exit_store.mperf.msr_data;
+    cpu->msr_entry_load.aperf.msr_data = blook::policy::adjust_perf_counter(
+        cpu->msr_exit_store.aperf.msr_data, cpu->vm_exit_mperf_overhead);
+    cpu->msr_entry_load.mperf.msr_data = blook::policy::adjust_perf_counter(
+        cpu->msr_exit_store.mperf.msr_data, cpu->vm_exit_mperf_overhead);
     vmx_vmwrite(VMCS_GUEST_PERF_GLOBAL_CTRL, perf_global_ctrl.flags);
-
-    // Account for the constant cost of the MSR loads and stores themselves.
-    cpu->msr_entry_load.aperf.msr_data -= cpu->vm_exit_mperf_overhead;
-    cpu->msr_entry_load.mperf.msr_data -= cpu->vm_exit_mperf_overhead;
 
     if (perf_global_ctrl.en_fixed_ctrn & (1ull << 2)) {
         const auto cpl = current_guest_cpl();
@@ -75,30 +81,19 @@ void hide_vm_exit_overhead(vcpu* const cpu) {
         ia32_fixed_ctr_ctrl_register fixed_ctr_ctrl;
         fixed_ctr_ctrl.flags = __readmsr(IA32_FIXED_CTR_CTRL);
 
-        const bool counting = (cpl == 0 && fixed_ctr_ctrl.en2_os) ||
-                              (cpl == 3 && fixed_ctr_ctrl.en2_usr);
-        if (counting)
+        if (blook::policy::fixed_ctr2_counting(cpl, fixed_ctr_ctrl.en2_os,
+                                               fixed_ctr_ctrl.en2_usr))
             __writemsr(IA32_FIXED_CTR2, __readmsr(IA32_FIXED_CTR2) -
                                             cpu->vm_exit_ref_tsc_overhead);
     }
 
-    // Exits we cannot attribute to a single instruction (exceptions, NMI
-    // delivery, preemption) are the chance to resynchronise the clock, since
-    // hiding their cost would accumulate error instead of removing it.
-    if (!cpu->hide_vm_exit_overhead || cpu->vm_exit_tsc_overhead > 10000) {
+    if (plan.resynchronise) {
         cpu->tsc_offset = 0;
         cpu->preemption_timer = ~0ull;
         return;
     }
-
-    // Force a resynchronisation after roughly 10000 guest TSC ticks.
-    const auto shift = cpu->cached.vmx_misc.preemption_timer_tsc_relationship;
-    uint64_t ticks = uint64_t{10000} >> shift;
-    if (ticks < 2)
-        ticks = 2;
-    cpu->preemption_timer = ticks;
-
-    cpu->tsc_offset -= cpu->vm_exit_tsc_overhead;
+    cpu->preemption_timer = plan.preemption_ticks;
+    cpu->tsc_offset -= plan.subtract_ticks;
 }
 
 uint64_t measure_vm_exit_tsc_overhead() {

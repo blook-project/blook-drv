@@ -1,0 +1,76 @@
+#include "bringup.hpp"
+
+#include "driver/pool.hpp"
+
+namespace hv::bringup {
+exit_storm last_storm{};
+volatile uint32_t storm_count{};
+namespace {
+UNICODE_STRING parameters{};
+bool ready{};
+}  // namespace
+
+void stage(const char* name, uint32_t cpu) {
+    // The guest is configured with a serial debug port; without a debugger
+    // attached DbgPrint is cheap and lands in the serial log.
+    DbgPrint("[blook] stage=%s cpu=%u\n", name, cpu);
+}
+
+void record_storm(uint32_t cpu, uint32_t reason, uint64_t rip, uint32_t count) {
+    // Root-mode-safe: plain stores only.
+    last_storm.cpu = cpu;
+    last_storm.reason = reason;
+    last_storm.rip = rip;
+    last_storm.count = count;
+    last_storm.active = 1;
+    ++storm_count;
+}
+
+void remember_service_path(PCUNICODE_STRING path) {
+    if (ready || !path || !path->Buffer || !path->Length)
+        return;
+    const auto bytes =
+        path->Length + sizeof(L"\\Parameters") + sizeof(WCHAR);
+    auto* buffer = static_cast<PWCH>(
+        ExAllocatePool2(POOL_FLAG_PAGED, bytes, blook::pool_tag));
+    if (!buffer)
+        return;
+    RtlCopyMemory(buffer, path->Buffer, path->Length);
+    RtlCopyMemory(reinterpret_cast<UCHAR*>(buffer) + path->Length,
+                  L"\\Parameters", sizeof(L"\\Parameters"));
+    parameters.Buffer = buffer;
+    parameters.Length = static_cast<USHORT>(
+        path->Length + sizeof(L"\\Parameters") - sizeof(WCHAR));
+    parameters.MaximumLength = static_cast<USHORT>(bytes);
+    ready = true;
+}
+
+namespace {
+void write_dword(const wchar_t* name, uint32_t value) {
+    if (!ready)
+        return;
+    OBJECT_ATTRIBUTES attributes{};
+    InitializeObjectAttributes(&attributes, &parameters,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, nullptr,
+                               nullptr);
+    HANDLE key{};
+    if (!NT_SUCCESS(ZwOpenKey(&key, KEY_SET_VALUE, &attributes)))
+        return;
+    UNICODE_STRING value_name;
+    RtlInitUnicodeString(&value_name, name);
+    ZwSetValueKey(key, &value_name, 0, REG_DWORD, &value, sizeof(value));
+    ZwClose(key);
+}
+}  // namespace
+
+void publish_storm() {
+    if (!last_storm.active)
+        return;
+    write_dword(L"StormReason", last_storm.reason);
+    write_dword(L"StormCount", last_storm.count);
+    write_dword(L"StormCpu", last_storm.cpu);
+    write_dword(L"StormRipLow", static_cast<uint32_t>(last_storm.rip));
+    write_dword(L"StormRipHigh", static_cast<uint32_t>(last_storm.rip >> 32));
+    write_dword(L"StormTotal", storm_count);
+}
+}  // namespace hv::bringup

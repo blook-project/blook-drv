@@ -288,6 +288,29 @@ bool handle_vm_exit(guest_context* const ctx) {
 
     cpu->stop_virtualization = false;
 
+    // Exit-storm watchdog (see bringup.hpp): if this processor keeps taking the
+    // same exit at the same guest RIP, the handler is not advancing the guest.
+    // Abort virtualisation on this processor so hv::start returns an error and
+    // the failure can be read from the service key, instead of freezing the
+    // whole guest in an endless root/guest loop.
+    {
+        const auto guest_rip = vmx_vmread(VMCS_GUEST_RIP);
+        if (reason.basic_exit_reason == cpu->last_exit_reason &&
+            guest_rip == cpu->last_exit_rip) {
+            if (++cpu->same_exit_count > bringup::storm_threshold) {
+                bringup::record_storm(cpu->index, reason.basic_exit_reason,
+                                      guest_rip, cpu->same_exit_count);
+                bringup::stage("exit-storm", cpu->index);
+                cpu->stop_virtualization = true;
+                return true;
+            }
+        } else {
+            cpu->last_exit_reason = reason.basic_exit_reason;
+            cpu->last_exit_rip = guest_rip;
+            cpu->same_exit_count = 0;
+        }
+    }
+
     // Only exits that exist because an instruction was intercepted have a cost
     // that can be removed from the guest clock without accumulating error.
     switch (reason.basic_exit_reason) {
@@ -581,8 +604,12 @@ bool supported_cpu() {
         r[0] < 0x0d)
         return false;
     __cpuid(r, 1);
-    if (!(r[2] & (1 << 5)) || !(r[2] & (1 << 26)) ||
-        (static_cast<unsigned>(r[2]) & 0x80000000u))
+    // CPUID.1:ECX[31] (hypervisor present) is *expected* when this driver runs
+    // nested, inside a VMware/Hyper-V/KVM guest: the outer hypervisor sets it.
+    // Rejecting it made the driver refuse to start in exactly the environment it
+    // is built to support, so it is deliberately not part of the gate (the
+    // bring-up report still records it as a reason code).
+    if (!(r[2] & (1 << 5)) || !(r[2] & (1 << 26)))
         return false;
     __cpuidex(r, 7, 0);
     if (!(r[1] & 1))
@@ -656,24 +683,31 @@ bool virtualize_cpu(vcpu* const cpu) {
         return false;
     }
     if (!enter_vmx_operation(cpu->vmxon)) {
+        bringup::stage("vmxon-failed", cpu->index);
         rollback();
         return false;
     }
+    bringup::stage("vmxon", cpu->index);
     if (!load_vmcs_pointer(cpu->vmcs)) {
+        bringup::stage("vmptrld-failed", cpu->index);
         vmx_vmxoff();
         rollback();
         return false;
     }
+    bringup::stage("vmptrld", cpu->index);
     write_vmcs_ctrl_fields(cpu);
     write_vmcs_host_fields(cpu);
     write_vmcs_guest_fields();
+    bringup::stage("vmcs-ready", cpu->index);
     if (!vm_launch()) {
+        bringup::stage("vmlaunch-failed", cpu->index);
         vmx_vmxoff();
         rollback();
         return false;
     }
     // Back in non-root operation at DISPATCH_LEVEL on the same logical
     // processor.
+    bringup::stage("launched", cpu->index);
     cpu->launched = true;
     _enable();
     KeLowerIrql(irql);
