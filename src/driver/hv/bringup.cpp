@@ -81,6 +81,11 @@ void record_launch_error(uint64_t error) {
     launch_error = error;
 }
 
+void publish_probe(uint32_t code, uint32_t extra) {
+    write_dword(L"Probe", code);
+    write_dword(L"ProbeExtra", extra);
+}
+
 void publish_stage() {
     write_dword(L"LaunchErrorLow", static_cast<uint32_t>(launch_error));
     write_dword(L"LaunchErrorHigh", static_cast<uint32_t>(launch_error >> 32));

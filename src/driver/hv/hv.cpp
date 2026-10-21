@@ -255,13 +255,14 @@ NTSTATUS start() {
         // Black-box first-exit probe. Every mark is a registry write (PASSIVE,
         // on disk), so if the guest dies in one of these steps the host can
         // reboot the VM and read Parameters\TraceLast to see how far it got.
-        blook::tuning::mark(0x200, 0);  // about to run CPUID in guest mode
+        bringup::publish_probe(0x200);  // about to run CPUID in guest mode
         int regs[4]{};
         __cpuid(regs, 1);
-        blook::tuning::mark(0x201, static_cast<uint32_t>(regs[2]));
-        blook::tuning::mark(0x202, 0);  // about to run VMCALL in guest mode
+        bringup::publish_probe(0x201, static_cast<uint32_t>(regs[2]));
+        bringup::publish_probe(0x202);  // about to run VMCALL in guest mode
         hypercall_input probe{operation::ping};
-        blook::tuning::mark(0x203, static_cast<uint32_t>(vmx_vmcall(probe)));
+        bringup::publish_probe(0x203,
+                              static_cast<uint32_t>(vmx_vmcall(probe)));
     }
     if (bringup::vmwrite_error) {
         bringup::publish_stage();
