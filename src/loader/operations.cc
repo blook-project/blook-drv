@@ -149,7 +149,8 @@ result service_command(const cli::command& command, output_sink& output) {
         {
             HKEY key{};
             if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                              L"SYSTEM\\CurrentControlSet\\Services\\BlookDrv\\Parameters",
+                              L"SYSTEM\\CurrentControlSet\\Services\\BlookDrv\\"
+                              L"Parameters",
                               0, KEY_READ, &key) == ERROR_SUCCESS) {
                 DWORD value = 0;
                 DWORD size = sizeof(value);
