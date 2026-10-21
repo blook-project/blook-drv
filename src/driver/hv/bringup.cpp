@@ -102,6 +102,58 @@ void write_dword(const wchar_t* name, uint32_t value) {
     ZwClose(key);
 }
 
+// One open + one flush for the whole entry snapshot: the guest can die inside
+// VMLAUNCH microseconds after this runs, and a flush per value loses most of the
+// record (verified on the nested host).
+void write_snapshot() {
+    if (!ready)
+        return;
+    OBJECT_ATTRIBUTES attributes{};
+    InitializeObjectAttributes(&attributes, &parameters,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, nullptr,
+                               nullptr);
+    HANDLE key{};
+    if (!NT_SUCCESS(ZwOpenKey(&key, KEY_SET_VALUE, &attributes))) {
+        if (!NT_SUCCESS(ZwCreateKey(&key, KEY_SET_VALUE, &attributes, 0, nullptr,
+                                    REG_OPTION_NON_VOLATILE, nullptr)))
+            return;
+    }
+    const struct {
+        const wchar_t* name;
+        uint32_t value;
+    } values[] = {
+        {L"EntryCtls", static_cast<uint32_t>(entry_controls)},
+        {L"EntryCtlsAllowed0", static_cast<uint32_t>(entry_ctls_allowed0)},
+        {L"EntryCtlsAllowed1", static_cast<uint32_t>(entry_ctls_allowed1)},
+        {L"EntryEfer", static_cast<uint32_t>(entry_efer)},
+        {L"EntryCr0", static_cast<uint32_t>(entry_cr0)},
+        {L"EntryCr4", static_cast<uint32_t>(entry_cr4)},
+        {L"EntryActivity", static_cast<uint32_t>(entry_activity)},
+        {L"EntryIntr", static_cast<uint32_t>(entry_interruptibility)},
+        {L"EntryPendDbg", static_cast<uint32_t>(entry_pending_debug)},
+        {L"EntryLinkPtr", static_cast<uint32_t>(entry_link_pointer)},
+        {L"EntryEptp", static_cast<uint32_t>(entry_eptp)},
+        {L"EntryGdtrLimit", static_cast<uint32_t>(entry_gdtr_limit)},
+        {L"EntryIdtrLimit", static_cast<uint32_t>(entry_idtr_limit)},
+        {L"HostCr0", static_cast<uint32_t>(host_cr0)},
+        {L"HostCr4", static_cast<uint32_t>(host_cr4)},
+        {L"HostRsp", static_cast<uint32_t>(host_rsp)},
+        {L"HostRip", static_cast<uint32_t>(host_rip)},
+        {L"HostEfer", static_cast<uint32_t>(host_efer)},
+        {L"LaunchError", static_cast<uint32_t>(launch_error)},
+        {L"VmwriteField", static_cast<uint32_t>(vmwrite_error)},
+        {L"StageSerial", stage_serial},
+        {L"StageCpu", stage_cpu},
+    };
+    for (const auto& entry : values) {
+        UNICODE_STRING value_name;
+        RtlInitUnicodeString(&value_name, entry.name);
+        ZwSetValueKey(key, &value_name, 0, REG_DWORD,
+                      const_cast<uint32_t*>(&entry.value), sizeof(uint32_t));
+    }
+    ZwFlushKey(key);
+    ZwClose(key);
+}
 void stage_worker(PVOID) {
     LARGE_INTEGER interval{};
     interval.QuadPart = -10000;  // 1 ms poll
@@ -176,6 +228,7 @@ void publish_probe(uint32_t code, uint32_t extra) {
 }
 
 void publish_stage() {
+    write_snapshot();
     write_dword(L"LaunchErrorLow", static_cast<uint32_t>(launch_error));
     write_dword(L"LaunchErrorHigh", static_cast<uint32_t>(launch_error >> 32));
     write_dword(L"VmwriteFieldLow", static_cast<uint32_t>(vmwrite_error));
