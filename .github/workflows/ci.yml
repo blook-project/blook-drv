@@ -87,6 +87,10 @@ jobs:
           $sys = Get-ChildItem -Recurse build -Filter blook-drv.sys | Select-Object -First 1
           if (-not $sys) { throw "blook-drv.sys was not built" }
           if ($sys) { Copy-Item $sys.FullName $stage }
+          foreach ($exe in @("blook-loader.exe", "blook-guest-hooks.exe", "blook-antidetect.exe")) {
+            $built = Get-ChildItem -Recurse build -Filter $exe -File | Select-Object -First 1
+            if ($built) { Copy-Item $built.FullName $stage }
+          }
           Copy-Item include, sdk, docs, scripts, signer -Destination $stage -Recurse
           Copy-Item README.md, LICENSE, CHANGELOG.md, version.txt, xmake.lua, blook.ini -Destination $stage
           Compress-Archive -Path $stage -DestinationPath "out/blook-drv-$ver.zip" -Force
@@ -125,8 +129,8 @@ jobs:
           }
           if ($bad.Count -ne 0) { throw "clang-format violations in: $($bad -join ', ')" }
 
-  kernel-load-smoke:
-    name: kernel load smoke (non-hypervisor)
+  e2e-non-vmx:
+    name: e2e matrix (non-VT-x, hosted runner)
     # Runs on a disposable GitHub runner (a VM, never the physical lab host) and
     # loads the signed driver with the hypervisor disabled, so the job exercises
     # signature acceptance, DriverEntry, the service lifecycle and DriverUnload
@@ -212,40 +216,28 @@ jobs:
             Write-Host "signtool not found - skipping kernel-policy verification"
           }
 
-      - name: Load and unload without the hypervisor
+      - name: Non-VT-x e2e matrix
         if: env.SKIP != '1'
         shell: pwsh
         run: |
           $stage = (Get-ChildItem -Directory stage | Select-Object -First 1).FullName
-          $sys = Join-Path $stage 'blook-drv.sys'
-          # NoHypervisor keeps DriverEntry away from VT-x; Solo means no channel
-          # peer, so start does not wait for one.
-          $key = 'HKLM\SYSTEM\CurrentControlSet\Services\BlookDrv\Parameters'
-          & sc.exe @('create', 'BlookDrv', 'type=', 'kernel', 'start=', 'demand',
-                     "binPath= $sys") | Out-Null
-          if ($LASTEXITCODE -ne 0) { throw "sc create failed" }
-          reg add $key /f /v NoHypervisor /t REG_DWORD /d 1 | Out-Null
-          reg add $key /f /v Solo /t REG_DWORD /d 1 | Out-Null
-          $env:BLOOK_VM_GUEST = 'ci'
-          $env:BLOOK_ALLOW_KERNEL_LOAD = '1'
-          sc.exe start BlookDrv
-          $deadline = (Get-Date).AddSeconds(90)
-          $state = ''
-          while ((Get-Date) -lt $deadline) {
-            $state = sc.exe query BlookDrv | Out-String
-            if ($state -match 'RUNNING') { break }
-            Start-Sleep 2
-          }
-          Write-Host $state
-          if ($state -notmatch 'RUNNING') {
-            sc.exe stop BlookDrv | Out-Null
-            sc.exe delete BlookDrv | Out-Null
-            throw 'driver did not reach RUNNING'
-          }
-          sc.exe stop BlookDrv
-          Start-Sleep 5
-          $stopped = sc.exe query BlookDrv | Out-String
-          Write-Host $stopped
-          if ($stopped -notmatch 'STOPPED') { throw 'driver did not stop cleanly' }
-          sc.exe delete BlookDrv | Out-Null
-          Write-Host 'kernel load smoke passed'
+          $args = @(
+            '-NoProfile', '-ExecutionPolicy', 'Bypass',
+            '-File', 'scripts\E2E-Host.ps1',
+            '-Sys', (Join-Path $stage 'blook-drv.sys'),
+            '-Loader', (Join-Path $stage 'blook-loader.exe'),
+            '-Hooks', (Join-Path $stage 'blook-guest-hooks.exe'),
+            '-Artifacts', 'out/host-e2e'
+          )
+          & pwsh @args
+          if ($LASTEXITCODE -ne 0) { throw "non-VT-x e2e reported failures" }
+          $result = Get-Content 'out/host-e2e/result.json' -Raw | ConvertFrom-Json
+          Write-Host ("host e2e: {0} pass, {1} fail, {2} documented skips" -f $result.summary.pass, $result.summary.fail, $result.summary.skip)
+          if ($result.summary.fail -ne 0) { throw "host e2e failures: $(($result.cases | Where-Object status -eq 'fail' | ForEach-Object name) -join ', ')" }
+
+      - uses: actions/upload-artifact@v4
+        if: env.SKIP != '1' && always()
+        with:
+          name: host-e2e-result
+          path: out/host-e2e
+          if-no-files-found: warn
