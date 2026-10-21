@@ -13,6 +13,7 @@ bool trace_value{};
 bool skip_timing_value{};
 bool minimal_value{};
 uint32_t start_stage_value{};
+bool no_hypervisor_value{};
 
 bool read_dword(const wchar_t* name, uint32_t& value) {
     if (!parameters.Buffer)
@@ -87,6 +88,9 @@ void initialize(PCUNICODE_STRING service_path) {
     uint32_t skip_timing{};
     if (read_dword(L"SkipTimingCalibration", skip_timing))
         skip_timing_value = skip_timing != 0;
+    uint32_t no_hv{};
+    if (read_dword(L"NoHypervisor", no_hv))
+        no_hypervisor_value = no_hv != 0;
     uint32_t stage{};
     if (read_dword(L"StartStage", stage))
         start_stage_value = stage;
@@ -113,6 +117,10 @@ bool skip_timing_calibration() {
 
 uint32_t start_stage() {
     return start_stage_value;
+}
+
+bool no_hypervisor() {
+    return no_hypervisor_value;
 }
 
 bool bringup_minimal() {

@@ -174,8 +174,11 @@ NTSTATUS initialize_sessions() {
     // virtualized before the first request arrives, and the anti-detection
     // state (CPUID spoofing, MSR filtering) is in effect from that point on.
     hv::detect::initialize();
-    status = hv::start();
-    if (NT_SUCCESS(status) && !blook::tuning::bringup_minimal()) {
+    // Evidence/fallback mode: no hypervisor, but every other subsystem
+    // (kchannel session, self-hide, config, queries) still runs.
+    status = blook::tuning::no_hypervisor() ? STATUS_SUCCESS : hv::start();
+    if (NT_SUCCESS(status) && !blook::tuning::bringup_minimal() &&
+        !blook::tuning::no_hypervisor()) {
         // Mandatory VM maintenance is not an optional feature. Refuse startup
         // rather than silently promising COW/dormant support without its hooks.
         status = hide::activate_maintenance();
@@ -233,7 +236,7 @@ NTSTATUS attach_peer(uint32_t pid, bool administrator, uint64_t& token) {
     manager->peer.pid = pid;
     manager->peer.token = manager->next_token++;
     manager->peer.administrator = administrator;
-    manager->peer.enabled = hv::ghv.running;
+    manager->peer.enabled = hv::ghv.running || blook::tuning::no_hypervisor();
     token = manager->peer.token;
     return STATUS_SUCCESS;
 }

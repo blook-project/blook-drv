@@ -45,6 +45,12 @@ bool bringup_minimal();
 // Bring-up stage bisect (Parameters\StartStage): 0 = full, 1 = VMXON + VMCS
 // load + VMXOFF only (never enters guest mode), 2 = full but without EPT.
 uint32_t start_stage();
+// Evidence/fallback mode (Parameters\NoHypervisor): the driver loads, serves
+// the kchannel session, self-hides and answers queries, but never starts the
+// hypervisor. Used to run the non-hypervisor e2e cases for real on a host where
+// nested VM entry is not usable; hook operations then fail cleanly with
+// STATUS_DEVICE_NOT_READY instead of pretending to work.
+bool no_hypervisor();
 
 // Records a phase marker (best effort, PASSIVE_LEVEL only, ignores failures).
 void mark(uint32_t phase, uint32_t extra = 0);
