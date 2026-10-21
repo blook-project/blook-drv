@@ -41,7 +41,8 @@ jobs:
       - name: Configure and build
         shell: pwsh
         run: |
-          $env:BLOOK_VERSION = (Get-Content version.txt -Raw).Trim()`n          xmake f -p windows -a x64 -m release --wdk="$env:WDK_ROOT" -y
+          $env:BLOOK_VERSION = (Get-Content version.txt -Raw).Trim()
+          xmake f -p windows -a x64 -m release --wdk="$env:WDK_ROOT" -y
           xmake -y
 
       - name: Unit tests
