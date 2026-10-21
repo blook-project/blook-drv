@@ -1,6 +1,7 @@
 #include "bringup.hpp"
 
 #include "driver/pool.hpp"
+#include "vmx.h"
 
 namespace hv::bringup {
 exit_storm last_storm{};
@@ -108,6 +109,26 @@ void write_dword(const wchar_t* name, uint32_t value) {
 void write_snapshot() {
     if (!ready)
         return;
+    // Read the control fields and the capability MSRs the validator uses. The
+    // VM-instruction error is only a number (7 = invalid control field); this
+    // tells which field and which allowed-0/1 split produced the mismatch.
+    uint64_t controls_snapshot[15]{};
+    controls_snapshot[0] = vmx_vmread(0x00004000);  // PIN_BASED
+    controls_snapshot[1] = vmx_vmread(0x00004002);  // PROC_BASED
+    controls_snapshot[2] = vmx_vmread(0x0000401E);  // PROC_BASED2
+    controls_snapshot[3] = vmx_vmread(0x0000400C);  // VMEXIT_CONTROLS
+    controls_snapshot[4] = vmx_vmread(VMCS_CTRL_VMENTRY_CONTROLS);
+    controls_snapshot[5] = __readmsr(0x00004811);   // TRUE_PINBASED 0
+    controls_snapshot[6] = __readmsr(0x00004811) >> 32;
+    controls_snapshot[7] = __readmsr(0x00004813);   // TRUE_PROCBASED 0
+    controls_snapshot[8] = __readmsr(0x00004813) >> 32;
+    controls_snapshot[9] = __readmsr(0x00004815);   // TRUE_EXIT 0
+    controls_snapshot[10] = __readmsr(0x00004815) >> 32;
+    controls_snapshot[11] = __readmsr(0x00004817);  // TRUE_ENTRY 0
+    controls_snapshot[12] = __readmsr(0x00004817) >> 32;
+    controls_snapshot[13] = __readmsr(0x0000480B) >> 32;  // PROCBASED_CTLS2 hi
+    controls_snapshot[14] = static_cast<uint32_t>(__readmsr(0x0000048A));
+    (void)controls_snapshot;
     OBJECT_ATTRIBUTES attributes{};
     InitializeObjectAttributes(&attributes, &parameters,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, nullptr,
@@ -144,6 +165,21 @@ void write_snapshot() {
         {L"VmwriteField", static_cast<uint32_t>(vmwrite_error)},
         {L"StageSerial", stage_serial},
         {L"StageCpu", stage_cpu},
+        {L"PinCtls", static_cast<uint32_t>(controls_snapshot[0])},
+        {L"ProcCtls", static_cast<uint32_t>(controls_snapshot[1])},
+        {L"Proc2Ctls", static_cast<uint32_t>(controls_snapshot[2])},
+        {L"ExitCtls", static_cast<uint32_t>(controls_snapshot[3])},
+        {L"EntryCtlsV", static_cast<uint32_t>(controls_snapshot[4])},
+        {L"TruePinAllowed0", static_cast<uint32_t>(controls_snapshot[5])},
+        {L"TruePinAllowed1", static_cast<uint32_t>(controls_snapshot[6])},
+        {L"TrueProcAllowed0", static_cast<uint32_t>(controls_snapshot[7])},
+        {L"TrueProcAllowed1", static_cast<uint32_t>(controls_snapshot[8])},
+        {L"TrueExitAllowed0", static_cast<uint32_t>(controls_snapshot[9])},
+        {L"TrueExitAllowed1", static_cast<uint32_t>(controls_snapshot[10])},
+        {L"TrueEntryAllowed0", static_cast<uint32_t>(controls_snapshot[11])},
+        {L"TrueEntryAllowed1", static_cast<uint32_t>(controls_snapshot[12])},
+        {L"SecondaryCtls", static_cast<uint32_t>(controls_snapshot[13])},
+        {L"VmxBasic", static_cast<uint32_t>(controls_snapshot[14])},
     };
     for (const auto& entry : values) {
         UNICODE_STRING value_name;
