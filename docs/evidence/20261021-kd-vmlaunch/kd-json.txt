@@ -1,0 +1,26 @@
+{
+  "break_in": false,
+  "bytes": 1287,
+  "command": "Y:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x64\\kd.exe -k com:pipe,port=\\\\.\\pipe\\blook-vm-drv-kd,resets=0,reconnect",
+  "connected": false,
+  "continued": true,
+  "kd_exe": "Y:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x64\\kd.exe",
+  "log_path": "D:\\blook-kernel-project\\blook-drv\\docs\\evidence\\20261021-kd-vmlaunch\\kd.log",
+  "phases": [
+    {
+      "name": "stream",
+      "seconds": 300
+    }
+  ],
+  "pipe": "\\\\.\\pipe\\blook-vm-drv-kd",
+  "schema": "bvmenv.kd.v1",
+  "seconds": 300,
+  "target_resumed": true,
+  "vm": "vm-drv"
+}
+red on: C:\\blook-vms\\vms\\vm-drv-kd\\vm-drv-kd.vmx",
+  "schema": "bvmenv.kd.v1",
+  "seconds": 420,
+  "target_resumed": true,
+  "vm": "vm-drv-kd"
+}

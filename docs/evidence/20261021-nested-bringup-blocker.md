@@ -1,75 +1,64 @@
-# Nested-VM bring-up: current blocker (2026-10-21)
+# Nested-VM bring-up: root cause found (2026-10-21, second update)
 
-Status: **not resolved**. The driver loads and the hypervisor starts inside the
-VMware guest, but `hv::start()` freezes the guest. No real 56-case e2e run has
-passed yet; the dry-run artefacts in this directory are harness validation only.
+Status: the nested freeze is **diagnosed and fixed**; VMXON/VMCS/VMXOFF now run
+inside the VMware guest. Full start (VMLAUNCH) still wedges the guest and is the
+only remaining blocker. No real 56-case run yet.
 
-## What works (measured, not inferred)
+## Root cause of the freeze (confirmed with a kd capture)
 
-* `bvmenv` VM lifecycle, `push`, `exec --elevated` (with the SYSTEM fallback),
-  `state`, screenshots and the per-VM serial log all work on the refreshed base.
-* Inside the guest, `blook-antidetect.exe` runs (`docs/evidence/20261021-1400-vm-preflight/antidetect-baseline.json`):
-  `CPUID.1:ECX[31]` set, vendor `VMwareVMware`, `CPUID.1:ECX[5]` (VMX) set,
-  `smx=0`, `svm=0`. env's signed ring-0 probe independently reports
-  `VMX=1 HYPERVISOR_PRESENT=1 HYPERVISOR_VENDOR=VMwareVMware
-  FIRMWARE_VIRTUALIZATION_ENABLED=1`. So nested VT-x **is** exposed.
-* `blook-loader install` succeeds (`SERVICE_NAME: BlookDrv`, exit 0), the
-  host-safety marker guard passes inside the guest, and `start` reaches the
-  driver's `DriverEntry`.
+kd (symbols resolved) caught:
 
-## What fails
+```
+BUGCHECK_CODE: 7e   P1: C0000096 (STATUS_PRIVILEGED_INSTRUCTION)
+FAILURE_BUCKET_ID: 0x7E_C0000096_blook_drv!hv::write_tr
+STACK: write_tr <- fatal_root_error <- (VMCS field writes) <- virtualize_cpu <- hv::start
+```
 
-`blook-loader start` (i.e. `hv::start()`) never returns; the guest becomes
-unresponsive to `exec`/`state` (both time out), `vmware-vmx` keeps burning CPU
-(~1.7 cores), and the MKS screen capture is black. This is a guest-side freeze,
-not a BSOD: no bugcheck text, no new minidump.
+The new non-fatal diagnostics then named the failed write:
 
-Two distinct failures were observed:
+```
+Parameters\VmwriteField = 0x482E  (VMCS_GUEST_VMX_PREEMPTION_TIMER_VALUE)
+```
 
-1. **Fixed:** `TraceLast=0x102` (initialize_sessions) + `TraceExtra=0xC035001E`
-   (`STATUS_HV_FEATURE_UNAVAILABLE`): `supported_cpu()` rejected the guest
-   because `CPUID.1:ECX[31]` (hypervisor present) was set. Nested guests are
-   *supposed* to have that bit; it is no longer part of the gate (commit
-   `c1f…`, see `src/driver/hv/vcpu.cpp`).
-2. **Open:** after the gate fix the driver gets further and then the guest
-   freezes. Reproduced with the *minimal* preset
-   (`Parameters\BringupMinimal=1`, `InterceptDebug=0`, `InterceptRdtscp=0`,
-   `SkipTimingCalibration=1`): only VMXON, VMPTRLD, VM entry/exit and the
-   unavoidable CPUID/VMCALL handling are active. No MSR bitmap, no CR exits, no
-   EPT hook work, no timing calibration, no debug-register interception. The
-   freeze therefore lives in the **minimum guest-entry path**, not in a
-   particular interception feature.
+`write_vmcs_guest_fields()` wrote the preemption-timer **value** field
+unconditionally. A nested VMware guest masks the "activate VMX preemption timer"
+control (allowed-1 bit 6 = 0), so the control is off and writing that field makes
+**VMWRITE fail**. The old code called `fatal_root_error()`, whose recovery ran
+`LTR` with a guest TR selector that is not a valid TSS: `#GP` in root mode ->
+0x7E -> black screen with no dump (the base image has `CrashDumpEnabled=0`).
+That is exactly the "guest freeze" seen from outside.
 
-## Instruments added for the next attempt
+Fixes (all pushed):
+* write the timer value only when the control bit is actually set;
+* `fatal_root_error()` no longer dies in its own `LTR` recovery;
+* every VMWRITE failure is recorded and published (`Parameters\VmwriteField`,
+  `LaunchError*`, `StageSerial/StageCpu`, `Storm*`) and fails `hv::start`
+  cleanly instead of bugchecking inside root mode;
+* CPUID/RDMSR/WRMSM/RDTSC/xsetbv advance RIP by their architectural lengths
+  instead of the unreliable `VMCS_VMEXIT_INSTRUCTION_LENGTH` (mis-skip guard).
 
-* `hv::bringup::stage()` breadcrumbs (`vmxon`, `vmptrld`, `vmcs-ready`,
-  `vmxon-only-ok`, `launched`, `exit-storm`, `exit-rate-storm`) written to
-  `Parameters\StageSerial` / `StageCpu` by `publish_stage()`.
-* Exit-storm watchdog: per-processor identical `(exit reason, guest RIP)` pairs
-  and a sustained exit rate no real VM exit can produce are treated as a runaway
-  loop; the processor aborts virtualisation so `hv::start` returns an error and
-  publishes `Parameters\Storm*` instead of freezing the guest.
-* `Parameters\StartStage=1`: VMXON + VMPTRLD + VMXOFF only, **never enters guest
-  mode**. This cannot hang the guest; it splits "root-mode setup broken" from
-  "VM entry/exit broken". Start here.
-* `Parameters\BringupMinimal=1`, `InterceptDebug`, `InterceptRdtscp`,
-  `SkipTimingCalibration`: startup-only bisect switches (see `docs/nested.md`).
+## Verified after the fix (no kd attached)
 
-## Most likely causes (to check first)
+`StartStage=1` (VMXON + VMPTRLD + VMXOFF, 1 CPU, minimal controls, solo):
+`sc start` -> `STATE: 4 RUNNING`, `TraceLast=0x3`, `VmwriteField=0`,
+`LaunchError=0`, `StageSerial=5`, guest healthy afterwards. So nested VMX
+bring-up works.
 
-1. VM entry/exit in the nested host with a control/field VMware did not
-   actually expose (the freeze is before any feature-specific work, so a VMCS
-   control combination is the prime suspect).
-2. Root-mode page tables / host state: a root-mode fault with the guest state
-   still loaded turns into a triple fault and a VM reset rather than a bugcheck,
-   which matches the black screen and the CPU spin.
-3. `vm_exit.asm` resume path on a nested host (the earlier bare-metal failure
-   was an unhandled root-mode `#UD` at `rdtscp` inside `hv::start`).
+## Remaining blocker: VMLAUNCH
 
-## What is needed to finish this
+`StartStage=0` (minimal preset, 1 CPU) still wedges the guest: `sc start` never
+returns, `exec`/`state` time out, screen black. No bugcheck and no stage marker
+beyond `vmcs-ready`, which points at the entry/exit path rather than root-mode
+setup. Next steps, in order:
 
-* Text-level kernel debug output from the guest (attach `kd` to the VM's serial
-  device, or a VMCI debug channel). `DbgPrint` without an attached debugger does
-  not reach the serial file, which is why `serial.log` is only KD packet noise.
-* Or run `Parameters\StartStage=1` first and report `Parameters\StageSerial` —
-  it needs no debugger and tells us whether VMXON/PVMPTRLD/VMXOFF work nested.
+1. kd capture with the target *continuing* so `Bringup::stage` DbgPrint streams
+   (kd-pipe + kd-log); the last `[blook] stage=` line names the failing step.
+   The pipe-server creation is still flaky: `kd-pipe vm-drv` reports success and
+   `bvmenv kd vm-drv` prints the right `kd -k com:pipe,port=\\.\pipe\blook-vm-drv-kd`
+   command, but kd stays in `Waiting for pipe` even after a stop/start cycle, so
+   the capture has not been obtained yet.
+2. If the wedge is an exit loop with changing RIP: tighten the watchdog beyond
+   the current "average < 100 cycles" rule (compare the exit *count per
+   millisecond*, not cycles per exit).
+3. If it is VM entry state: `Parameters\BringupNoEpt=1` and a bare guest, then
+   re-enable controls one at a time.
