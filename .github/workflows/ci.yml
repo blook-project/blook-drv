@@ -221,7 +221,8 @@ jobs:
         shell: pwsh
         run: |
           $stage = (Get-ChildItem -Directory stage | Select-Object -First 1).FullName
-          $args = @(
+          # $args is a PowerShell automatic variable: use a normal name.
+          $e2eArgs = @(
             '-NoProfile', '-ExecutionPolicy', 'Bypass',
             '-File', 'scripts\E2E-Host.ps1',
             '-Sys', (Join-Path $stage 'blook-drv.sys'),
@@ -229,7 +230,7 @@ jobs:
             '-Hooks', (Join-Path $stage 'blook-guest-hooks.exe'),
             '-Artifacts', 'out/host-e2e'
           )
-          & pwsh @args
+          & pwsh @e2eArgs
           if ($LASTEXITCODE -ne 0) { throw "non-VT-x e2e reported failures" }
           $result = Get-Content 'out/host-e2e/result.json' -Raw | ConvertFrom-Json
           Write-Host ("host e2e: {0} pass, {1} fail, {2} documented skips" -f $result.summary.pass, $result.summary.fail, $result.summary.skip)
