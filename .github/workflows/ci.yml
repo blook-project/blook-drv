@@ -86,11 +86,16 @@ jobs:
           New-Item -ItemType Directory -Force $stage | Out-Null
           $sys = Get-ChildItem -Recurse build -Filter blook-drv.sys | Select-Object -First 1
           if (-not $sys) { throw "blook-drv.sys was not built" }
-          if ($sys) { Copy-Item $sys.FullName $stage }
+          Copy-Item $sys.FullName $stage
           foreach ($exe in @("blook-loader.exe", "blook-guest-hooks.exe", "blook-antidetect.exe")) {
             $built = Get-ChildItem -Recurse build -Filter $exe -File | Select-Object -First 1
             if ($built) { Copy-Item $built.FullName $stage }
           }
+          # Public headers include <policy/*.hpp>; ship those headers at
+          # include/policy so the SDK include root is self-contained.
+          $policyStage = Join-Path $stage "include\policy"
+          New-Item -ItemType Directory -Force $policyStage | Out-Null
+          Copy-Item src\policy\*.hpp $policyStage -Force
           Copy-Item include, sdk, docs, scripts, signer -Destination $stage -Recurse
           Copy-Item README.md, LICENSE, CHANGELOG.md, version.txt, xmake.lua, blook.ini -Destination $stage
           Compress-Archive -Path $stage -DestinationPath "out/blook-drv-$ver.zip" -Force
@@ -98,11 +103,35 @@ jobs:
             ForEach-Object { "$($_.ToLower())  blook-drv-$ver.zip" } |
             Set-Content "out/blook-drv-$ver.zip.sha256"
 
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      - name: SDK headers compile check
+        shell: pwsh
+        run: |
+          $zip = Get-ChildItem out -Filter *.zip | Select-Object -First 1
+          if (-not $zip) { throw "no package artefact" }
+          Expand-Archive $zip.FullName -DestinationPath sdkcheck -Force
+          $stage = (Get-ChildItem -Directory sdkcheck | Select-Object -First 1).FullName
+          $include = Join-Path $stage "include"
+          $probe = Join-Path $env:RUNNER_TEMP "sdk_probe.cc"
+          $lines = @(
+            "#include <blook/drv/ept.hpp>",
+            "#include <blook/drv/handle.hpp>",
+            "#include <blook/drv/transport.hpp>",
+            "#include <blook/drv/wire.hpp>",
+            "int main() { return wire::abi_version == 7 ? 0 : 1; }"
+          )
+          Set-Content $probe ($lines -join "`n")
+          & cl.exe /nologo /std:c++20 /EHsc /W4 /WX /I $include /c $probe /Fo:$env:RUNNER_TEMP\sdk_probe.obj
+          if ($LASTEXITCODE -ne 0) { throw "packaged SDK headers are not self-contained" }
+          Write-Host "packaged SDK headers compile against include/ alone"
+
       - uses: actions/upload-artifact@v4
         with:
           name: blook-drv-ci
           path: out/*
           if-no-files-found: error
+
 
   format:
     name: clang-format
