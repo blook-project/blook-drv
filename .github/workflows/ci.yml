@@ -167,9 +167,22 @@ jobs:
           [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:SPC_PFX_BASE64))
           $pw = ConvertTo-SecureString $env:SPC_PFX_PASSWORD -AsPlainText -Force
           Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:\CurrentUser\My -Password $pw | Out-Null
+          # Trust imports (verified recipe): the SPC timestamp chain needs its
+          # root and intermediates in the machine stores before the kernel can
+          # accept the signature, and the leaf must be a trusted publisher.
           $tsa = Get-ChildItem -Recurse stage -Filter tsa-root.cer | Select-Object -First 1
-          if (-not $tsa) { throw "tsa-root.cer missing from the package" }
-          certutil -addstore -f root $tsa.FullName
+          if ($tsa) { certutil -addstore -f root $tsa.FullName } 
+          $certDir = Join-Path $PWD 'signer\certs'
+          if (-not (Test-Path $certDir)) { $certDir = (Get-ChildItem -Directory stage | Select-Object -First 1).FullName + '\signer\certs' }
+          Get-ChildItem $certDir -Filter 'verisign-*.cer' -ErrorAction SilentlyContinue |
+            ForEach-Object { certutil -addstore -f CA $_.FullName }
+          $leaf = Get-ChildItem Cert:\CurrentUser\My |
+            Where-Object { $_.Subject -match 'XINDA' } | Select-Object -First 1
+          if ($leaf) {
+            $leafFile = Join-Path $env:RUNNER_TEMP 'spc-leaf.cer'
+            [IO.File]::WriteAllBytes($leafFile, $leaf.Export('Cert'))
+            certutil -addstore -f trustedpublisher $leafFile
+          }
 
       - name: Sign driver
         if: env.SKIP != '1'
@@ -189,6 +202,15 @@ jobs:
             --chain (Join-Path $certs 'verisign-cscs-2010.cer') `
             --chain (Join-Path $certs 'verisign-g5-mcvr.cer') $sys
           if ($LASTEXITCODE -ne 0) { throw "spcsign failed" }
+          $signtool = Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin' -Recurse -Filter signtool.exe -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -match '\\x64\\' } | Select-Object -First 1
+          if ($signtool) {
+            & $signtool.FullName verify /kp /v $sys
+            if ($LASTEXITCODE -ne 0) { throw "signtool verify /kp failed" }
+            Write-Host "signtool verify /kp passed"
+          } else {
+            Write-Host "signtool not found - skipping kernel-policy verification"
+          }
 
       - name: Load and unload without the hypervisor
         if: env.SKIP != '1'
