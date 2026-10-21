@@ -793,9 +793,11 @@ bool virtualize_cpu(vcpu* const cpu) {
             rollback();
             return false;
         }
-        // The stub only comes back if the processor left VMX (it never does on
-        // the ping path), so reaching this line means root mode took over.
-        bringup::stage("stub-returned", cpu->index);
+        // The stub comes back only if root mode took over: its VMCALL asked to
+        // stop, the exit handler VMXOFF'd this processor, and control returned
+        // here. Restore the pre-VMX control registers and finish normally.
+        bringup::stage("stub-stop-ok", cpu->index);
+        rollback();
         return true;
     }
     if (blook::tuning::start_stage() == 1) {

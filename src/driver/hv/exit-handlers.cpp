@@ -8,6 +8,7 @@
 #include "vcpu.h"
 #include "vmx.h"
 
+#include "driver/tuning.hpp"
 #include "hv.h"
 
 #include "driver/hv/detect.h"
@@ -230,6 +231,12 @@ void emulate_vmxon(vcpu*) {
 
 extern "C" char blook_vmcall_site;
 void emulate_vmcall(vcpu* const cpu) {
+    if (blook::tuning::start_stage() == 3) {
+        // Stage 3 diagnostic: the guest stub asked to stop; leave VMX on this
+        // processor so hv::start can finish and the driver load can complete.
+        cpu->stop_virtualization = true;
+    }
+
     // Gate entry/leave must precede tagged hypercalls: no guest register is
     // available for a tag, and shim returns must preserve the return value.
     if (hook_gate::handle_gate_vmcall(cpu))
