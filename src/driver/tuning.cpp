@@ -21,6 +21,7 @@ bool probe_exits_value{};
 uint32_t raw_entry_ctls_value{};
 uint32_t raw_pin_ctls_value{};
 uint32_t raw_exit_ctls_value{};
+bool bare_entry_value{};
 
 bool read_dword(const wchar_t* name, uint32_t& value) {
     if (!parameters.Buffer)
@@ -98,6 +99,9 @@ void initialize(PCUNICODE_STRING service_path) {
     uint32_t max_cpus_dword{};
     if (read_dword(L"MaxCpus", max_cpus_dword))
         max_cpus_value = max_cpus_dword;
+    uint32_t bare{};
+    if (read_dword(L"BareEntry", bare))
+        bare_entry_value = bare != 0;
     uint32_t raw_pin{};
     if (read_dword(L"RawPinCtls", raw_pin))
         raw_pin_ctls_value = raw_pin;
@@ -165,6 +169,10 @@ uint32_t raw_entry_ctls() {
 
 uint32_t raw_pin_ctls() {
     return raw_pin_ctls_value;
+}
+
+bool bare_entry() {
+    return bare_entry_value;
 }
 
 uint32_t raw_exit_ctls() {

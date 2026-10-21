@@ -74,6 +74,11 @@ uint32_t raw_entry_ctls();
 // pin the nested configuration to the capability MSRs allowed-0 values only.
 uint32_t raw_pin_ctls();
 uint32_t raw_exit_ctls();
+// Debug switch (Parameters\BareEntry): write the absolute minimum VMCS control
+// set - no pin/primary controls at all, no EPT/secondary controls, only the
+// 64-bit host address-space exit bit and IA-32e guest entry. The last meaningful
+// difference between our configuration and a hand-built nested VMCS.
+bool bare_entry();
 
 // Records a phase marker (best effort, PASSIVE_LEVEL only, ignores failures).
 void mark(uint32_t phase, uint32_t extra = 0);

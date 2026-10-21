@@ -134,6 +134,17 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
 
     // 3.24.6.5
     vmx_vmwrite(VMCS_CTRL_TSC_OFFSET, 0);
+    // Bare entry mode: no pin/primary controls at all, no secondary controls
+    // (so no EPT, no MSR bitmaps), no exception interception - only the 64-bit
+    // host address-space exit bit and IA-32e guest entry. Last meaningful
+    // difference between our VMCS and a hand-built nested one.
+    if (blook::tuning::bare_entry()) {
+        vmx_vmwrite(VMCS_CTRL_PIN_BASED_VM_EXECUTION_CONTROLS, 0);
+        vmx_vmwrite(VMCS_CTRL_PROCESSOR_BASED_VM_EXECUTION_CONTROLS, 0);
+        vmx_vmwrite(VMCS_CTRL_VMEXIT_CONTROLS, 0x200);
+        vmx_vmwrite(VMCS_CTRL_VMENTRY_CONTROLS, 0x1);
+        vmx_vmwrite(VMCS_CTRL_EXCEPTION_BITMAP, 0);
+    }
 
     // 3.24.6.6
     vmx_vmwrite(VMCS_CTRL_CR0_GUEST_HOST_MASK,
