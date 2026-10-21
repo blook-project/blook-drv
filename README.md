@@ -125,3 +125,23 @@ MIT (see [LICENSE](<LICENSE>)); vendored third-party notices in
 [third_party](<third_party/README.md>) and [LICENSES](<LICENSES>). For authorised
 security research and testing only: do not deploy on systems you do not own or
 have written permission to test.
+## Capability and limitation table (v4.0.0)
+
+Verified on 2026-10-21 against a Windows 11 26100 VMware Workstation guest and on
+GitHub-hosted runners (`e2e matrix (non-VT-x)`).
+
+| capability | status | evidence |
+|---|---|---|
+| driver install / start / stop / uninstall | works | CI `e2e matrix`; VM `docs/evidence/20261021-host-e2e-vm/result.json` |
+| kernel->user verification round trip (DriverEntry markers) | works | CI `kernel-roundtrip-markers`; VM same |
+| lifecycle stress (3 restart cycles) and negative input | works | CI + VM |
+| self-hide (module list, driver object, registry, pool tag) | implemented, VM-verified pre-hypervisor | `tests/guest/hooks self-hide`, VM matrix |
+| kchannel-only IPC (no device/IOCTL) | implemented | adapter + SDK + unit tests; VM matrix |
+| nested VMware: VMXON / VMPTRLD / VMXOFF | **works** | VM preflight, `StartStage=1` -> `STATE: RUNNING` |
+| nested VMware: VM entry (VMLAUNCH) | **blocked by the L0 hypervisor** | see `docs/evidence/20261021-nested-vmlaunch-blocker.md`: legal control fields vs TRUE capability MSRs, explicit EPTP (`0x33` low bits), VMCLEAR, valid host state, `HostStateOk=0x3`, yet no VM-instruction error and no first VM exit; guest wedges silently |
+| CPUID/MSR/TSC hiding, EPT software-breakpoint hooks, hardware-breakpoint hooks | implemented, VM-only | require a working nested VM entry; listed as documented skips in the CI result |
+| gated host loads | enforced | `BLOOK_VM_GUEST` + `BLOOK_ALLOW_KERNEL_LOAD` markers only |
+
+Because nested VM entry is rejected/hangs inside this VMware build, the
+hypervisor-dependent cases run only in the bvmenv VM matrix and are reported as
+`requires VT-x` skips in CI; the non-VT-x feature matrix is green in CI.
