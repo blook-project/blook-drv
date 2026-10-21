@@ -1,4 +1,10 @@
 # Changelog
+## 4.0.2 - 2026-10-22
+
+- Documentation-only release: state explicitly that the public SDK headers
+  require **C++23** (`std::expected` in `include/blook/drv/ept.hpp`) and that the
+  package ships `include/policy/*.hpp` so the include root is self-contained.
+  No code or binary change since 4.0.1.
 
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project

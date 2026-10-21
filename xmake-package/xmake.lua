@@ -6,7 +6,8 @@
 --   add_repositories("blook https://github.com/blook-project/blook-xmake-repo.git")
 --   add_requires("blook-drv <VERSION>")
 --   target("app"):add_packages("blook-drv")
-package("blook-drv")
+-- Consumers must compile with C++23 (std::expected in ept.hpp):
+--   xmake: set_languages("cxx23")   MSVC: /std:c++latestpackage("blook-drv")
     set_description("blook-drv: hardened VT-x hypervisor driver and user-mode EPT hook SDK")
     set_kind("library", { headeronly = true })
 

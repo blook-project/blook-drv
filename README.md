@@ -34,6 +34,12 @@ debug-register hook APIs, built for security research and authorised testing.
 include/blook/drv/     public SDK (header-only): ept.hpp (hooks), wire.hpp (ABI),
                        transport.hpp (kchannel), handle.hpp
 include/blook/drv/km   kernel-shared wire types
+**SDK requirement: C++23.** The public headers use `std::expected`/`std::unexpected`
+(`include/blook/drv/ept.hpp`), so consumers must build with C++23 — in xmake add
+`set_languages("cxx23")`, with MSVC pass `/std:c++latest` (or `/std:c++23preview`).
+A plain C++20 consumer fails with `C2039 "expected": is not a member of std`.
+The package ships `include/blook/drv/*.hpp` plus the `include/policy/*.hpp` headers
+they include, so one include root is enough.
 src/driver/            driver: entry, session, control, hooks, watch, hide/*,
                        hv/* (vcpu, vmcs, ept, exit handlers, timing, nested,
                        swbreak, hwbreak, detect), ssdt, tuning
