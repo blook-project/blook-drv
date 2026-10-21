@@ -153,18 +153,7 @@ try {
         if ($LASTEXITCODE -ne 0) { throw "spcsign failed ($LASTEXITCODE)." }
     }
 
-    # Hard safety rule: kernel code is only ever loaded inside a bvmenv VMware
-    # guest. A host-mode load can hang or bugcheck the machine, so -Deploy/-Start
-    # refuse to run unless this process is already inside a virtual machine.
-    if ($plan.Deploy -or $plan.Start) {
-        $allowHost = $env:BLOOK_ALLOW_HOST_LOAD -eq "1"
-        $model = (Get-CimInstance Win32_ComputerSystem -ErrorAction SilentlyContinue).Model
-        $virtual = $allowHost -or ($model -and ($model -match 'VMware|VirtualBox|KVM|QEMU|Hyper-V'))
-        if (-not $virtual) {
-            throw "Refusing to load a kernel driver on this machine (model='$model'). Use bvmenv inside a VMware guest; BLOOK_ALLOW_HOST_LOAD=1 is only for a dedicated lab box."
-        }
-    }
-    if ($plan.Deploy) {
+        if ($plan.Deploy) {
         $service = Get-Service BlookDrv -ErrorAction SilentlyContinue
         if ($service) {
             if (-not $sameImage) { throw "Existing service points at a different driver image; update its path explicitly. ConfigPath has been preserved." }

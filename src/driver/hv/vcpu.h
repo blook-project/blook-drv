@@ -4,6 +4,7 @@
 #include "idt.h"
 #include "ept.h"
 #include "timing.h"
+#include "policy/breakpoint_policy.hpp"
 #include "vmx.h"
 namespace hv {
 inline constexpr size_t host_stack_size = 0x8000;
@@ -69,10 +70,9 @@ struct vcpu {
     uint64_t guest_dr6{};
     uint64_t guest_dr7{};
     // Set while this processor is single-stepping an original instruction for a
-    // software breakpoint: the id of the entry and the saved RFLAGS.TF.
-    uint64_t swbreak_step_id{};
-    uint64_t swbreak_saved_rflags{};
-    bool swbreak_stepping{};
+    // software breakpoint. The transitions live in policy/breakpoint_policy.hpp
+    // so the "exactly once" invariant is the same code the host tests exercise.
+    blook::policy::step_state swbreak_step{};
 };
 bool virtualize_cpu(vcpu* cpu);
 bool supported_cpu();

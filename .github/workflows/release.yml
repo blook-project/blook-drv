@@ -64,17 +64,17 @@ jobs:
           Copy-Item $sys.FullName $stage
           Copy-Item include, sdk, docs, scripts, signer, xmake-package -Destination $stage -Recurse
           Copy-Item README.md, LICENSE, CHANGELOG.md, version.txt, xmake.lua, blook.ini -Destination $stage
-          Compress-Archive -Path $stage -DestinationPath "out/blook-drv-$ver.zip" -Force
-          $hash = (Get-FileHash "out/blook-drv-$ver.zip" -Algorithm SHA256).Hash.ToLower()
-          "$hash  blook-drv-$ver.zip" | Set-Content "out/blook-drv-$ver.zip.sha256"
+          Compress-Archive -Path $stage -DestinationPath "out/blook-drv-$ver-windows-x64.zip" -Force
+          $hash = (Get-FileHash "out/blook-drv-$ver-windows-x64.zip" -Algorithm SHA256).Hash.ToLower()
+          "$hash  blook-drv-$ver-windows-x64.zip" | Set-Content "out/blook-drv-$ver-windows-x64.zip.sha256"
           "sha256=$hash" >> $env:GITHUB_OUTPUT
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            out/blook-drv-*.zip
-            out/blook-drv-*.zip.sha256
+            out/blook-drv-*-windows-x64.zip
+            out/blook-drv-*-windows-x64.zip.sha256
           generate_release_notes: true
           draft: false
 

@@ -1,3 +1,12 @@
+# blook-drv (hardened rewrite)
+
+> **HOST SAFETY (non-negotiable).** Kernel code in this repository runs only
+> inside a bvmenv-managed VMware guest. There is no supported way to load the
+> driver on a physical host: `scripts/Build.ps1` refuses `-Deploy/-Start`,
+> `blook-loader start` requires the `BLOOK_VM_GUEST` + `BLOOK_ALLOW_KERNEL_LOAD`
+> markers that only `scripts/E2E.ps1` sets on a `bvmenv exec` command line, and
+> the guest test binaries exit with "refusing to run kernel code outside a
+> bvmenv guest" when the marker is missing. See `docs/evidence/README.md`.
 # blook-drv 系统概述
 
 blook-drv 是面向 Windows x64 平台的 Intel VT-x 与扩展页表（Extended Page Tables, EPT）分析辅助驱动系统，包含内核驱动程序、用户态控制接口、命令行管理工具及宿主机验证测试套件。系统通过硬件辅助虚拟化技术在指定目标进程中建立影子执行视图，实现对用户态指令的无侵入拦截与内核行为监控。

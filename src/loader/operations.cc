@@ -68,19 +68,15 @@ std::unexpected<failure> failed(std::string action, std::error_code code,
 }
 
 namespace {
-// A kernel driver must never be loaded on a physical host by accident: a broken
-// hypervisor takes the machine down with it. Everything in this repository is
-// tested inside a bvmenv VMware guest, so the loader refuses to start a driver
-// unless it can see that it is running under a hypervisor or on a virtualised
-// platform. BLOOK_ALLOW_HOST_LOAD=1 is the explicit, documented escape hatch
-// for a dedicated lab machine.
+// A kernel driver must never be loaded outside a bvmenv VMware guest: a broken
+// hypervisor takes the host machine down with it. The guard is structural - the
+// e2e harness is the only thing that sets the two marker variables, on a
+// command line it executes through bvmenv - and there is deliberately no
+// environment variable or switch that bypasses it.
 bool inside_virtual_machine() {
-    // Structural guard: only the bvmenv e2e harness sets these variables, on a
-    // command line that runs inside the VM. A host shell never has them, so a
-    // driver can never be loaded on the physical machine by accident.
-    if (std::getenv("BLOOK_ALLOW_HOST_LOAD") != nullptr) {
-        return true;
-    }
+    // Structural guard, no escape hatch: only the bvmenv e2e harness sets these
+    // variables, on a command line that runs inside the VM. A host shell never
+    // has them, so a driver can never be loaded on the physical machine.
     if (std::getenv("BLOOK_VM_GUEST") == nullptr ||
         std::getenv("BLOOK_ALLOW_KERNEL_LOAD") == nullptr) {
         return false;
@@ -170,8 +166,7 @@ result service_command(const cli::command& command, output_sink& output) {
                 "Refusing to load a kernel driver on a physical host: this "
                 "machine does not look virtualised and a broken hypervisor "
                 "takes the host down. Run the driver inside a bvmenv VMware "
-                "guest, or set BLOOK_ALLOW_HOST_LOAD=1 on a dedicated lab "
-                "machine.");
+                "guest (scripts/E2E.ps1 sets the required markers).");
         }
         // Start through the channel bootstrap: create the anonymous shared
         // region, hand the descriptor to the driver through its service key,

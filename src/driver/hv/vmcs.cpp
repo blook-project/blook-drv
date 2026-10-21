@@ -5,6 +5,7 @@
 #include "vcpu.h"
 #include "segment.h"
 #include "driver/tuning.hpp"
+#include "policy/nested_matrix.hpp"
 #include "nested.h"
 
 namespace hv {
@@ -21,11 +22,24 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     pin_based_ctrl.flags = 0;
     pin_based_ctrl.virtual_nmi = 1;
     pin_based_ctrl.nmi_exiting = 1;
-    // The preemption timer is not guaranteed to be exposed by a nested host; a
-    // control the capability MSR says is disallowed makes VM entry fail with
-    // "invalid control field", which presents as a hang. Ask first.
+    // The plan is pure policy (policy/nested_matrix.hpp): every optional
+    // control is only requested when this CPU (possibly inside another
+    // hypervisor) exposes it, and the unit tests pin down the expected matrix.
+    const auto& host = nested::probe();
+    blook::policy::host_capabilities capabilities{};
+    capabilities.vmx_msr_readable = host.vmx_msr_readable;
+    capabilities.vp_assist = host.vp_assist;
+    capabilities.preemption_timer = host.preemption_timer;
+    capabilities.ept_ad = host.ept_ad;
+    capabilities.vpid = host.vpid;
+    capabilities.invpcid = host.invpcid;
+    capabilities.xsaves = host.xsaves;
+    capabilities.rdtscp = host.rdtscp;
+    capabilities.mtf = host.mtf;
+    capabilities.host = static_cast<blook::policy::host_kind>(host.host);
+    const auto plan = blook::policy::make_plan(capabilities);
     pin_based_ctrl.activate_vmx_preemption_timer =
-        nested::preemption_timer_supported() ? 1 : 0;
+        plan.use_preemption_timer ? 1 : 0;
     write_ctrl_pin_based_safe(pin_based_ctrl);
 
     // 3.24.6.2
@@ -51,9 +65,9 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     proc_based_ctrl2.enable_rdtscp =
         (blook::tuning::intercept_rdtscp() && nested::rdtscp_supported()) ? 1
                                                                           : 0;
-    proc_based_ctrl2.enable_vpid = nested::vpid_supported() ? 1 : 0;
-    proc_based_ctrl2.enable_invpcid = nested::invpcid_supported() ? 1 : 0;
-    proc_based_ctrl2.enable_xsaves = nested::xsaves_supported() ? 1 : 0;
+    proc_based_ctrl2.enable_vpid = plan.use_vpid ? 1 : 0;
+    proc_based_ctrl2.enable_invpcid = plan.use_invpcid ? 1 : 0;
+    proc_based_ctrl2.enable_xsaves = plan.use_xsaves ? 1 : 0;
     proc_based_ctrl2.enable_user_wait_pause = 1;
     proc_based_ctrl2.conceal_vmx_from_pt = 1;
     write_ctrl_proc_based2_safe(proc_based_ctrl2);

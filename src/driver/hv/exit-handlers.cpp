@@ -13,6 +13,8 @@
 #include "driver/hv/detect.h"
 #include "driver/hv/hwbreak.hpp"
 #include "driver/hv/nested.h"
+#include "policy/cpuid_policy.hpp"
+#include "policy/msr_policy.hpp"
 #include "driver/hv/swbreak.hpp"
 
 namespace hv {
@@ -25,69 +27,57 @@ void blook_write_debug_register(uint32_t index, uint64_t value);
 
 namespace hv {
 
+namespace {
+// The presentation policy is pure (policy/cpuid_policy.hpp) and unit-tested on
+// the host; this is the only place it is fed with the host classification.
+blook::policy::cpuid_options current_cpuid_options() {
+    blook::policy::cpuid_options options;
+    options.host = static_cast<blook::policy::host_kind>(nested::probe().host);
+    return options;
+}
+
+blook::policy::msr_options current_msr_options() {
+    blook::policy::msr_options options;
+    options.hide_virtualization_features = true;
+    options.filter_supervisor_cet = true;
+    return options;
+}
+}  // namespace
+
 void emulate_cpuid(vcpu* const cpu) {
     auto const ctx = cpu->ctx;
 
     int regs[4];
     __cpuidex(regs, ctx->eax, ctx->ecx);
 
-    switch (ctx->eax) {
-        case 0x1:
-            // CPUID.1:ECX[31] is set by the processor itself in non-root
-            // operation, which is the single most common way to notice a
-            // hypervisor. Clear it, and clear the VMX/SMX feature bits as well:
-            // advertising VT-x while the VMX MSRs are filtered (see
-            // emulate_rdmsr) would be a contradiction a detector looks for.
-            regs[2] &= ~static_cast<int>(0x80000000u);  // hypervisor
-            regs[2] &= ~static_cast<int>(0x00000020u);  // VMX
-            regs[2] &= ~static_cast<int>(0x00000040u);  // SMX
-            break;
-        case 0x80000001:
-            // SVM / nested paging vendor bits: an Intel host never sets them,
-            // and a nested host that leaks AMD bits is a detection vector on
-            // its own.
-            regs[2] &= ~static_cast<int>(0x00000004u);  // SVM
-            break;
-        case 0x8000000A:
-            // SVM feature leaves are vendor-specific to AMD.
-            if (nested::probe().host != nested::host_kind::none)
-                regs[0] = regs[1] = regs[2] = regs[3] = 0;
-            break;
-        default:
-            break;
-    }
+    const blook::policy::cpuid_reply raw{
+        static_cast<uint32_t>(regs[0]), static_cast<uint32_t>(regs[1]),
+        static_cast<uint32_t>(regs[2]), static_cast<uint32_t>(regs[3])};
+    const auto filtered =
+        blook::policy::filter(raw, ctx->eax, ctx->ecx, current_cpuid_options());
 
-    // Hypervisor-defined leaves are only defined when a hypervisor advertises
-    // them through that bit, so they read as zero here. This hides the L0
-    // hypervisor's vendor signature as well (the nested VMware/Hyper-V host
-    // leaves 0x40000000.. are visible to the guest otherwise).
-    if (ctx->eax >= 0x40000000 && ctx->eax <= 0x4FFFFFFF)
-        regs[0] = regs[1] = regs[2] = regs[3] = 0;
-
-    ctx->rax = static_cast<uint32_t>(regs[0]);
-    ctx->rbx = static_cast<uint32_t>(regs[1]);
-    ctx->rcx = static_cast<uint32_t>(regs[2]);
-    ctx->rdx = static_cast<uint32_t>(regs[3]);
+    ctx->rax = filtered.eax;
+    ctx->rbx = filtered.ebx;
+    ctx->rcx = filtered.ecx;
+    ctx->rdx = filtered.edx;
     skip_instruction();
 }
 
 void emulate_rdmsr(vcpu* const cpu) {
-    // Hiding CPUID.1:ECX[5] (VMX) is only consistent if the VMX capability
-    // MSRs and IA32_FEATURE_CONTROL agree that VT-x is not available:
-    //   * IA32_FEATURE_CONTROL reads as locked with VMX outside SMX disabled;
-    //   * every IA32_VMX_* MSR raises #GP, exactly as on a CPU without VT-x.
-    // A detector that compares "CPUID says no VMX" against "0x480 is readable"
-    // is otherwise a one-line find.
-    if (cpu->ctx->ecx >= 0x480 && cpu->ctx->ecx <= 0x48F) {
+    // The decision is the unit-tested MSR policy: hiding CPUID.1:ECX[5] (VMX)
+    // is only consistent if IA32_FEATURE_CONTROL reads as locked-with-VMX-off
+    // and every IA32_VMX_* MSR faults, exactly like on a CPU without VT-x.
+    const auto decision =
+        blook::policy::read(cpu->ctx->ecx, current_msr_options());
+    if (decision.action == blook::policy::msr_action::fault) {
         detect::note_masked_msr(cpu->ctx->ecx);
         inject_hw_exception(general_protection, 0);
         return;
     }
-    if (cpu->ctx->ecx == IA32_FEATURE_CONTROL) {
-        // lock = 1, enable VMX outside SMX = 0, enable VMX inside SMX = 0.
+    if (decision.action == blook::policy::msr_action::constant) {
         detect::note_masked_msr(cpu->ctx->ecx);
-        cpu->ctx->rax = 1;
-        cpu->ctx->rdx = 0;
+        cpu->ctx->rax = decision.value & 0xFFFFFFFFull;
+        cpu->ctx->rdx = decision.value >> 32;
         skip_instruction();
         return;
     }
@@ -113,13 +103,15 @@ void emulate_wrmsr(vcpu* const cpu) {
     auto const msr = cpu->ctx->ecx;
     auto value = (cpu->ctx->rdx << 32) | cpu->ctx->eax;
 
-    // CET: user mode shadow stacks (IA32_U_CET) are passed through untouched,
-    // but supervisor shadow stacks cannot be enforced while this hypervisor
-    // runs at CPL0 with the same CET state as the guest - root mode's own
-    // returns would raise #CP. Keep only the enable bit clear; the rest of the
-    // MSR is written as asked.
-    if (msr == IA32_S_CET)
-        value &= ~static_cast<uint64_t>(IA32_S_CET_SH_STK_EN_FLAG);
+    // The write decision comes from the unit-tested MSR policy (VMX MSR writes
+    // fault, supervisor CET shadow-stack enable stays clear).
+    const auto decision =
+        blook::policy::write(msr, value, current_msr_options());
+    if (decision.action == blook::policy::msr_action::fault) {
+        inject_hw_exception(general_protection, 0);
+        return;
+    }
+    value = decision.value;
 
     // let the guest write to the MSRs
     host_exception_info e;
@@ -914,23 +906,27 @@ bool handle_breakpoint_exception(vcpu* const cpu, uint32_t vector) {
         }
         // Execute the original instruction exactly once from the untouched
         // page, then resume after it with the shadow page back in effect.
-        if (!begin_ept_window(cpu->ept, id)) {
+        blook::policy::breakpoint_action action;
+        action.handled = true;
+        action.rewind = true;
+        action.id = id;
+        action.rewind_to = address;
+        if (!begin_ept_window(cpu->ept, id) ||
+            !blook::policy::begin_step(action, cpu->swbreak_step)) {
             inject_hw_exception(3);
             return true;
         }
-        cpu->swbreak_stepping = true;
-        cpu->swbreak_step_id = id;
-        cpu->swbreak_saved_rflags = vmx_vmread(VMCS_GUEST_RFLAGS);
-        vmx_vmwrite(VMCS_GUEST_RFLAGS, cpu->swbreak_saved_rflags | 0x100ull);
+        cpu->swbreak_step.saved_rflags = vmx_vmread(VMCS_GUEST_RFLAGS);
+        vmx_vmwrite(VMCS_GUEST_RFLAGS,
+                    cpu->swbreak_step.saved_rflags | 0x100ull);
         vmx_vmwrite(VMCS_GUEST_RIP, address);
         return true;
     }
 
     // #DB.
-    if (cpu->swbreak_stepping) {
-        cpu->swbreak_stepping = false;
-        end_ept_window(cpu->ept, cpu->swbreak_step_id);
-        cpu->swbreak_step_id = 0;
+    uint64_t stepped{};
+    if (blook::policy::end_step(cpu->swbreak_step, stepped)) {
+        end_ept_window(cpu->ept, stepped);
         const auto flags = vmx_vmread(VMCS_GUEST_RFLAGS);
         vmx_vmwrite(VMCS_GUEST_RFLAGS, flags & ~0x100ull);
         // The single-step status is ours; the guest must not see it.

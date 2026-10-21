@@ -10,7 +10,7 @@ package("blook-drv")
     set_description("blook-drv: hardened VT-x hypervisor driver and user-mode EPT hook SDK")
     set_kind("library", { headeronly = true })
 
-    add_urls("https://github.com/blook-project/blook-drv/releases/download/v$(version)/blook-drv-$(version).zip")
+    add_urls("https://github.com/blook-project/blook-drv/releases/download/v$(version)/blook-drv-$(version)-windows-x64.zip")
     add_versions("<VERSION>", "<SHA256>")
 
     on_install("windows", function (package)
