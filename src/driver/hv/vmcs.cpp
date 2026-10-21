@@ -4,6 +4,7 @@
 #include "vmx.h"
 #include "vcpu.h"
 #include "segment.h"
+#include "driver/tuning.hpp"
 #include "nested.h"
 
 namespace hv {
@@ -37,7 +38,7 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     proc_based_ctrl.use_tsc_offsetting = 1;
     // Debug-register accesses are intercepted so the driver can hide its own
     // hardware breakpoints and sanitise what the guest reads (hwbreak).
-    proc_based_ctrl.mov_dr_exiting = 1;
+    proc_based_ctrl.mov_dr_exiting = blook::tuning::intercept_debug() ? 1 : 0;
     proc_based_ctrl.activate_secondary_controls = 1;
     write_ctrl_proc_based_safe(proc_based_ctrl);
 
@@ -47,7 +48,8 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     proc_based_ctrl2.enable_ept = 1;
     // Optional second-level controls: each one is only requested when the
     // capability MSRs allow it on this CPU / nested host.
-    proc_based_ctrl2.enable_rdtscp = nested::rdtscp_supported() ? 1 : 0;
+    proc_based_ctrl2.enable_rdtscp =
+        (blook::tuning::intercept_rdtscp() && nested::rdtscp_supported()) ? 1 : 0;
     proc_based_ctrl2.enable_vpid = nested::vpid_supported() ? 1 : 0;
     proc_based_ctrl2.enable_invpcid = nested::invpcid_supported() ? 1 : 0;
     proc_based_ctrl2.enable_xsaves = nested::xsaves_supported() ? 1 : 0;
@@ -83,9 +85,12 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
         (vmx_vmread(VMCS_CTRL_PRIMARY_VMEXIT_CONTROLS) >> 12) & 1;
 
     // 3.24.6.3
-    // Bits 1 (#DB) and 3 (#BP) are always intercepted: the software and
-    // hardware breakpoint hooks consume those exceptions (exit-handlers.cpp).
-    vmx_vmwrite(VMCS_CTRL_EXCEPTION_BITMAP, (1u << 1) | (1u << 3));
+    // #DB/#BP are only intercepted when the breakpoint hooks are enabled: they
+    // are the one place where a wrong reflection would be visible to every
+    // debugger in the guest, so the switch matters.
+    const uint32_t breakpoint_bits =
+        blook::tuning::intercept_debug() ? ((1u << 1) | (1u << 3)) : 0;
+    vmx_vmwrite(VMCS_CTRL_EXCEPTION_BITMAP, breakpoint_bits);
 
     // set up the mask and match in such a way so
     // that a vm-exit is never triggered for a pagefault
@@ -153,7 +158,7 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     // real machine delivers them without exiting.
     vmx_vmwrite(
         VMCS_CTRL_EXCEPTION_BITMAP,
-        ((1u << 1) | (1u << 3)) |
+        breakpoint_bits |
             (hv::fault_trace_enabled() ? hv::fault_trace_exception_bitmap : 0));
 
     vmx_vmwrite(VMCS_CTRL_VMEXIT_MSR_STORE_COUNT, hv::timing_hidden() ? 4 : 0);

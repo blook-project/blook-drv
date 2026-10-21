@@ -67,6 +67,49 @@ std::unexpected<failure> failed(std::string action, std::error_code code,
                   std::move(detail), std::move(hint));
 }
 
+namespace {
+// A kernel driver must never be loaded on a physical host by accident: a broken
+// hypervisor takes the machine down with it. Everything in this repository is
+// tested inside a bvmenv VMware guest, so the loader refuses to start a driver
+// unless it can see that it is running under a hypervisor or on a virtualised
+// platform. BLOOK_ALLOW_HOST_LOAD=1 is the explicit, documented escape hatch for
+// a dedicated lab machine.
+bool inside_virtual_machine() {
+    if (std::getenv("BLOOK_ALLOW_HOST_LOAD") != nullptr) {
+        return true;
+    }
+    int regs[4]{};
+    __cpuid(regs, 1);
+    if ((static_cast<unsigned>(regs[2]) & 0x80000000u) != 0) {
+        return true;
+    }
+    HKEY key{};
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      L"HARDWARE\\DESCRIPTION\\System\\BIOS", 0, KEY_READ,
+                      &key) != ERROR_SUCCESS) {
+        return false;
+    }
+    wchar_t model[256]{};
+    DWORD size = sizeof(model);
+    DWORD type{};
+    const auto status =
+        RegQueryValueExW(key, L"SystemProductName", nullptr, &type,
+                         reinterpret_cast<LPBYTE>(model), &size);
+    RegCloseKey(key);
+    if (status != ERROR_SUCCESS || type != REG_SZ) {
+        return false;
+    }
+    const std::wstring text{model};
+    return text.find(L"VMware") != std::wstring::npos ||
+           text.find(L"VirtualBox") != std::wstring::npos ||
+           text.find(L"KVM") != std::wstring::npos ||
+           text.find(L"QEMU") != std::wstring::npos ||
+           text.find(L"Hyper-V") != std::wstring::npos ||
+           text.find(L"Microsoft Hv") != std::wstring::npos;
+}
+}  // namespace
+
+
 result service_command(const cli::command& command, output_sink& output) {
     using enum cli::kind;
     std::wstring image_path;
@@ -115,9 +158,30 @@ result service_command(const cli::command& command, output_sink& output) {
     if (!service)
         return failed("Open service");
     if (command.action == start) {
-        if (!StartServiceW(service.get(), 0, nullptr))
+        if (!inside_virtual_machine()) {
+            return failed(
+                "Start service", ERROR_ACCESS_DENIED,
+                "Refusing to load a kernel driver on a physical host: this "
+                "machine does not look virtualised and a broken hypervisor "
+                "takes the host down. Run the driver inside a bvmenv VMware "
+                "guest, or set BLOOK_ALLOW_HOST_LOAD=1 on a dedicated lab "
+                "machine.");
+        }
+        // Start through the channel bootstrap: create the anonymous shared
+        // region, hand the descriptor to the driver through its service key,
+        // start the service and complete the handshake. A plain StartServiceW
+        // would boot the driver with no control channel at all (solo mode).
+        auto opened = blook::client::session::open();
+        if (opened) {
+            output.message("Started with a control channel (kchannel ready).");
+            return operation_result{};
+        }
+        // Fall back to a solo start for bring-up: the hypervisor runs, and
+        // `stop` is the only way to reach it.
+        if (!StartServiceW(service.get(), 0, nullptr) &&
+            GetLastError() != ERROR_SERVICE_ALREADY_RUNNING)
             return failed("Start service");
-        output.message("Started.");
+        output.message("Started in solo mode (no control channel).");
         return operation_result{};
     }
     SERVICE_STATUS service_status{};

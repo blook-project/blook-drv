@@ -25,6 +25,7 @@
 #include "driver/hide/self.hpp"
 #include "driver/pool.hpp"
 #include "driver/session.hpp"
+#include "driver/tuning.hpp"
 #include "ipc/kchannel.hpp"
 #include "policy/integer.hpp"
 
@@ -137,17 +138,24 @@ void unload(PDRIVER_OBJECT) {
 }
 
 NTSTATUS run(PUNICODE_STRING registry_path, const void* bootstrap) {
+    blook::tuning::mark(1);
     auto status = blook::configuration_state::initialize(registry_path);
-    if (!NT_SUCCESS(status))
+    if (!NT_SUCCESS(status)) {
+        blook::tuning::mark(0x101, static_cast<uint32_t>(status));
         return status;
+    }
+    blook::tuning::mark(2);
     status = blook::initialize_sessions();
     if (!NT_SUCCESS(status)) {
+        blook::tuning::mark(0x102, static_cast<uint32_t>(status));
         blook::shutdown_sessions();
         blook::configuration_state::shutdown();
         return status;
     }
+    blook::tuning::mark(3);
     if (blook::ipc::adapter_start(bootstrap) != 0 &&
         !blook::ipc::adapter_solo()) {
+        blook::tuning::mark(0x103);
         // A client expected the channel to answer and it did not: fail the load
         // instead of pretending to be ready.
         blook::shutdown_sessions();
@@ -171,6 +179,7 @@ extern "C" NTSTATUS DriverEntry(PDRIVER_OBJECT driver,
     blook::hide::self::remember_driver_object(driver_object);
     blook::hide::self::remember_service_path(registry_path);
 
+    blook::tuning::initialize(registry_path);
     void* blob{};
     ULONG blob_size{};
     bool solo{};

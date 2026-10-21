@@ -22,7 +22,8 @@ param(
     [switch]$NoSign,
     [switch]$StopRunningDriver,
     [ValidateNotNullOrEmpty()]
-    [string]$BuildDir = "build"
+    [string]$BuildDir = "build",
+    [string]$KchannelDir
 )
 # Native tools write diagnostics to stderr; with "Stop" PowerShell turns that
 # into a terminating error before the exit code is even inspected, so every
@@ -87,7 +88,16 @@ try {
     }
 
     Write-Log "=== build.ps1: configure"
-    $configure = & $xmake f -p windows -a x64 -m releasedbg -o $BuildRoot -y 2>&1
+    # version.txt is the single source of truth; xmake's description sandbox
+    # cannot read files, so the value is passed through the environment.
+    $env:BLOOK_VERSION = (Get-Content -LiteralPath (Join-Path $RepoRoot "version.txt") -Raw).Trim()
+    # The transport sources are part of this build (no stub): point at the
+    # blook-kchannel checkout, or at the sibling repository by default.
+    $kchannel = if ($KchannelDir) { $KchannelDir } elseif ($env:KCHANNEL_DIR) { $env:KCHANNEL_DIR } else { Join-Path (Split-Path -Parent $RepoRoot) "blook-kchannel" }
+    if (-not (Test-Path -LiteralPath (Join-Path $kchannel "include\blook\kchannel.h"))) {
+        throw "blook-kchannel not found at $kchannel; pass -KchannelDir or set KCHANNEL_DIR."
+    }
+    $configure = & $xmake f -p windows -a x64 -m releasedbg -o $BuildRoot --kchannel_dir=$kchannel -y 2>&1
     foreach ($line in $configure) { Write-Log ("  " + [string]$line) }
     if ($LASTEXITCODE -ne 0) { throw "xmake configure failed ($LASTEXITCODE)." }
 
@@ -135,6 +145,17 @@ try {
         if ($LASTEXITCODE -ne 0) { throw "spcsign failed ($LASTEXITCODE)." }
     }
 
+    # Hard safety rule: kernel code is only ever loaded inside a bvmenv VMware
+    # guest. A host-mode load can hang or bugcheck the machine, so -Deploy/-Start
+    # refuse to run unless this process is already inside a virtual machine.
+    if ($plan.Deploy -or $plan.Start) {
+        $allowHost = $env:BLOOK_ALLOW_HOST_LOAD -eq "1"
+        $model = (Get-CimInstance Win32_ComputerSystem -ErrorAction SilentlyContinue).Model
+        $virtual = $allowHost -or ($model -and ($model -match 'VMware|VirtualBox|KVM|QEMU|Hyper-V'))
+        if (-not $virtual) {
+            throw "Refusing to load a kernel driver on this machine (model='$model'). Use bvmenv inside a VMware guest; BLOOK_ALLOW_HOST_LOAD=1 is only for a dedicated lab box."
+        }
+    }
     if ($plan.Deploy) {
         $service = Get-Service BlookDrv -ErrorAction SilentlyContinue
         if ($service) {

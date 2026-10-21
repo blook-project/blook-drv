@@ -774,19 +774,32 @@ void handle_mov_dr(vcpu* const cpu) {
     const auto index = static_cast<uint32_t>(qualification.debug_register);
     const auto gpr = qualification.general_purpose_register;
 
+    // Outside the armed target address space the architectural behaviour is
+    // preserved: MOV DR at CPL3 raises #GP (that is what a bare-metal CPU does,
+    // and a scanner using "did the read fault?" as its signal must keep seeing
+    // the same answer).
+    const auto cpl = vmx_vmread(VMCS_GUEST_CS_SELECTOR) & 3u;
     if (qualification.direction_of_access) {
-        // MOV XXX, DRn: what the guest is told depends on what the driver has
-        // armed. Our breakpoints never appear in the answer.
         uint64_t value{};
-        if (!hwbreak::dr_read(cpu, index, value))
-            value = blook_read_debug_register(index);
-        write_guest_gpr(cpu->ctx, gpr, value);
+        if (hwbreak::dr_read(cpu, index, value)) {
+            write_guest_gpr(cpu->ctx, gpr, value);
+        } else if (cpl == 3) {
+            inject_hw_exception(general_protection, 0);
+            return;
+        } else {
+            write_guest_gpr(cpu->ctx, gpr,
+                            blook_read_debug_register(index));
+        }
     } else {
-        // MOV DRn, XXX: a write that would disarm a driver breakpoint is
-        // swallowed (hwbreak::dr_write returns true and records the attempt).
         const auto value = blook_read_guest_gpr(cpu, gpr);
-        if (!hwbreak::dr_write(cpu, index, value))
+        if (hwbreak::dr_write(cpu, index, value)) {
+            // handled (possibly swallowed)
+        } else if (cpl == 3) {
+            inject_hw_exception(general_protection, 0);
+            return;
+        } else {
             blook_write_debug_register(index, value);
+        }
     }
     skip_instruction();
 }

@@ -49,6 +49,13 @@ struct info {
     uint32_t hidden{};
 };
 
+// The address space the driver intercepts debug-register access for. A scanner
+// in any other process sees exactly what bare metal shows (`MOV DR` at CPL3
+// raises #GP), which keeps the driver from being detectable by "the read did
+// not fault" alone.
+bool targets_current_space(uint64_t guest_cr3_base);
+void remember_space(uint64_t cr3_base);
+
 struct sanitized {
     uint64_t dr[4]{};
     uint64_t dr6{};

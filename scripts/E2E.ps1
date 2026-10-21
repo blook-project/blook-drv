@@ -68,6 +68,10 @@
     pwsh -File scripts/E2E.ps1 -ValidateOnly
 #>
 [CmdletBinding()]
+# HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
 param(
     [string]$Vm = 'vm-drv',
     [string]$Bvmenv,
@@ -129,7 +133,11 @@ $script:AllowedCategories = @(
 # ---------------------------------------------------------------------------
 
 function Write-Log {
-    param(
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param(
         [Parameter(Mandatory = $true)][AllowEmptyString()][string]$Message,
         [ValidateSet('INFO', 'WARN', 'ERROR', 'DEBUG', 'STEP')]
         [string]$Level = 'INFO'
@@ -154,7 +162,11 @@ function Write-Step([string]$Text) {
 }
 
 function Write-Utf8Text {
-    param([Parameter(Mandatory = $true)][string]$Path, [AllowNull()][string]$Text)
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param([Parameter(Mandatory = $true)][string]$Path, [AllowNull()][string]$Text)
     $dir = Split-Path -Parent $Path
     if ($dir -and -not (Test-Path -LiteralPath $dir)) {
         New-Item -ItemType Directory -Force -Path $dir | Out-Null
@@ -163,21 +175,33 @@ function Write-Utf8Text {
 }
 
 function ConvertTo-ArgText {
-    param([AllowEmptyString()][string]$Value)
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param([AllowEmptyString()][string]$Value)
     if ($null -eq $Value) { return '""' }
     if ($Value -match '^[A-Za-z0-9_./\\:=+,@-]+$') { return $Value }
     return '"' + ($Value -replace '"', '\"') + '"'
 }
 
 function Format-CommandLine {
-    param([string]$FilePath, [string[]]$Arguments = @())
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param([string]$FilePath, [string[]]$Arguments = @())
     $parts = @((ConvertTo-ArgText $FilePath))
     foreach ($a in $Arguments) { $parts += (ConvertTo-ArgText ([string]$a)) }
     return ($parts -join ' ')
 }
 
 function Get-ObjectProperty {
-    param($Object, [string]$Name)
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param($Object, [string]$Name)
     if ($null -eq $Object) { return $null }
     if ($Object -is [System.Collections.IDictionary]) {
         if ($Object.Contains($Name)) { return $Object[$Name] }
@@ -194,7 +218,11 @@ function Test-Admin {
 }
 
 function Resolve-FullPath {
-    param([string]$Path)
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param([string]$Path)
     if ([IO.Path]::IsPathRooted($Path)) { return [IO.Path]::GetFullPath($Path) }
     return [IO.Path]::GetFullPath((Join-Path $script:RepoRoot $Path))
 }
@@ -216,7 +244,11 @@ function Get-GitCommit {
 # ---------------------------------------------------------------------------
 
 function Invoke-Native {
-    param(
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param(
         [Parameter(Mandatory = $true)][string]$FilePath,
         [string[]]$Arguments = @(),
         [int]$TimeoutSeconds = 120,
@@ -313,7 +345,11 @@ function Invoke-Native {
 # ---------------------------------------------------------------------------
 
 function Invoke-Bvmenv {
-    param(
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param(
         [Parameter(Mandatory = $true)][string[]]$Arguments,
         [int]$TimeoutSeconds = 120,
         [switch]$Echo
@@ -337,7 +373,11 @@ function Invoke-Bvmenv {
 }
 
 function Resolve-Bvmenv {
-    param([string]$Explicit)
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param([string]$Explicit)
     if ($Explicit) {
         $candidate = $Explicit
         if (Test-Path -LiteralPath $candidate -PathType Container) {
@@ -416,7 +456,11 @@ function ConvertFrom-CaseAst {
     # Import-PowerShellDataFile only accepts a single hashtable root; the matrix
     # is an ordered array.  Evaluate the small literal subset used by .psd1
     # without invoking arbitrary code.
-    param($Ast)
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param($Ast)
     if ($null -eq $Ast) { return $null }
     switch ($Ast.GetType().Name) {
         'PipelineAst' {
@@ -466,7 +510,11 @@ function ConvertFrom-CaseAst {
 }
 
 function Import-CaseDataFile {
-    param([Parameter(Mandatory = $true)][string]$Path)
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param([Parameter(Mandatory = $true)][string]$Path)
     $tokens = $null
     $parseErrors = $null
     $ast = [System.Management.Automation.Language.Parser]::ParseFile($Path, [ref]$tokens, [ref]$parseErrors)
@@ -481,7 +529,11 @@ function Import-CaseDataFile {
 }
 
 function Get-CaseCommand {
-    param($Item)
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param($Item)
     $value = $null
     if ($Item.Contains('command')) { $value = $Item['command'] }
     elseif ($Item.Contains('guest_command')) { $value = $Item['guest_command'] }
@@ -646,7 +698,11 @@ function Test-CaseMatrix {
 }
 
 function Select-Cases {
-    param([object[]]$Cases)
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param([object[]]$Cases)
     $selected = @($Cases)
     if ($Filter) {
         try { [void][regex]::new($Filter) } catch { throw "Invalid -Filter regex: $($_.Exception.Message)" }
@@ -668,7 +724,11 @@ function Select-Cases {
 # ---------------------------------------------------------------------------
 
 function Invoke-HostStep {
-    param(
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param(
         [Parameter(Mandatory = $true)][string]$FilePath,
         [string[]]$Arguments = @(),
         [Parameter(Mandatory = $true)][string]$Label
@@ -734,7 +794,11 @@ function Get-BuildArtifacts {
 }
 
 function Assert-BuildArtifacts {
-    param([object[]]$Artifacts)
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param([object[]]$Artifacts)
     if ($script:IsDryRun) { return }
     $missing = @($Artifacts | Where-Object { $_.Required -and -not (Test-Path -LiteralPath $_.Path) })
     if ($missing.Count -gt 0) {
@@ -748,7 +812,11 @@ function Assert-BuildArtifacts {
 # ---------------------------------------------------------------------------
 
 function ConvertFrom-EmbeddedJson {
-    param([string]$Text)
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param([string]$Text)
     if ([string]::IsNullOrWhiteSpace($Text)) { return $null }
     $start = $Text.IndexOf('{')
     $end = $Text.LastIndexOf('}')
@@ -763,7 +831,11 @@ function ConvertTo-FlatVmState {
     #     screenshot}, vmx, log:{issues}, ... }
     # The user-facing contract is flatter.  Keep both: state.json preserves the
     # original fields and adds the aliases the harness asserts on.
-    param($Data)
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param($Data)
     if ($null -eq $Data) { return $null }
     $flat = [ordered]@{}
     if ($Data -is [System.Collections.IDictionary]) {
@@ -811,7 +883,11 @@ function ConvertTo-FlatVmState {
 }
 
 function Save-VmState {
-    param(
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param(
         [Parameter(Mandatory = $true)][string]$OutputDir,
         [string]$Prefix = 'state',
         [switch]$NoSave
@@ -919,7 +995,11 @@ function Wait-VmReady {
 }
 
 function Push-GuestFile {
-    param([string]$LocalPath, [string]$GuestPath)
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param([string]$LocalPath, [string]$GuestPath)
     if (-not (Test-Path -LiteralPath $LocalPath)) {
         throw "Cannot push missing file: $LocalPath"
     }
@@ -977,7 +1057,11 @@ function Initialize-Guest {
 }
 
 function Reset-Vm {
-    param([switch]$ForRecovery)
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param([switch]$ForRecovery)
     if ($NoReset) {
         throw 'VM reset is disabled by -NoReset; a dead VM cannot be recovered.'
     }
@@ -996,7 +1080,11 @@ function Reset-Vm {
 # ---------------------------------------------------------------------------
 
 function Add-Assertion {
-    param(
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param(
         [Parameter(Mandatory = $true)][AllowEmptyCollection()][System.Collections.Generic.List[object]]$List,
         [Parameter(Mandatory = $true)][string]$Name,
         [Parameter(Mandatory = $true)][bool]$Ok,
@@ -1006,7 +1094,11 @@ function Add-Assertion {
 }
 
 function Test-ContainsAny {
-    param([string]$Haystack, [object]$Needles, [bool]$Present)
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param([string]$Haystack, [object]$Needles, [bool]$Present)
     $result = [System.Collections.Generic.List[object]]::new()
     if ($null -eq $Needles) { return $result }
     $items = @($Needles | Where-Object { $null -ne $_ -and [string]$_ -ne '' })
@@ -1030,7 +1122,11 @@ function Invoke-CaseExec {
     # exit_code/timed_out and host paths for stdout/stderr; prefer that.  The
     # switch is command-local in 0.1.0 (a leading global --json prints help),
     # and contract-style CLIs that only return the guest exit code still work.
-    param(
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param(
         [Parameter(Mandatory = $true)][string[]]$Arguments,
         [int]$TimeoutSeconds = 120
     )
@@ -1080,7 +1176,11 @@ function Invoke-CaseExec {
 }
 
 function Invoke-Case {
-    param([Parameter(Mandatory = $true)]$Case)
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param([Parameter(Mandatory = $true)]$Case)
 
     $caseDir = Join-Path $script:CasesDir $Case.Id
     if (-not (Test-Path -LiteralPath $caseDir)) {
@@ -1322,7 +1422,11 @@ function Invoke-Case {
 }
 
 function New-SkippedResult {
-    param($Case, [string]$Reason)
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param($Case, [string]$Reason)
     $caseDir = Join-Path $script:CasesDir $Case.Id
     if (-not (Test-Path -LiteralPath $caseDir)) {
         New-Item -ItemType Directory -Force -Path $caseDir | Out-Null
@@ -1348,7 +1452,11 @@ function New-SkippedResult {
 }
 
 function New-DryRunResult {
-    param($Case)
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param($Case)
     $caseDir = Join-Path $script:CasesDir $Case.Id
     return [ordered]@{
         id              = $Case.Id
@@ -1420,7 +1528,11 @@ function Write-ResultJson {
 }
 
 function Format-ReportCell {
-    param([object]$Value)
+    # HOST-SAFETY: this harness only ever executes kernel tests through bvmenv inside a
+# VMware guest. It never runs sc create/start, blook-loader or any driver on the
+# physical host, and it refuses to run without a bvmenv executable.
+
+param([object]$Value)
     if ($null -eq $Value) { return '' }
     return ([string]$Value) -replace '\|', '\|'
 }

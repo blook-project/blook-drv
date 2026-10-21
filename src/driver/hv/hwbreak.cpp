@@ -13,6 +13,7 @@ constexpr size_t capacity = 32;
 
 struct entry {
     volatile uint64_t id{};
+    uint64_t cr3_base{};  // address space the breakpoint belongs to
     uint64_t token{};
     uint64_t address{};
     uint32_t pid{};
@@ -116,6 +117,22 @@ uint32_t interrupt_flag() {
 }
 }  // namespace
 
+namespace {
+// Samples the directory-table base of `pid` by attaching to it. The driver must
+// never compare CR3 low bits (PCID), only the page-frame part.
+uint64_t address_space_of(uint32_t pid) {
+    PEPROCESS process{};
+    if (!NT_SUCCESS(PsLookupProcessByProcessId(ULongToHandle(pid), &process)))
+        return 0;
+    KAPC_STATE state{};
+    KeStackAttachProcess(process, &state);
+    const auto base = __readcr3() & ~0xFFFull;
+    KeUnstackDetachProcess(&state);
+    ObDereferenceObject(process);
+    return base;
+}
+}  // namespace
+
 NTSTATUS arm(const arm_request& request, info& out) {
     out = {};
     if (!request.pid || !request.address || request.dr_index > 3)
@@ -153,6 +170,7 @@ NTSTATUS arm(const arm_request& request, info& out) {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     slot->token = request.token;
+    slot->cr3_base = address_space_of(request.pid);
     slot->pid = request.pid;
     slot->tid = request.tid;
     slot->dr_index = request.dr_index;
@@ -262,7 +280,20 @@ uint32_t count() {
     return total;
 }
 
+bool targets_current_space(uint64_t guest_cr3_base) {
+    if (!guest_cr3_base)
+        return false;
+    for (const auto& item : entries) {
+        if (item.id && item.cr3_base == guest_cr3_base)
+            return true;
+    }
+    return false;
+}
+
 bool dr_read(vcpu* cpu, uint32_t dr_index, uint64_t& value) {
+    // Any other address space gets the architectural behaviour, not ours.
+    if (!targets_current_space(vmx_vmread(VMCS_GUEST_CR3) & ~0xFFFull))
+        return false;
     const auto live = read_dr(dr_index);
     switch (dr_index) {
         case 0:
@@ -298,6 +329,8 @@ bool dr_read(vcpu* cpu, uint32_t dr_index, uint64_t& value) {
 }
 
 bool dr_write(vcpu* cpu, uint32_t dr_index, uint64_t value) {
+    if (!targets_current_space(vmx_vmread(VMCS_GUEST_CR3) & ~0xFFFull))
+        return false;
     switch (dr_index) {
         case 0:
         case 1:

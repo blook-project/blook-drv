@@ -1,5 +1,7 @@
 #include "hv.h"
 
+#include "driver/tuning.hpp"
+
 #include "driver/hooks.hpp"
 #include "driver/configuration_state.hpp"
 #include "timing.h"
