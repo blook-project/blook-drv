@@ -61,7 +61,8 @@ void serial_mark(char tag, uint32_t first, uint32_t second) {
         serial_out(':');
         serial_hex(second);
     }
-    serial_out('\r'); serial_out('\n');
+    serial_out('\r');
+    serial_out('\n');
 }
 
 void serial_exit(uint32_t reason, uint64_t rip) {
@@ -70,7 +71,8 @@ void serial_exit(uint32_t reason, uint64_t rip) {
     serial_out(':');
     serial_hex(static_cast<uint32_t>(rip >> 32));
     serial_hex(static_cast<uint32_t>(rip));
-    serial_out('\r'); serial_out('\n');
+    serial_out('\r');
+    serial_out('\n');
 }
 
 void stage(const char* name, uint32_t cpu) {
@@ -219,8 +221,7 @@ void write_snapshot() {
         {L"SecondaryCtls", static_cast<uint32_t>(controls_snapshot[13])},
         {L"VmxBasic", static_cast<uint32_t>(controls_snapshot[14])},
         {L"CurrentCr3Low", static_cast<uint32_t>(__readcr3())},
-        {L"HostCr3Low",
-         static_cast<uint32_t>(vmx_vmread(VMCS_HOST_CR3))},
+        {L"HostCr3Low", static_cast<uint32_t>(vmx_vmread(VMCS_HOST_CR3))},
         {L"HostStateOk",
          static_cast<uint32_t>(
              (MmIsAddressValid(reinterpret_cast<void*>(host_rip)) ? 1 : 0) |

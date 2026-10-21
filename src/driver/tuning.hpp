@@ -67,8 +67,8 @@ bool host_page_tables();
 bool probe_exits();
 // Debug switch (Parameters\RawEntryCtls, nonzero): write this value into
 // VMCS_CTRL_VMENTRY_CONTROLS verbatim instead of merging with the capability
-// MSRs. VMware nested VMX can expose entry-control capability values that do not
-// behave like bare metal, so the merge has to be bypassable to test.
+// MSRs. VMware nested VMX can expose entry-control capability values that do
+// not behave like bare metal, so the merge has to be bypassable to test.
 uint32_t raw_entry_ctls();
 // Same raw overrides for the other control groups (see raw_entry_ctls). Used to
 // pin the nested configuration to the capability MSRs allowed-0 values only.

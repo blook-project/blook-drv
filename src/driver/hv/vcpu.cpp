@@ -777,9 +777,8 @@ bool virtualize_cpu(vcpu* const cpu) {
     if (blook::tuning::start_stage() == 6) {
         // Stage 6: CPUID (guaranteed VM exit) then VMCALL(stop). Reaching the
         // stop path proves entry, exit handling and the return to root.
-        const uint64_t stop_command =
-            (static_cast<uint64_t>(call_tag) << 8) |
-            static_cast<uint8_t>(operation::stop);
+        const uint64_t stop_command = (static_cast<uint64_t>(call_tag) << 8) |
+                                      static_cast<uint8_t>(operation::stop);
         if (!blook_vm_launch_stub(
                 reinterpret_cast<uint64_t>(&blook_guest_stub_cpuid_vmcall),
                 stop_command)) {
