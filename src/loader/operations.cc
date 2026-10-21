@@ -72,8 +72,8 @@ namespace {
 // hypervisor takes the machine down with it. Everything in this repository is
 // tested inside a bvmenv VMware guest, so the loader refuses to start a driver
 // unless it can see that it is running under a hypervisor or on a virtualised
-// platform. BLOOK_ALLOW_HOST_LOAD=1 is the explicit, documented escape hatch for
-// a dedicated lab machine.
+// platform. BLOOK_ALLOW_HOST_LOAD=1 is the explicit, documented escape hatch
+// for a dedicated lab machine.
 bool inside_virtual_machine() {
     if (std::getenv("BLOOK_ALLOW_HOST_LOAD") != nullptr) {
         return true;
@@ -108,7 +108,6 @@ bool inside_virtual_machine() {
            text.find(L"Microsoft Hv") != std::wstring::npos;
 }
 }  // namespace
-
 
 result service_command(const cli::command& command, output_sink& output) {
     using enum cli::kind;

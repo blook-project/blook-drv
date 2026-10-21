@@ -49,7 +49,8 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     // Optional second-level controls: each one is only requested when the
     // capability MSRs allow it on this CPU / nested host.
     proc_based_ctrl2.enable_rdtscp =
-        (blook::tuning::intercept_rdtscp() && nested::rdtscp_supported()) ? 1 : 0;
+        (blook::tuning::intercept_rdtscp() && nested::rdtscp_supported()) ? 1
+                                                                          : 0;
     proc_based_ctrl2.enable_vpid = nested::vpid_supported() ? 1 : 0;
     proc_based_ctrl2.enable_invpcid = nested::invpcid_supported() ? 1 : 0;
     proc_based_ctrl2.enable_xsaves = nested::xsaves_supported() ? 1 : 0;

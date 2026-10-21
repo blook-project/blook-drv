@@ -16,8 +16,8 @@ bool read_dword(const wchar_t* name, uint32_t& value) {
         return false;
     OBJECT_ATTRIBUTES attributes{};
     InitializeObjectAttributes(&attributes, &parameters,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, nullptr,
-                               nullptr);
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               nullptr, nullptr);
     HANDLE key{};
     if (!NT_SUCCESS(ZwOpenKey(&key, KEY_READ, &attributes)))
         return false;
@@ -25,9 +25,9 @@ bool read_dword(const wchar_t* name, uint32_t& value) {
     UNICODE_STRING value_name;
     RtlInitUnicodeString(&value_name, name);
     ULONG length{};
-    const auto status = ZwQueryValueKey(key, &value_name,
-                                        KeyValuePartialInformation, buffer,
-                                        sizeof(buffer), &length);
+    const auto status =
+        ZwQueryValueKey(key, &value_name, KeyValuePartialInformation, buffer,
+                        sizeof(buffer), &length);
     ZwClose(key);
     if (!NT_SUCCESS(status))
         return false;
@@ -43,8 +43,8 @@ void write_dword(const wchar_t* name, uint32_t value) {
         return;
     OBJECT_ATTRIBUTES attributes{};
     InitializeObjectAttributes(&attributes, &parameters,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, nullptr,
-                               nullptr);
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               nullptr, nullptr);
     HANDLE key{};
     if (!NT_SUCCESS(ZwOpenKey(&key, KEY_SET_VALUE, &attributes)))
         return;
@@ -59,20 +59,21 @@ void initialize(PCUNICODE_STRING service_path) {
     if (initialized || !service_path || !service_path->Buffer)
         return;
     initialized = true;
-    const auto bytes = service_path->Length + sizeof(L"\\Parameters") +
-                       sizeof(WCHAR);
+    const auto bytes =
+        service_path->Length + sizeof(L"\\Parameters") + sizeof(WCHAR);
     parameters_buffer = static_cast<PWCH>(
         ExAllocatePool2(POOL_FLAG_PAGED, bytes, blook::pool_tag));
     if (!parameters_buffer)
         return;
-    RtlCopyMemory(parameters_buffer, service_path->Buffer, service_path->Length);
-    auto* cursor = reinterpret_cast<UCHAR*>(parameters_buffer) +
-                   service_path->Length;
+    RtlCopyMemory(parameters_buffer, service_path->Buffer,
+                  service_path->Length);
+    auto* cursor =
+        reinterpret_cast<UCHAR*>(parameters_buffer) + service_path->Length;
     const wchar_t suffix[] = L"\\Parameters";
     RtlCopyMemory(cursor, suffix, sizeof(suffix));
     parameters.Buffer = parameters_buffer;
-    parameters.Length =
-        static_cast<USHORT>(service_path->Length + sizeof(suffix) - sizeof(WCHAR));
+    parameters.Length = static_cast<USHORT>(service_path->Length +
+                                            sizeof(suffix) - sizeof(WCHAR));
     parameters.MaximumLength = static_cast<USHORT>(bytes);
 
     read_dword(L"InterceptDebug", intercept_debug_value);

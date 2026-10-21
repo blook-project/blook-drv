@@ -37,8 +37,8 @@ std::vector<check_result>& results() {
 void add(const char* id, const char* category, verdict value,
          const std::string& detail, const std::string& values = {}) {
     results().push_back({id, category, value, detail, values});
-    const char* name = value == verdict::pass  ? "PASS"
-                       : value == verdict::fail ? "FAIL"
+    const char* name = value == verdict::pass    ? "PASS"
+                       : value == verdict::fail  ? "FAIL"
                        : value == verdict::error ? "ERROR"
                                                  : "INFO";
     std::printf("[%s] %-32s %s%s%s\n", name, id, detail.c_str(),
@@ -127,7 +127,8 @@ uint64_t rdtscp() {
 void check_cpuid_hypervisor() {
     const auto leaf1 = cpuid(1);
     const bool present = (leaf1.ecx & (1u << 31)) != 0;
-    add("cpuid-hypervisor-bit", "cpuid", present ? verdict::fail : verdict::pass,
+    add("cpuid-hypervisor-bit", "cpuid",
+        present ? verdict::fail : verdict::pass,
         present ? "CPUID.1:ECX[31] is set" : "CPUID.1:ECX[31] is clear",
         "ecx=" + hex(leaf1.ecx));
 }
@@ -138,16 +139,14 @@ void check_cpuid_vendor() {
     // A CPU without hypervisor leaves answers CPUID.0x40000000 with the data of
     // its highest basic leaf, so the vendor signature is only meaningful when
     // the returned maximum leaf is actually in the hypervisor range.
-    const bool empty = vendor.eax < 0x40000000 || (vendor.ebx == 0 &&
-                                                   vendor.ecx == 0 &&
-                                                   vendor.edx == 0);
+    const bool empty = vendor.eax < 0x40000000 ||
+                       (vendor.ebx == 0 && vendor.ecx == 0 && vendor.edx == 0);
     const auto raw = vendor_string(vendor);
     const auto display = empty ? std::string("(empty)") : raw;
-    const bool known = raw.rfind("VMware", 0) == 0 ||
-                       raw.rfind("Microsoft Hv", 0) == 0 ||
-                       raw.rfind("KVMKVMKVM", 0) == 0 ||
-                       raw.rfind("XenVMM", 0) == 0 ||
-                       raw.rfind("VBoxVBox", 0) == 0;
+    const bool known =
+        raw.rfind("VMware", 0) == 0 || raw.rfind("Microsoft Hv", 0) == 0 ||
+        raw.rfind("KVMKVMKVM", 0) == 0 || raw.rfind("XenVMM", 0) == 0 ||
+        raw.rfind("VBoxVBox", 0) == 0;
     add("cpuid-vendor-leaves", "cpuid",
         empty ? verdict::pass : (known ? verdict::fail : verdict::info),
         empty ? "leaf 0x40000000 is empty"
@@ -177,8 +176,9 @@ void check_cpuid_features() {
     const char* detail{};
     if (vmx) {
         consistent = fc_locked && fc_vmx && vmx_msr_readable;
-        detail = consistent ? "CPUID advertises VT-x and the MSR view agrees"
-                            : "CPUID advertises VT-x but the MSR view disagrees";
+        detail = consistent
+                     ? "CPUID advertises VT-x and the MSR view agrees"
+                     : "CPUID advertises VT-x but the MSR view disagrees";
     } else {
         consistent = !vmx_msr_readable && !fc_vmx;
         detail = consistent
@@ -191,10 +191,10 @@ void check_cpuid_features() {
     // asserts). Never fail a machine just because a CPL0 MSR is privileged.
     add("cpuid-vmx-svm-bits", "cpuid", verdict::info, detail,
         "vmx=" + std::to_string(vmx) + " smx=" + std::to_string(smx) +
-            " svm=" + std::to_string(svm) + " fc_readable=" +
-            std::to_string(fc_readable) + " fc_locked=" +
-            std::to_string(fc_locked) + " vmx_msr_readable=" +
-            std::to_string(vmx_msr_readable));
+            " svm=" + std::to_string(svm) +
+            " fc_readable=" + std::to_string(fc_readable) +
+            " fc_locked=" + std::to_string(fc_locked) +
+            " vmx_msr_readable=" + std::to_string(vmx_msr_readable));
 }
 
 void check_msr_feature_control() {
@@ -215,8 +215,8 @@ void check_msr_feature_control() {
 
 void check_msr_vmx_leaves() {
     int faults = 0;
-    const uint32_t msrs[] = {0x480, 0x481, 0x482, 0x483, 0x484,
-                             0x485, 0x486, 0x487, 0x488, 0x489, 0x48B, 0x48C};
+    const uint32_t msrs[] = {0x480, 0x481, 0x482, 0x483, 0x484, 0x485,
+                             0x486, 0x487, 0x488, 0x489, 0x48B, 0x48C};
     for (const auto msr : msrs) {
         uint64_t value{};
         if (!rdmsr_safe(msr, value))
@@ -292,9 +292,9 @@ void check_aperf_mperf() {
     // world switch shows up as a ratio far from the QPC-implied one.
     add("aperf-mperf-ratio", "timing",
         (qpc > 0 && ratio > 0.5 && ratio < 1.5) ? verdict::pass : verdict::fail,
-        "ratio in the expected band", "aperf=" + std::to_string(aperf) +
-                                          " mperf=" + std::to_string(mperf) +
-                                          " ratio=" + std::to_string(ratio));
+        "ratio in the expected band",
+        "aperf=" + std::to_string(aperf) + " mperf=" + std::to_string(mperf) +
+            " ratio=" + std::to_string(ratio));
 }
 
 void check_exception_behaviour() {
@@ -323,8 +323,7 @@ void check_debug_registers() {
 }
 
 void check_debugger_surface() {
-    const auto peb =
-        reinterpret_cast<peb_prefix*>(__readgsqword(0x60));
+    const auto peb = reinterpret_cast<peb_prefix*>(__readgsqword(0x60));
     const bool being_debugged = peb && peb->being_debugged != 0;
     BOOL remote{};
     CheckRemoteDebuggerPresent(GetCurrentProcess(), &remote);
@@ -337,9 +336,8 @@ void check_debugger_surface() {
 
 void check_memory_latency() {
     constexpr size_t size = 64u << 20;
-    auto* buffer = static_cast<char*>(VirtualAlloc(nullptr, size,
-                                                   MEM_COMMIT | MEM_RESERVE,
-                                                   PAGE_READWRITE));
+    auto* buffer = static_cast<char*>(
+        VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
     if (!buffer) {
         add("memory-latency", "memory", verdict::error, "allocation failed");
         return;
@@ -371,9 +369,8 @@ void check_memory_latency() {
 void check_nested_host() {
     const auto vendor = cpuid(0x40000000);
     const auto signature = vendor_string(vendor);
-    const bool empty = vendor.eax < 0x40000000 || (vendor.ebx == 0 &&
-                                                  vendor.ecx == 0 &&
-                                                  vendor.edx == 0);
+    const bool empty = vendor.eax < 0x40000000 ||
+                       (vendor.ebx == 0 && vendor.ecx == 0 && vendor.edx == 0);
     add("nested-host-visible", "cpuid", verdict::info,
         empty ? "no L0 hypervisor vendor is visible"
               : "an L0 hypervisor vendor is visible",

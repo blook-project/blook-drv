@@ -787,8 +787,7 @@ void handle_mov_dr(vcpu* const cpu) {
             inject_hw_exception(general_protection, 0);
             return;
         } else {
-            write_guest_gpr(cpu->ctx, gpr,
-                            blook_read_debug_register(index));
+            write_guest_gpr(cpu->ctx, gpr, blook_read_debug_register(index));
         }
     } else {
         const auto value = blook_read_guest_gpr(cpu, gpr);

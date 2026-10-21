@@ -51,12 +51,11 @@ struct arguments {
             if (value == "--json") {
                 result.json = true;
             } else if (value == "--target-pid" && i + 1 < argc) {
-                result.target_pid = static_cast<uint32_t>(
-                    std::strtoul(argv[++i], nullptr, 0));
+                result.target_pid =
+                    static_cast<uint32_t>(std::strtoul(argv[++i], nullptr, 0));
                 result.has_pid = true;
             } else if (value == "--target-address" && i + 1 < argc) {
-                result.target_address =
-                    std::strtoull(argv[++i], nullptr, 0);
+                result.target_address = std::strtoull(argv[++i], nullptr, 0);
                 result.has_address = true;
             } else if (value == "--target-log" && i + 1 < argc) {
                 result.target_log = argv[++i];
@@ -148,8 +147,7 @@ __declspec(noinline) int target_function(int x) {
 }
 
 int run_target(const arguments& args) {
-    const auto address =
-        reinterpret_cast<uint64_t>(&target_function);
+    const auto address = reinterpret_cast<uint64_t>(&target_function);
     const std::string path = args.log.empty() ? args.target_log : args.log;
     if (auto* file = std::fopen(path.c_str(), "wb")) {
         std::fprintf(file, "pid=%lu\n", GetCurrentProcessId());
@@ -158,8 +156,8 @@ int run_target(const arguments& args) {
                      static_cast<unsigned long long>(address));
         std::fclose(file);
     }
-    const auto deadline = GetTickCount64() +
-                          static_cast<uint64_t>(args.duration_seconds) * 1000;
+    const auto deadline =
+        GetTickCount64() + static_cast<uint64_t>(args.duration_seconds) * 1000;
     while (GetTickCount64() < deadline) {
         const auto value = target_function(1);
         const auto dr0 = __readdr(0);
@@ -192,9 +190,8 @@ blook::client::result<session> attach_session() {
             return std::unexpected(last);
         Sleep(50);
     }
-    return std::unexpected(last ? last
-                                : std::error_code{ERROR_TIMEOUT,
-                                                  std::system_category()});
+    return std::unexpected(
+        last ? last : std::error_code{ERROR_TIMEOUT, std::system_category()});
 }
 
 struct child {
@@ -239,12 +236,10 @@ struct child {
         while (monotonic_ms() < deadline) {
             const auto text = read_file(log);
             if (text.find("address=0x") != std::string::npos) {
-                if (const auto at = text.find("pid=");
-                    at != std::string::npos)
+                if (const auto at = text.find("pid="); at != std::string::npos)
                     pid = static_cast<uint32_t>(
                         std::strtoul(text.c_str() + at + 4, nullptr, 0));
-                if (const auto at = text.find("tid=");
-                    at != std::string::npos)
+                if (const auto at = text.find("tid="); at != std::string::npos)
                     tid = static_cast<uint32_t>(
                         std::strtoul(text.c_str() + at + 4, nullptr, 0));
                 if (const auto at = text.find("address=0x");
@@ -259,19 +254,18 @@ struct child {
 };
 
 // The patched stub the EPT hooks install: `mov eax, 4991; ret`.
-const std::array<std::byte, 6> return_4991{
-    std::byte{0xb8}, std::byte{0x37}, std::byte{0x13},
-    std::byte{0x00}, std::byte{0x00}, std::byte{0xc3}};
+const std::array<std::byte, 6> return_4991{std::byte{0xb8}, std::byte{0x37},
+                                           std::byte{0x13}, std::byte{0x00},
+                                           std::byte{0x00}, std::byte{0xc3}};
 
 bool read_remote(uint32_t pid, uint64_t address, void* buffer, size_t size) {
-    auto* process = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION,
-                                FALSE, pid);
+    auto* process =
+        OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, pid);
     if (!process)
         return false;
     SIZE_T read{};
-    const auto ok =
-        ReadProcessMemory(process, reinterpret_cast<void*>(address), buffer,
-                          size, &read) != FALSE;
+    const auto ok = ReadProcessMemory(process, reinterpret_cast<void*>(address),
+                                      buffer, size, &read) != FALSE;
     CloseHandle(process);
     return ok && read == size;
 }
@@ -311,14 +305,12 @@ int ept_install_hit(const arguments& args, bool restore_check) {
     // Self-read consistency: the target's own memory must still show the
     // original bytes even though its instruction fetch goes to the shadow.
     std::array<uint8_t, 6> remote{};
-    const auto readable =
-        read_remote(args.target_pid, args.target_address, remote.data(),
-                    remote.size());
+    const auto readable = read_remote(args.target_pid, args.target_address,
+                                      remote.data(), remote.size());
     const bool original_visible =
         readable && remote[0] == 0x8D;  // lea eax, [rcx+rcx*2+1] or similar
-    emit_bool("self_read_original", readable && !original_visible
-                                               ? false
-                                               : original_visible);
+    emit_bool("self_read_original",
+              readable && !original_visible ? false : original_visible);
     const auto hit = wait_for_value(args.target_log, 4991, 5000);
     emit_bool("hook_hit", hit);
     if (!hit) {
@@ -362,8 +354,8 @@ int ept_multi_same_page(const arguments& args) {
             if (address == args.target_address)
                 continue;
             const std::array<std::byte, 1> patch{std::byte{0xc3}};
-            auto added = opened->patch(reinterpret_cast<void*>(address), patch,
-                                       target);
+            auto added =
+                opened->patch(reinterpret_cast<void*>(address), patch, target);
             if (added)
                 hooks.push_back(std::make_unique<hook>(std::move(*added)));
         }
@@ -387,8 +379,9 @@ int ept_invalid_address() {
     if (!opened)
         return fail("attach");
     const std::array<std::byte, 1> patch{std::byte{0xcc}};
-    const uint64_t addresses[] = {0x00008FFF00000000ull,  // non-canonical
-                                  0x0000000000001000ull};  // unmapped in any process
+    const uint64_t addresses[] = {
+        0x00008FFF00000000ull,   // non-canonical
+        0x0000000000001000ull};  // unmapped in any process
     for (const auto address : addresses) {
         auto result = opened->patch(reinterpret_cast<void*>(address), patch);
         emit_bool("invalid_rejected", !result);
@@ -427,9 +420,9 @@ int swbreak_run(const arguments& args) {
 
     // Re-arm after a hit, then race disarm against execution.
     for (int i = 0; i < 50; ++i) {
-        if (auto result = opened->swbreak_disarm(armed->id, pid{target.pid},
-                                                 reinterpret_cast<void*>(
-                                                     target.address));
+        if (auto result =
+                opened->swbreak_disarm(armed->id, pid{target.pid},
+                                       reinterpret_cast<void*>(target.address));
             !result) {
             emit("disarm_error", std::to_string(result.error().value()));
             return fail("swbreak_disarm");
@@ -440,8 +433,8 @@ int swbreak_run(const arguments& args) {
             return fail("swbreak re-arm");
         armed->id = again->id;
     }
-    auto multi = opened->swbreak_arm(pid{target.pid},
-                                     reinterpret_cast<void*>(target.address + 1));
+    auto multi = opened->swbreak_arm(
+        pid{target.pid}, reinterpret_cast<void*>(target.address + 1));
     emit_bool("multi_hooks", static_cast<bool>(multi));
     if (multi)
         opened->swbreak_disarm(multi->id, pid{target.pid},
@@ -496,9 +489,9 @@ int hwbreak_run(const arguments& args) {
         emit("hwbreak_error", std::to_string(armed.error().value()));
         return fail("hwbreak_arm");
     }
-    auto* thread = OpenThread(THREAD_GET_CONTEXT | THREAD_SET_CONTEXT |
-                                  THREAD_SUSPEND_RESUME,
-                              FALSE, target.tid);
+    auto* thread = OpenThread(
+        THREAD_GET_CONTEXT | THREAD_SET_CONTEXT | THREAD_SUSPEND_RESUME, FALSE,
+        target.tid);
     if (!thread)
         return fail("OpenThread");
     SuspendThread(thread);
@@ -528,15 +521,14 @@ int hwbreak_run(const arguments& args) {
     ResumeThread(thread);
     Sleep(300);
     auto after = opened->hwbreak_query(process, target.tid);
-    emit("hwbreak_hits_after_clear",
-         std::to_string(after ? after->hits : 0));
+    emit("hwbreak_hits_after_clear", std::to_string(after ? after->hits : 0));
 
     // Several indices at once.
     uint32_t armed_count = 0;
     for (uint32_t index = 1; index < 4; ++index) {
-        auto more = opened->hwbreak_arm(process, target.tid, index,
-                                        reinterpret_cast<void*>(
-                                            target.address));
+        auto more =
+            opened->hwbreak_arm(process, target.tid, index,
+                                reinterpret_cast<void*>(target.address));
         if (more)
             ++armed_count;
     }
@@ -559,12 +551,11 @@ int hv_info() {
     auto info = opened->hv_info();
     if (!info)
         return fail("hv_info");
-    emit_json("\"mode\":\"hv-info\",\"flags\":" +
-              std::to_string(info->flags) + ",\"vcpus\":" +
-              std::to_string(info->vcpu_count) + ",\"vmx_basic\":" +
-              std::to_string(info->vmx_basic) + ",\"capabilities\":" +
-              std::to_string(info->capabilities) + ",\"degradation\":" +
-              std::to_string(info->degradation_reasons));
+    emit_json("\"mode\":\"hv-info\",\"flags\":" + std::to_string(info->flags) +
+              ",\"vcpus\":" + std::to_string(info->vcpu_count) +
+              ",\"vmx_basic\":" + std::to_string(info->vmx_basic) +
+              ",\"capabilities\":" + std::to_string(info->capabilities) +
+              ",\"degradation\":" + std::to_string(info->degradation_reasons));
     emit("hv_flags", std::to_string(info->flags));
     emit_bool("running", (info->flags & wire::hv_flag_running) != 0);
     emit_bool("nested", (info->flags & wire::hv_flag_nested) != 0);
@@ -602,9 +593,8 @@ int memory_pressure(const arguments& args) {
     // driver's page pins must either succeed or fail cleanly, never crash.
     std::vector<char*> blocks;
     while (true) {
-        auto* block = static_cast<char*>(
-            VirtualAlloc(nullptr, 16u << 20, MEM_COMMIT | MEM_RESERVE,
-                         PAGE_READWRITE));
+        auto* block = static_cast<char*>(VirtualAlloc(
+            nullptr, 16u << 20, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
         if (!block)
             break;
         std::memset(block, 0x5a, 16u << 20);
