@@ -141,7 +141,7 @@ void write_vmcs_ctrl_fields(vcpu* const cpu) {
     if (blook::tuning::bare_entry()) {
         vmx_vmwrite(VMCS_CTRL_PIN_BASED_VM_EXECUTION_CONTROLS, 0);
         vmx_vmwrite(VMCS_CTRL_PROCESSOR_BASED_VM_EXECUTION_CONTROLS, 0);
-        vmx_vmwrite(VMCS_CTRL_VMEXIT_CONTROLS, 0x200);
+        vmx_vmwrite(VMCS_CTRL_PRIMARY_VMEXIT_CONTROLS, 0x200);
         vmx_vmwrite(VMCS_CTRL_VMENTRY_CONTROLS, 0x1);
         vmx_vmwrite(VMCS_CTRL_EXCEPTION_BITMAP, 0);
     }
