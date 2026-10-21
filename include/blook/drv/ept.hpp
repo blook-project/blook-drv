@@ -637,7 +637,7 @@ class session final {
     }
 
     [[nodiscard]] result<wire::HwBreakResponse> hwbreak_disarm(
-        uint64_t id) const noexcept {
+        uint32_t id) const noexcept {
         auto request = wire::request<wire::HwBreakArmRequest>();
         request.id = id;
         wire::HwBreakResponse response{};

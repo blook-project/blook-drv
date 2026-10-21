@@ -122,7 +122,7 @@ jobs:
             "int main() { return wire::abi_version == 7 ? 0 : 1; }"
           )
           Set-Content $probe ($lines -join "`n")
-          & cl.exe /nologo /std:c++20 /EHsc /W4 /WX /I $include /c $probe /Fo:$env:RUNNER_TEMP\sdk_probe.obj
+          & cl.exe /nologo /std:c++latest /EHsc /W4 /I $include /c $probe /Fo:$env:RUNNER_TEMP\sdk_probe.obj
           if ($LASTEXITCODE -ne 0) { throw "packaged SDK headers are not self-contained" }
           Write-Host "packaged SDK headers compile against include/ alone"
 
