@@ -295,7 +295,8 @@ void write_vmcs_guest_fields() {
     vmx_vmwrite(VMCS_GUEST_CR0, __readcr0());
     // CR4.VMXE belongs to root mode only: the guest must not run with VMX
     // enabled claims. On a nested host the VM-entry checks are strict about it
-    // (VMLAUNCH either fails or the first guest instruction faults), so mask it.
+    // (VMLAUNCH either fails or the first guest instruction faults), so mask
+    // it.
     vmx_vmwrite(VMCS_GUEST_CR4, __readcr4() & ~(1ull << 13));
 
     vmx_vmwrite(VMCS_GUEST_DR7, __readdr(7));

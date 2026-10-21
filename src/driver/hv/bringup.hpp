@@ -39,9 +39,10 @@ void publish_stage();
 // First-exit probe breadcrumbs (Parameters\ProbeExits); they go to the
 // independent bring-up key so a self-hide on failure cannot erase them.
 void publish_probe(uint32_t code, uint32_t extra = 0);
-// Stage watchdog thread: while armed, a PASSIVE thread rewrites StageNum/StageCpu
-// into the persistent key every 50 ms. When the guest dies mid-bring-up (no
-// bugcheck, no debugger), the last value on disk names the stage that killed it.
+// Stage watchdog thread: while armed, a PASSIVE thread rewrites
+// StageNum/StageCpu into the persistent key every 50 ms. When the guest dies
+// mid-bring-up (no bugcheck, no debugger), the last value on disk names the
+// stage that killed it.
 void start_stage_thread();
 void disarm_stage_thread();
 // VMX instruction error from the last failed VMLAUNCH

@@ -263,8 +263,7 @@ NTSTATUS start() {
         bringup::publish_probe(0x201, static_cast<uint32_t>(regs[2]));
         bringup::publish_probe(0x202);  // about to run VMCALL in guest mode
         hypercall_input probe{operation::ping};
-        bringup::publish_probe(0x203,
-                              static_cast<uint32_t>(vmx_vmcall(probe)));
+        bringup::publish_probe(0x203, static_cast<uint32_t>(vmx_vmcall(probe)));
     }
     if (bringup::vmwrite_error) {
         bringup::publish_stage();

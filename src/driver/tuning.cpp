@@ -16,7 +16,7 @@ uint32_t start_stage_value{};
 bool no_hypervisor_value{};
 uint32_t max_cpus_value{};
 bool no_ept_value{};
-bool host_page_tables_value{ true };
+bool host_page_tables_value{true};
 bool probe_exits_value{};
 
 bool read_dword(const wchar_t* name, uint32_t& value) {

@@ -64,12 +64,12 @@ void write_dword(const wchar_t* name, uint32_t value) {
         return;
     OBJECT_ATTRIBUTES attributes{};
     InitializeObjectAttributes(&attributes, &parameters,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, nullptr,
-                               nullptr);
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               nullptr, nullptr);
     HANDLE key{};
     if (!NT_SUCCESS(ZwOpenKey(&key, KEY_SET_VALUE, &attributes))) {
-        if (!NT_SUCCESS(ZwCreateKey(&key, KEY_SET_VALUE, &attributes, 0, nullptr,
-                                    REG_OPTION_NON_VOLATILE, nullptr)))
+        if (!NT_SUCCESS(ZwCreateKey(&key, KEY_SET_VALUE, &attributes, 0,
+                                    nullptr, REG_OPTION_NON_VOLATILE, nullptr)))
             return;
     }
     UNICODE_STRING value_name;
@@ -126,7 +126,8 @@ void publish_stage() {
     write_dword(L"LaunchErrorLow", static_cast<uint32_t>(launch_error));
     write_dword(L"LaunchErrorHigh", static_cast<uint32_t>(launch_error >> 32));
     write_dword(L"VmwriteFieldLow", static_cast<uint32_t>(vmwrite_error));
-    write_dword(L"VmwriteFieldHigh", static_cast<uint32_t>(vmwrite_error >> 32));
+    write_dword(L"VmwriteFieldHigh",
+                static_cast<uint32_t>(vmwrite_error >> 32));
     write_dword(L"StageSerial", stage_serial);
     write_dword(L"StageCpu", stage_cpu);
 }
